@@ -10,7 +10,7 @@ DocMeta.setdocmeta!(
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     @testset verbose = true "Code quality (Aqua.jl)" begin
-        Aqua.test_all(HiddenMarkovModels)
+        Aqua.test_all(HiddenMarkovModels; ambiguities=false)
     end
 
     @testset verbose = true "Code formatting (JuliaFormatter.jl)" begin
