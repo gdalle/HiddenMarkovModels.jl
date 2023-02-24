@@ -20,4 +20,8 @@ DocMeta.setdocmeta!(
     @testset verbose = true "Doctests (Documenter.jl)" begin
         doctest(HiddenMarkovModels)
     end
+
+    @testset verbose = true "Normal HMM" begin
+        include("normal.jl")
+    end
 end
