@@ -17,7 +17,6 @@ makedocs(;
         assets=String[],
     ),
     pages=["Home" => "index.md"],
-    checkdocs=true,
     linkcheck=true,
     strict=true,
 )
