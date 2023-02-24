@@ -1,7 +1,9 @@
 using HiddenMarkovModels
 using Documenter
 
-DocMeta.setdocmeta!(HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true)
+DocMeta.setdocmeta!(
+    HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
+)
 
 makedocs(;
     modules=[HiddenMarkovModels],
@@ -14,12 +16,10 @@ makedocs(;
         edit_link="main",
         assets=String[],
     ),
-    pages=[
-        "Home" => "index.md",
-    ],
+    pages=["Home" => "index.md"],
+    checkdocs=true,
+    linkcheck=true,
+    strict=true,
 )
 
-deploydocs(;
-    repo="github.com/gdalle/HiddenMarkovModels.jl",
-    devbranch="main",
-)
+deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")

@@ -1,13 +1,16 @@
 name = "HiddenMarkovModels"
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
-authors = ["Maxime Mouchet", "Guillaume Dalle and contributors"]
+authors = ["Maxime Mouchet", "Guillaume Dalle"]
 version = "0.1.0"
 
 [compat]
 julia = "1.6"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Aqua", "Documenter", "JuliaFormatter", "Test"]
