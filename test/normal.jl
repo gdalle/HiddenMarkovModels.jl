@@ -11,6 +11,6 @@ em = [Normal(i) for i in 1:N]
 
 hmm = HMM(p, A, em)
 
-(; state_seq, obs_seq) = rand(hmm, 100)
+(state_seq, obs_seq) = rand(hmm, 100)
 
 loglikelihoods(hmm, obs_seq)

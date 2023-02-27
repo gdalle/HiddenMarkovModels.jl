@@ -17,7 +17,7 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer; check_args=fa
         state_seq[t] = i
     end
     obs_seq = [rand(rng, ems[state_seq[t]]) for t in 1:T]
-    return (; state_seq, obs_seq)
+    return (state_seq=state_seq, obs_seq=obs_seq)
 end
 
 function Base.rand(hmm::AbstractHMM, T::Integer; check_args=false)
