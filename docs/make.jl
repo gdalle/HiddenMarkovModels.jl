@@ -18,7 +18,7 @@ makedocs(;
     ),
     pages=["Home" => "index.md"],
     linkcheck=true,
-    strict=false,
+    strict=true,
 )
 
 deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")

@@ -1,14 +1,13 @@
 """
-    rand(rng, hmm, T)
-    rand(hmm, T)
+    rand(rng, hmm, T, θ)
+    rand(hmm, T, θ)
 
 Simulate `hmm` for `T` time steps and return a named tuple `(state_seq, obs_seq)`.
 """
-function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer; check_args=false)
-    N = nb_states(hmm)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    ems = emission_distributions(hmm)
+function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, θ, T::Integer; check_args=false)
+    p = initial_distribution(hmm, θ)
+    A = transition_matrix(hmm, θ)
+    ems = emission_distributions(hmm, θ)
     state_seq = Vector{Int}(undef, T)
     i = rand(rng, Categorical(p; check_args=check_args))
     state_seq[1] = i
@@ -20,6 +19,6 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer; check_args=fa
     return (state_seq=state_seq, obs_seq=obs_seq)
 end
 
-function Base.rand(hmm::AbstractHMM, T::Integer; check_args=false)
-    return rand(GLOBAL_RNG, hmm, T; check_args=check_args)
+function Base.rand(hmm::AbstractHMM, θ, T::Integer; check_args=false)
+    return rand(GLOBAL_RNG, hmm, θ, T; check_args=check_args)
 end
