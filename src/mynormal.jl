@@ -15,8 +15,14 @@ function DensityInterface.densityof(dist::MyNormal, x)
 end
 
 function fit_mle_from_multiple_sequences(::Type{<:MyNormal}, xs, ws)
-    n = sum(length, xs)
-    μ = sum(sum(wᵢ * xᵢ for (wᵢ, xᵢ) in zip(x, w)) for (x, w) in zip(xs, ws)) / n
-    σ² = sum(sum(wᵢ * (xᵢ - μ)^2 for (wᵢ, xᵢ) in zip(x, w)) for (x, w) in zip(xs, ws)) / n
+    w_tot = sum(sum, ws)
+    μ = sum(dot(w, x) for (x, w) in zip(xs, ws)) / w_tot
+    σ² = zero(μ)
+    for (x, w) in zip(xs, ws)
+        for (xᵢ, wᵢ) in zip(x, w)
+            σ² += wᵢ * (xᵢ - μ)^2
+        end
+    end
+    σ² /= w_tot
     return MyNormal(μ, σ²)
 end

@@ -1,12 +1,11 @@
 """
-    baum_welch(hmm_init::HMM, obs_seqs; max_iterations, tol)
+    baum_welch(hmm::HMM, obs_seqs; max_iterations, tol)
 
-Apply the Baum-Welch algorithm on multiple observation sequences, starting from an initial [`HMM`](@ref) `hmm_init`.
+Apply the Baum-Welch algorithm on multiple observation sequences, starting from an initial estimate `hmm`.
 """
-function baum_welch(hmm_init::H, obs_seqs; max_iterations=100, tol=1e-5) where {H<:HMM}
+function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, tol=1e-5)
     θ = nothing
-    N = nb_states(hmm_init, θ)
-    hmm = hmm_init
+    N = nb_states(hmm, θ)
 
     p = initial_distribution(hmm, θ)
     A = transition_matrix(hmm, θ)
@@ -24,36 +23,47 @@ function baum_welch(hmm_init::H, obs_seqs; max_iterations=100, tol=1e-5) where {
         end
         push!(logL_evolution, logL)
 
-        new_p = estimate_initial_distribution(forbacks)
-        new_A = estimate_transition_matrix(forbacks)
-        new_em = [estimate_emission_distribution(H, forbacks, obs_seqs, i) for i in 1:N]
-        hmm = H(new_p, new_A, new_em)
+        update_initial_distribution!(hmm, forbacks)
+        update_transition_matrix!(hmm, forbacks)
+        update_emission_distributions!(hmm, forbacks, obs_seqs)
 
         if (iteration > 1) && (logL_evolution[end] - logL_evolution[end - 1] < tol)
             break
         end
     end
-    return hmm, logL_evolution
+    return logL_evolution
 end
 
-function estimate_initial_distribution(forbacks)
-    @views p = Vector(reduce(+, forbacks[k].γ[:, 1] for k in eachindex(forbacks)))
+function update_initial_distribution!(hmm, forbacks)
+    p = hmm.initial_distribution
+    p .= zero(eltype(p))
+    @views for k in eachindex(forbacks)
+        p .+= forbacks[k].γ[:, 1]
+    end
     p ./= sum(p)
     check_nan(p)
-    return p
+    return nothing
 end
 
-function estimate_transition_matrix(forbacks)
-    A = reduce(+, dropdims(sum(forbacks[k].ξ; dims=3); dims=3) for k in eachindex(forbacks))
+function update_transition_matrix!(hmm, forbacks)
+    A = hmm.transition_matrix
+    A .= zero(eltype(A))
+    for k in eachindex(forbacks)
+        A .+= dropdims(sum(forbacks[k].ξ; dims=3); dims=3)
+    end
     A ./= sum(A; dims=2)
     check_nan(A)
-    return A
+    return nothing
 end
 
-function estimate_emission_distribution(
-    ::Type{HMM{T1,T2,D}}, forbacks, obs_seqs, i
+function update_emission_distributions!(
+    hmm::HMM{T1,T2,D}, forbacks, obs_seqs
 ) where {T1,T2,D}
+    em = hmm.emission_distributions
+    N = length(em)
     xs = (obs_seqs[k] for k in eachindex(obs_seqs, forbacks))
-    ws = (forbacks[k].γ[i, :] for k in eachindex(obs_seqs, forbacks))
-    return fit_mle_from_multiple_sequences(D, xs, ws)
+    @views for i in 1:N
+        ws = (forbacks[k].γ[i, :] for k in eachindex(obs_seqs, forbacks))
+        em[i] = fit_mle_from_multiple_sequences(D, xs, ws)
+    end
 end

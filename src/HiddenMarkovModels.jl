@@ -11,7 +11,7 @@ using ChainRulesCore: ChainRulesCore
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
 using DensityInterface: densityof, logdensityof
 using Distributions: Categorical, fit_mle
-using LinearAlgebra: mul!
+using LinearAlgebra: Diagonal, dot, mul!
 using Random: AbstractRNG, GLOBAL_RNG
 
 include("utils.jl")
@@ -27,6 +27,6 @@ export HMMs
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export forward_backward
-export baum_welch
+export baum_welch!
 
 end

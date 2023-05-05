@@ -13,6 +13,8 @@ struct HiddenMarkovModel{T1,T2,D} <: AbstractHMM
     end
 end
 
+const HMM = HiddenMarkovModel
+
 function HiddenMarkovModel(
     initial_distribution::Vector{T1},
     transition_matrix::Matrix{T2},
@@ -50,8 +52,6 @@ function check_hmm_args(initial_distribution, transition_matrix, emission_distri
     end
 end
 
-const HMM = HiddenMarkovModel
-
 function nb_states(hmm::HMM, θ)
     return length(hmm.initial_distribution)
 end
@@ -70,4 +70,8 @@ end
 
 function emission_distributions(hmm::HMM, θ)
     return hmm.emission_distributions
+end
+
+function emission_type(hmm::HMM{T1,T2,D}) where {T1,T2,D}
+    return D
 end

@@ -85,7 +85,7 @@ end
 function fit_mle_from_single_sequence(
     ::Type{D}, x::AbstractVector{<:AbstractVector}, w::AbstractVector
 ) where {D}
-    return fit_mle(D, hcat(x...), w)
+    return fit_mle(D, reduce(hcat, x), w)
 end
 
 """
@@ -96,5 +96,5 @@ Fit a distribution of type `D` based on multiple sequences of observations `xs` 
 Must accept arbitrary iterables for `xs` and `ws`.
 """
 function fit_mle_from_multiple_sequences(::Type{D}, xs, ws) where {D}
-    return fit_mle_from_single_sequence(D, vcat(xs...), vcat(ws...))
+    return fit_mle_from_single_sequence(D, reduce(vcat, xs), reduce(vcat, ws))
 end
