@@ -1,17 +1,21 @@
 function likelihoods!(B::Matrix, hmm::HMM, obs_seq::Vector)
     T, N = length(obs_seq), nb_states(hmm)
-    em_dists = emission_distributions(hmm)
-    for t in 1:T, i in 1:N
-        B[i, t] = densityof(em_dists[i], obs_seq[t])
+    for i in 1:N
+        dist = emission_distribution(hmm, i)
+        for t in 1:T
+            B[i, t] = densityof(dist, obs_seq[t])
+        end
     end
     return nothing
 end
 
 function loglikelihoods!(logB::Matrix, hmm::HMM, obs_seq::Vector)
     T, N = length(obs_seq), nb_states(hmm)
-    em_dists = emission_distributions(hmm)
-    for t in 1:T, i in 1:N
-        logB[i, t] = logdensityof(em_dists[i], obs_seq[t])
+    for i in 1:N
+        dist = emission_distribution(hmm, i)
+        for t in 1:T
+            logB[i, t] = logdensityof(dist, obs_seq[t])
+        end
     end
     return nothing
 end

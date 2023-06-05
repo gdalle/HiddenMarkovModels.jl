@@ -9,7 +9,7 @@ DocMeta.setdocmeta!(
 )
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
-    @testset verbose = true "Code quality" begin
+    @testset verbose = false "Code quality" begin
         Aqua.test_all(HiddenMarkovModels; ambiguities=false)
     end
 
@@ -19,7 +19,7 @@ DocMeta.setdocmeta!(
 
     doctest(HiddenMarkovModels)
 
-    @testset verbose = true "Normal HMM" begin
+    @testset verbose = true "Type stability and correctness" begin
         include("scratchpad.jl")
     end
 end

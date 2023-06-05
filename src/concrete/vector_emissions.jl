@@ -6,16 +6,11 @@ nb_states(emissions::VectorEmissions) = length(emissions.distributions)
 emission_distribution(emissions::VectorEmissions, i::Integer) = emissions.distributions[i]
 
 function reestimate!(
-    emissions::VectorEmissions{D},
-    forbacks::Vector{<:ForwardBackward},
-    obs_seqs::Vector{<:Vector},
+    emissions::VectorEmissions{D}, obs_seqs_concat::Vector, γ_concat::Matrix
 ) where {D}
     N = nb_states(emissions)
-    em = emissions.distributions
-    xs = (obs_seqs[k] for k in eachindex(obs_seqs, forbacks))
-    @views for i in 1:N
-        ws = (forbacks[k].γ[i, :] for k in eachindex(obs_seqs, forbacks))
-        em[i] = fit_mle_from_multiple_sequences(D, xs, ws)
+    for i in 1:N
+        @views emissions.distributions[i] = fit(D, obs_seqs_concat, γ_concat[i, :])
     end
     return nothing
 end

@@ -19,40 +19,21 @@ function Base.rand(rng::AbstractRNG, transitions::MarkovTransitions, T::Integer)
     i = rand(rng, Categorical(transitions.p; check_args=false))
     state_seq[1] = i
     for t in 2:T
-        i = rand(rng, Categorical(view(transitions.A, i, :); check_args=false))
+        @views i = rand(rng, Categorical(transitions.A[i, :]; check_args=false))
         state_seq[t] = i
     end
     return state_seq
 end
 
-function reestimate_initial_distribution!(
-    transitions::MarkovTransitions, forbacks::Vector{<:ForwardBackward}
-)
-    p = transitions.p
-    p .= zero(eltype(p))
-    @views for k in eachindex(forbacks)
-        p .+= forbacks[k].γ[:, 1]
+function reestimate!(transitions::MarkovTransitions, p_count::Vector, A_count::Matrix)
+    N = nb_states(transitions)
+    transitions.p .= p_count ./ sum(p_count)
+    transitions.A .= A_count
+    for i in 1:N
+        @views row_sum = sum(transitions.A[i, :])
+        transitions.A[i, :] .*= inv(row_sum)
     end
-    p ./= sum(p)
-    check_nan(p)
-    return nothing
-end
-
-function reestimate_transition_matrix!(
-    transitions::MarkovTransitions, forbacks::Vector{<:ForwardBackward}
-)
-    A = transitions.A
-    A .= zero(eltype(A))
-    for k in eachindex(forbacks)
-        A .+= dropdims(sum(forbacks[k].ξ; dims=3); dims=3)
-    end
-    A ./= sum(A; dims=2)
-    check_nan(A)
-    return nothing
-end
-
-function reestimate!(transitions::MarkovTransitions, forbacks::Vector{<:ForwardBackward})
-    reestimate_initial_distribution!(transitions, forbacks)
-    reestimate_transition_matrix!(transitions, forbacks)
+    check_nan(transitions.p)
+    check_nan(transitions.A)
     return nothing
 end

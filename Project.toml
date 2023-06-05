@@ -4,25 +4,16 @@ authors = ["Maxime Mouchet", "Guillaume Dalle"]
 version = "0.1.0"
 
 [deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
-[weakdeps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-
-[extensions]
-HMMsChainRulesExt = "ChainRulesCore"
-HMMsForwardDiffExt = "ForwardDiff"
-
 [compat]
-Aqua = "0.6"
+ChainRulesCore = "1.16"
 DensityInterface = "0.4"
 Distributions = "0.25"
-Documenter = "0.27"
-JuliaFormatter = "1"
 julia = "1.7"
 
 [extras]
