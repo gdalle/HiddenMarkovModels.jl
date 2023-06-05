@@ -1,4 +1,3 @@
-
 struct MyNormal{T1,T2}
     μ::T1
     σ²::T2
@@ -11,7 +10,11 @@ function Base.rand(rng::AbstractRNG, dist::MyNormal)
 end
 
 function DensityInterface.densityof(dist::MyNormal, x)
-    return inv(sqrt(2π * dist.σ²)) * exp(-(x - dist.μ)^2 * inv(2 * dist.σ²))
+    return exp(-(x - dist.μ)^2 / (2 * dist.σ²)) / sqrt(2π * dist.σ²)
+end
+
+function DensityInterface.logdensityof(dist::MyNormal, x)
+    return -(x - dist.μ)^2 / (2 * dist.σ²) - log(2π * dist.σ²) / 2
 end
 
 function fit_mle_from_multiple_sequences(::Type{<:MyNormal}, xs, ws)

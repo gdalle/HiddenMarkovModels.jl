@@ -20,6 +20,6 @@ DocMeta.setdocmeta!(
     doctest(HiddenMarkovModels)
 
     @testset verbose = true "Normal HMM" begin
-        include("normal.jl")
+        include("scratchpad.jl")
     end
 end

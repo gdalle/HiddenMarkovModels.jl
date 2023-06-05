@@ -1,0 +1,3 @@
+module HMMsChainRulesExt
+
+end

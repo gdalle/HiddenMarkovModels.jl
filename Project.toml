@@ -4,15 +4,21 @@ authors = ["Maxime Mouchet", "Guillaume Dalle"]
 version = "0.1.0"
 
 [deps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
+[weakdeps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+
+[extensions]
+HMMsChainRulesExt = "ChainRulesCore"
+HMMsForwardDiffExt = "ForwardDiff"
+
 [compat]
 Aqua = "0.6"
-ChainRulesCore = "1.15"
 DensityInterface = "0.4"
 Distributions = "0.25"
 Documenter = "0.27"
@@ -25,9 +31,11 @@ DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "DensityInterface", "Distributions", "Documenter", "ForwardDiff", "JuliaFormatter", "Statistics", "Test"]
+test = ["Aqua", "DensityInterface", "Distributions", "Documenter", "ForwardDiff", "JET", "JuliaFormatter", "Statistics", "Test", "Zygote"]
