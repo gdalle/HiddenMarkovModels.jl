@@ -1,6 +1,6 @@
 name = "HiddenMarkovModels"
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
-authors = ["Maxime Mouchet", "Guillaume Dalle"]
+authors = ["Guillaume Dalle", "Maxime Mouchet"]
 version = "0.1.0"
 
 [deps]
