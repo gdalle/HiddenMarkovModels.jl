@@ -14,6 +14,7 @@ using DensityInterface: densityof, logdensityof
 using Distributions: Categorical, fit
 using LinearAlgebra: Diagonal, dot, mul!
 using Random: AbstractRNG, GLOBAL_RNG
+using Requires: @require
 
 include("utils/probvec.jl")
 include("utils/transmat.jl")
@@ -46,5 +47,13 @@ export forward_backward
 export baum_welch!
 export MarkovTransitions
 export VectorEmissions
+
+if !isdefined(Base, :get_extension)
+    function __init__()
+        @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" include(
+            "../ext/HiddenMarkovModelsHMMBaseExt.jl"
+        )
+    end
+end
 
 end

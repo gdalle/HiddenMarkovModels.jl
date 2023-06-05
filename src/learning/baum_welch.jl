@@ -40,12 +40,12 @@ function baum_welch!(hmm::HMM, obs_seqs::Vector; max_iterations=100, rtol=1e-3)
         logL = sum(logL_by_seq)
         logL_evolution[iteration] = logL
 
-        #  Stopping criterion
-        logL_prev = iteration > 1 ? logL_evolution[iteration - 1] : NaN
-        if (logL - logL_prev) / abs(logL_prev) < rtol
-            max_iterations = iteration
-            break
-        end
+        # #  Stopping criterion
+        # logL_prev = iteration > 1 ? logL_evolution[iteration - 1] : NaN
+        # if (logL - logL_prev) / abs(logL_prev) < rtol
+        #     max_iterations = iteration
+        #     break
+        # end
 
         # M step
         update_transitions_stats!(p_count, A_count, fbs)

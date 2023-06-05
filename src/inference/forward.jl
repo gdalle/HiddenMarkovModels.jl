@@ -9,7 +9,7 @@ function forward!(α::Matrix, c::Vector, p, A, B)
     @views c[1] = inv(sum(α[:, 1]))
     @views α[:, 1] .*= c[1]
     @views for t in 1:(T - 1)
-        mul!(α[:, t + 1], A, α[:, t])
+        mul!(α[:, t + 1], A', α[:, t])
         α[:, t + 1] .*= B[:, t + 1]
         c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= c[t + 1]

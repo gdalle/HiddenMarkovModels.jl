@@ -4,7 +4,7 @@ using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
 using JET
 using Test
 
-N = 10
+N = 5
 
 # True model
 
@@ -15,11 +15,12 @@ transitions = MarkovTransitions(p, A);
 emissions = VectorEmissions([Normal(float(i), 1.0) for i in 1:N]);
 
 hmm = HMM(transitions, emissions);
+hmm_base = HMMBase.HMM(hmm);
 
 # Simulation
 
-(; state_seq, obs_seq) = rand(hmm, 1000);
-obs_seqs = [rand(hmm, 20).obs_seq for k in 1:100];
+(; state_seq, obs_seq) = rand(hmm, 100);
+obs_seqs = [rand(hmm, 20).obs_seq for k in 1:10];
 
 # Inference
 
@@ -31,13 +32,13 @@ obs_seqs = [rand(hmm, 20).obs_seq for k in 1:100];
 
 # Learning
 
-p_est = rand_prob_vec(N)
-A_est = rand_trans_mat(N)
+p_est = rand_prob_vec(N);
+A_est = rand_trans_mat(N);
 
-transitions_est = MarkovTransitions(p_est, A_est)
-emissions_est = VectorEmissions([Normal(rand(), 1.0) for i in 1:N])
+transitions_est = MarkovTransitions(p_est, A_est);
+emissions_est = VectorEmissions([Normal(rand(), 1.0) for i in 1:N]);
 
-hmm_est = HMM(transitions_est, emissions_est)
+hmm_est = HMM(transitions_est, emissions_est);
 
 @test_skip @test_opt baum_welch!(hmm_est, obs_seqs; rtol=0)
 @test_call baum_welch!(hmm_est, obs_seqs; rtol=0)

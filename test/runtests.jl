@@ -14,12 +14,16 @@ DocMeta.setdocmeta!(
     end
 
     @testset verbose = true "Code formatting" begin
-        @test format(HiddenMarkovModels; verbose=true, overwrite=false)
+        @test format(HiddenMarkovModels; verbose=false, overwrite=false)
     end
 
     doctest(HiddenMarkovModels)
 
-    @testset verbose = true "Type stability and correctness" begin
-        include("scratchpad.jl")
+    @testset verbose = true "Correctness" begin
+        include("correctness.jl")
+    end
+
+    @testset verbose = true "Efficiency" begin
+        include("efficiency.jl")
     end
 end
