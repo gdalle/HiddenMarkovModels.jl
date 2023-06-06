@@ -23,8 +23,8 @@ A Julia package for HMM modeling, simulation, inference and learning.
   - floating point precision
   - [LogarithmicNumbers.jl](https://github.com/cjdoris/LogarithmicNumbers.jl)
 - Automatic differentiation of parameters
-  - in forward mode
-  - in reverse mode
+  - in forward mode with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
+  - in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl) (WIP)
 
 ## Inspirations
 

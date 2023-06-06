@@ -48,6 +48,7 @@ include("concrete/standard_observation_process.jl")
 export HMMs
 export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
+export logdensityof
 export viterbi
 export forward_backward
 export baum_welch

@@ -17,7 +17,6 @@ hmm = HMM(sp, op)
 # Simulation
 
 (; state_seq, obs_seq) = rand(hmm, 100);
-obs_seqs = [rand(hmm, 20).obs_seq for k in 1:10];
 
 # Inference
 
@@ -37,6 +36,6 @@ sp_init = StandardStateProcess(p_init, A_init)
 op_init = StandardObservationProcess([Normal(rand(), 1.0) for i in 1:N])
 hmm_init = HMM(sp_init, op_init)
 
-@inferred baum_welch(hmm_init, obs_seqs; rtol=NaN);
-@test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, obs_seqs; rtol=NaN)
-@test_call baum_welch(hmm_init, obs_seqs; rtol=NaN)
+@inferred baum_welch(hmm_init, [obs_seq]; rtol=NaN);
+@test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, [obs_seq]; rtol=NaN)
+@test_call baum_welch(hmm_init, [obs_seq]; rtol=NaN)

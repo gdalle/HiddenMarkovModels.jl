@@ -21,7 +21,7 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
         likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
         forward_backward!(fbs[k], p, A, Bs[k])
     end
-    logL = float(loglikelihood(fbs))
+    logL = loglikelihood(fbs)
     logL_evolution = Float64[logL]
 
     for iteration in 1:max_iterations

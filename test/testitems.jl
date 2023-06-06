@@ -16,10 +16,18 @@ end
     include("correctness.jl")
 end
 
-@testitem "Sparse" begin
+@testitem "SparseArrays" begin
     include("sparse.jl")
 end
 
-@testitem "Logarithmic" begin
+@testitem "LogarithmicNumbers" begin
     include("logarithmic.jl")
+end
+
+@testitem "ForwardDiff" begin
+    include("forwarddiff.jl")
+end
+
+@testitem "Zygote" begin
+    include("zygote.jl")
 end

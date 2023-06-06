@@ -1,7 +1,7 @@
 using Distributions: Normal
+using HMMBase: HMMBase
 using HiddenMarkovModels
 using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
-using HMMBase: HMMBase
 using Test: @testset, @test
 
 N = 5
@@ -13,19 +13,26 @@ A = rand_trans_mat(N);
 sp = StandardStateProcess(p, A)
 op = StandardObservationProcess([Normal(float(i), 1.0) for i in 1:N])
 hmm = HMM(sp, op)
-hmm_base = HMMBase.HMM(deepcopy(hmm));
+hmm_base = HMMBase.HMM(copy(hmm));
 
 # Simulation
 
-(; state_seq, obs_seq) = rand(hmm, 100)
+(; state_seq, obs_seq) = rand(hmm, 100);
 
 # Inference
 
 logB = HMMs.loglikelihoods(hmm.obs_process, obs_seq);
 logB_base = HMMBase.loglikelihoods(hmm_base, obs_seq)';
 
-@testset "Likelihoods" begin
+@testset "Observation likelihoods" begin
     @test isapprox(logB, logB_base)
+end
+
+logL = logdensityof(hmm, obs_seq);
+_, logL_base = HMMBase.forward(hmm_base, obs_seq);
+
+@testset "Sequence likelihood" begin
+    @test logL ≈ logL_base
 end
 
 best_state_seq = @inferred viterbi(hmm, obs_seq);

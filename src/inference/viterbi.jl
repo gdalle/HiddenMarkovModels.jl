@@ -23,7 +23,7 @@ end
 """
     viterbi(hmm, obs_seq)
 
-Apply the Viterbi algorithm to compute the most likely sequence of states of an HMM, and return it as a vector of integers.
+Apply the Viterbi algorithm to compute the most likely sequence of states of an HMM.
 """
 function viterbi(hmm::HMM, obs_seq)
     T, N = length(obs_seq), length(hmm)
