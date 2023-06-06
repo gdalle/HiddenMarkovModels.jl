@@ -4,12 +4,12 @@ using HiddenMarkovModels
 using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
 using Zygote: Zygote
 
-N = 10
+N = 5
 
 p = rand_prob_vec(N);
 A = rand_trans_mat(N);
 sp = StandardStateProcess(p, A)
-μ = float.(1:N)
+μ = randn(N)
 op = StandardObservationProcess([Normal(μ[i], 1.0) for i in 1:N])
 hmm = HMM(sp, op)
 

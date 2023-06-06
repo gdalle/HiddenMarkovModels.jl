@@ -4,15 +4,15 @@ using HiddenMarkovModels: rand_prob_vec, rand_trans_mat, sum_to_one!
 using LogarithmicNumbers
 using Test: @inferred, @test, @test_throws
 
-N = 10
-D = 100  # op
+N = 5
+D = 1000  # op
 
 # True model
 
 p = rand_prob_vec(N);
 A = rand_trans_mat(N);
 sp = StandardStateProcess(p, A)
-op = StandardObservationProcess([MyDiagNormal(float(i), 1.0, D) for i in 1:N])
+op = StandardObservationProcess([MyDiagNormal(randn(), 1.0, D) for i in 1:N])
 hmm = HMM(sp, op)
 
 # Simulation
