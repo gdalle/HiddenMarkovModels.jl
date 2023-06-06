@@ -11,14 +11,17 @@ using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
 using DensityInterface: densityof, logdensityof
-using Distributions: Categorical, fit
-using LinearAlgebra: Diagonal, dot, mul!
+using Distributions: Categorical
+using LinearAlgebra: Diagonal, dot, mul!, normalize!
 using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require
+using StatsAPI: StatsAPI, fit
 
 include("utils/probvec.jl")
 include("utils/transmat.jl")
 include("utils/nan.jl")
+include("utils/mynormal.jl")
+include("utils/mydiagnormal.jl")
 
 include("abstract/abstract_transitions.jl")
 include("abstract/abstract_emissions.jl")
@@ -35,7 +38,7 @@ include("inference/viterbi.jl")
 include("learning/sufficient_stats.jl")
 include("learning/baum_welch.jl")
 
-include("concrete/markov_transitions.jl")
+include("concrete/standard_transitions.jl")
 include("concrete/vector_emissions.jl")
 
 export HMMs
@@ -44,8 +47,8 @@ export AbstractEmissions, emission_distribution
 export HiddenMarkovModel, HMM
 export viterbi
 export forward_backward
-export baum_welch!
-export MarkovTransitions
+export baum_welch
+export StandardTransitions
 export VectorEmissions
 
 if !isdefined(Base, :get_extension)

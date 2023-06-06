@@ -1,7 +1,7 @@
 module HiddenMarkovModelsHMMBaseExt
 
 using HiddenMarkovModels: HiddenMarkovModels
-using HiddenMarkovModels: MarkovTransitions, VectorEmissions
+using HiddenMarkovModels: StandardTransitions, VectorEmissions
 using HiddenMarkovModels: initial_distribution, transition_matrix, emission_distributions
 using HMMBase: HMMBase
 
@@ -9,7 +9,7 @@ function HiddenMarkovModels.HMM(hmm_base::HMMBase.HMM)
     p = copy(hmm_base.a)
     A = copy(hmm_base.A)
     distributions = copy.(hmm_base.B)
-    transitions = MarkovTransitions(p, A)
+    transitions = StandardTransitions(p, A)
     emissions = VectorEmissions(distributions)
     return HiddenMarkovModels.HMM(transitions, emissions)
 end

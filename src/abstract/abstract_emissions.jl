@@ -1,24 +1,22 @@
 abstract type AbstractEmissions end
 
-@inline DensityInterface.DensityKind(::AbstractEmissions) = HasDensity()
+## Interface
 
-function nb_states(::AbstractEmissions) end
-function emission_distribution(::AbstractEmissions, ::Integer) end
+function nb_states(::Em) where {Em<:AbstractEmissions}
+    return error("nb_states needs to be implemented for $Em")
+end
+
+function emission_distribution(::Em, ::Integer) where {Em<:AbstractEmissions}
+    return error("emission_distribution needs to be implemented for $Em")
+end
+
+## Fallbacks
 
 function emission_distributions(emissions::AbstractEmissions)
     return [emission_distribution(emissions, i) for i in 1:nb_states(emissions)]
 end
 
-function Base.rand(
-    rng::AbstractRNG, emissions::AbstractEmissions, state_seq::Vector{<:Integer}
-)
-    obs_seq = [rand(rng, emission_distribution(emissions, i)) for i in state_seq]
-    return obs_seq
-end
-
-function Base.rand(emissions::AbstractEmissions, state_seq::Vector{<:Integer})
-    return rand(GLOBAL_RNG, emissions, state_seq)
-end
+## Checks
 
 function check_emissions(emissions::AbstractEmissions)
     N = nb_states(emissions)
@@ -31,4 +29,16 @@ function check_emissions(emissions::AbstractEmissions)
             end
         end
     end
+    return nothing
+end
+
+## Simulation
+
+function Base.rand(rng::AbstractRNG, emissions::AbstractEmissions, state_seq)
+    obs_seq = [rand(rng, emission_distribution(emissions, i)) for i in state_seq]
+    return obs_seq
+end
+
+function Base.rand(emissions::AbstractEmissions, state_seq)
+    return rand(GLOBAL_RNG, emissions, state_seq)
 end

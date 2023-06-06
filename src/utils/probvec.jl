@@ -13,6 +13,8 @@ function check_prob_vec(p::AbstractVector)
     end
 end
 
+sum_to_one!(x) = normalize!(x, 1)
+
 """
     rand_prob_vec(rng, N)
     rand_prob_vec(N)
@@ -21,7 +23,7 @@ Generate a random probability distribution vector of length `N`.
 """
 function rand_prob_vec(rng::AbstractRNG, N)
     p = rand(rng, N)
-    p ./= sum(p)
+    sum_to_one!(p)
     return p
 end
 

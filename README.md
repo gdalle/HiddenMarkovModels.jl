@@ -8,8 +8,27 @@
 
 A Julia package for HMM modeling, simulation, inference and learning.
 
-Inspired by:
+## Main features
 
-- [ControlledHiddenMarkovModels.jl](https://github.com/gdalle/ControlledHiddenMarkovModels.jl)
+- Efficiency
+  - allocation-free versions of core functions
+  - linear algebra subroutines
+- Generic transitions
+  - dense or sparse
+  - with or without prior
+- Generic emissions
+  - [Distributions.jl](https://github.com/JuliaStats/Distributions.jl)
+  - [MeasureTheory.jl](https://github.com/cscherrer/MeasureTheory.jl)
+  - anything that follows [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl)
+- Generic number types
+  - floating point precision
+  - [LogarithmicNumbers.jl](https://github.com/cjdoris/LogarithmicNumbers.jl)
+- Automatic differentiation of parameters
+  - in forward mode
+  - in reverse mode
+
+## Inspirations
+
 - [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl)
 - [HMMGradients.jl](https://github.com/idiap/HMMGradients.jl)
+- [ControlledHiddenMarkovModels.jl](https://github.com/gdalle/ControlledHiddenMarkovModels.jl)

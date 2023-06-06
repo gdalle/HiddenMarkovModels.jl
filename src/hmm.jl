@@ -16,6 +16,12 @@ end
 
 const HMM = HiddenMarkovModel
 
+Base.copy(hmm::HMM) = HiddenMarkovModel(copy(hmm.transitions), copy(hmm.emissions))
+
+function Base.show(io::IO, hmm::HMM{Tr,Em}) where {Tr,Em}
+    return print(io, "HMM{$Tr,$Em} with $(nb_states(hmm)) states")
+end
+
 function check_nb_states(transitions::AbstractTransitions, emissions::AbstractEmissions)
     if nb_states(transitions) != nb_states(emissions)
         throw(

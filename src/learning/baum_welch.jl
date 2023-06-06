@@ -17,22 +17,22 @@ end
 
 Apply the Baum-Welch algorithm on multiple observation sequences, starting from an initial estimate `hmm`.
 """
-function baum_welch!(hmm::HMM, obs_seqs::Vector; max_iterations=100, rtol=1e-3)
+function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
     p = initial_distribution(hmm)
     A = transition_matrix(hmm)
     Bs = [likelihoods(hmm, obs_seq) for obs_seq in obs_seqs]
 
     # Pre-allocate all necessary memory
-    logL_by_seq = fill(NaN, length(obs_seqs))
-    logL_evolution = fill(NaN, max_iterations)
     fbs = [initialize_forward_backward(p, A, B) for B in Bs]
     p_count, A_count = initialize_transitions_stats(fbs)
     γ_concat = initialize_emissions_stats(fbs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
+    logL_by_seq = fill(NaN, length(obs_seqs))
+    logL_evolution = fill(NaN, max_iterations)
 
     for iteration in 1:max_iterations
         # E step by sequence
-        @threads for k in eachindex(obs_seqs, Bs, fbs)
+        for k in eachindex(obs_seqs, Bs, fbs)
             obs_seq, B, fb = obs_seqs[k], Bs[k], fbs[k]
             likelihoods!(B, hmm, obs_seq)
             logL_by_seq[k] = float(forward_backward!(fb, p, A, B))
@@ -40,12 +40,12 @@ function baum_welch!(hmm::HMM, obs_seqs::Vector; max_iterations=100, rtol=1e-3)
         logL = sum(logL_by_seq)
         logL_evolution[iteration] = logL
 
-        # #  Stopping criterion
-        # logL_prev = iteration > 1 ? logL_evolution[iteration - 1] : NaN
-        # if (logL - logL_prev) / abs(logL_prev) < rtol
-        #     max_iterations = iteration
-        #     break
-        # end
+        #  Stopping criterion
+        logL_prev = iteration > 1 ? logL_evolution[iteration - 1] : NaN
+        if (logL - logL_prev) / abs(logL_prev) < rtol
+            max_iterations = iteration
+            break
+        end
 
         # M step
         update_transitions_stats!(p_count, A_count, fbs)
@@ -55,4 +55,10 @@ function baum_welch!(hmm::HMM, obs_seqs::Vector; max_iterations=100, rtol=1e-3)
     end
 
     return logL_evolution[1:max_iterations]
+end
+
+function baum_welch(hmm_init::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
+    hmm = copy(hmm_init)
+    logL_evolution = baum_welch!(hmm, obs_seqs; max_iterations, rtol)
+    return hmm, logL_evolution
 end
