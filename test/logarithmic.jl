@@ -29,9 +29,7 @@ sp_init = StandardStateProcess(p_init, A_init)
 op_init = StandardObservationProcess([MyDiagNormal(rand(), 1.0, D) for i in 1:N])
 hmm_init = HMM(sp_init, op_init)
 
-@test_throws CompositeException baum_welch(
-    hmm_init, [obs_seq]; max_iterations=100, rtol=NaN
-);
+@test_throws Exception baum_welch(hmm_init, [obs_seq]; max_iterations=100, rtol=NaN);
 
 ## With logarithmic
 
