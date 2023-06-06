@@ -16,7 +16,7 @@ hmm = HMM(sp, op)
 
 # Simulation
 
-(; state_seq, obs_seq) = rand(hmm, 100);
+(; state_seq, obs_seq) = rand(hmm, 10);
 
 # Inference
 
