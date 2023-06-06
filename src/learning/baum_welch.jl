@@ -32,7 +32,7 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
 
     for iteration in 1:max_iterations
         # E step by sequence
-        for k in eachindex(obs_seqs, Bs, fbs)
+        @threads for k in eachindex(obs_seqs, Bs, fbs)
             obs_seq, B, fb = obs_seqs[k], Bs[k], fbs[k]
             likelihoods!(B, hmm, obs_seq)
             logL_by_seq[k] = float(forward_backward!(fb, p, A, B))

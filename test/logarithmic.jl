@@ -29,7 +29,7 @@ transitions_init = StandardTransitions(p_init, A_init)
 emissions_init = VectorEmissions([MyDiagNormal(rand(), 1.0, D) for i in 1:N])
 hmm_init = HMM(transitions_init, emissions_init)
 
-@test_throws OverflowError baum_welch(hmm_init, [obs_seq]; max_iterations=100, rtol=NaN);
+@test_throws CompositeException baum_welch(hmm_init, [obs_seq]; max_iterations=100, rtol=NaN);
 
 ## With logarithmic
 
