@@ -1,6 +1,6 @@
 using Distributions: Normal
 using HiddenMarkovModels
-using HiddenMarkovModels: rand_prob_vec, rand_trans_mat, sum_to_one!
+using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
 using JET: @test_opt, @test_call
 using Test: @inferred
 
@@ -10,9 +10,9 @@ N = 10
 
 p = rand_prob_vec(N);
 A = rand_trans_mat(N);
-transitions = StandardTransitions(p, A)
-emissions = VectorEmissions([Normal(float(i), 1.0) for i in 1:N])
-hmm = HMM(transitions, emissions)
+sp = StandardStateProcess(p, A)
+op = StandardObservationProcess([Normal(float(i), 1.0) for i in 1:N])
+hmm = HMM(sp, op)
 
 # Simulation
 
@@ -33,10 +33,10 @@ obs_seqs = [rand(hmm, 20).obs_seq for k in 1:10];
 
 p_init = rand_prob_vec(N);
 A_init = rand_trans_mat(N);
-transitions_init = StandardTransitions(p_init, A_init)
-emissions_init = VectorEmissions([Normal(rand(), 1.0) for i in 1:N])
-hmm_init = HMM(transitions_init, emissions_init)
+sp_init = StandardStateProcess(p_init, A_init)
+op_init = StandardObservationProcess([Normal(rand(), 1.0) for i in 1:N])
+hmm_init = HMM(sp_init, op_init)
 
-@inferred baum_welch(hmm_init, obs_seqs; rtol=0);
-@test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, obs_seqs; rtol=0)
-@test_call baum_welch(hmm_init, obs_seqs; rtol=0)
+@inferred baum_welch(hmm_init, obs_seqs; rtol=NaN);
+@test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, obs_seqs; rtol=NaN)
+@test_call baum_welch(hmm_init, obs_seqs; rtol=NaN)

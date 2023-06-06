@@ -1,17 +1,7 @@
-"""
-    is_square(A)
-
-Check if `A` is a square matrix.
-"""
 function is_square(A::AbstractMatrix)
     return size(A, 1) == size(A, 2)
 end
 
-"""
-    is_trans_mat(A; rtol)
-
-Check if `A` is a transition matrix.
-"""
 function is_trans_mat(A::AbstractMatrix; rtol=1e-2)
     if !is_square(A)
         return false
@@ -41,12 +31,6 @@ function check_coherent_sizes(p::AbstractVector, A::AbstractMatrix)
     end
 end
 
-"""
-    rand_trans_mat(rng, N)
-    rand_trans_mat(N)
-
-Generate a random transition matrix of size `N × N`.
-"""
 function rand_trans_mat(rng::AbstractRNG, N)
     A = rand(rng, N, N)
     foreach(sum_to_one!, eachrow(A))

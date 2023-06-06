@@ -1,54 +1,50 @@
-"""
-    forward_backward!(α, c, β, Bβ, γ, ξ, p, A, B)
+function forward!(α, c, p, A, B)
+    T = size(α, 2)
+    @views α[:, 1] .= p .* B[:, 1]
+    @views c[1] = inv(sum(α[:, 1]))
+    @views α[:, 1] .*= c[1]
+    @views for t in 1:(T - 1)
+        mul!(α[:, t + 1], A', α[:, t])
+        α[:, t + 1] .*= B[:, t + 1]
+        c[t + 1] = inv(sum(α[:, t + 1]))
+        α[:, t + 1] .*= c[t + 1]
+    end
+    check_nan(α)
+    return nothing
+end
 
-Apply the full forward-backward algorithm by mutating `α`, `c`, `β`, `Bβ`, `γ` and `ξ`.
-"""
-function forward_backward!(
-    α::Matrix, c::Vector, β::Matrix, Bβ::Matrix, γ::Matrix, ξ::Array{<:Any,3}, p, A, B
-)
+function backward!(β, Bβ, c, A, B)
+    T = size(β, 2)
+    β[:, T] .= one(eltype(β))
+    @views for t in (T - 1):-1:1
+        Bβ[:, t + 1] .= B[:, t + 1] .* β[:, t + 1]
+        mul!(β[:, t], A, Bβ[:, t + 1])
+        β[:, t] .*= c[t]
+    end
+    check_nan(β)
+    return nothing
+end
+
+function marginals!(γ, ξ, α, β, Bβ, A)
+    T = size(γ, 2)
+    @views for t in 1:T
+        γ[:, t] .= α[:, t] .* β[:, t]
+        γt_sum_inv = inv(sum(γ[:, t]))
+        γ[:, t] .*= γt_sum_inv
+    end
+    check_nan(γ)
+    @views for t in 1:(T - 1)
+        ξ[:, :, t] .= α[:, t] .* A .* Bβ[:, t + 1]'
+        ξt_sum_inv = inv(sum(ξ[:, :, t]))
+        ξ[:, :, t] .*= ξt_sum_inv
+    end
+    check_nan(ξ)
+    return nothing
+end
+
+function forward_backward!(α, c, β, Bβ, γ, ξ, p, A, B)
     forward!(α, c, p, A, B)
     backward!(β, Bβ, c, A, B)
     marginals!(γ, ξ, α, β, Bβ, A)
-    logL = -sum(log, c)
-    return logL
-end
-
-Base.@kwdef struct ForwardBackwardStorage{R}
-    α::Matrix{R}
-    c::Vector{R}
-    β::Matrix{R}
-    Bβ::Matrix{R}
-    γ::Matrix{R}
-    ξ::Array{R,3}
-end
-
-const MultiForwardBackwardStorage{R} = Vector{ForwardBackwardStorage{R}}
-
-nb_states(fb::ForwardBackwardStorage) = size(fb.α, 1)
-duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
-
-function forward_backward!(fb::ForwardBackwardStorage, p, A, B)
-    (; α, c, β, Bβ, γ, ξ) = fb
-    return forward_backward!(α, c, β, Bβ, γ, ξ, p, A, B)
-end
-
-function initialize_forward_backward(p, A, B)
-    N, T = size(B)
-    R = promote_type(eltype(p), eltype(A), eltype(B))
-    α = Matrix{R}(undef, N, T)
-    c = Vector{R}(undef, T)
-    β = Matrix{R}(undef, N, T)
-    Bβ = Matrix{R}(undef, N, T)
-    γ = Matrix{R}(undef, N, T)
-    ξ = Array{R,3}(undef, N, N, T - 1)
-    return ForwardBackwardStorage(α, c, β, Bβ, γ, ξ)
-end
-
-function forward_backward(hmm::HMM, obs_seq::Vector)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    B = likelihoods(hmm, obs_seq)
-    fb = initialize_forward_backward(p, A, B)
-    logL = forward_backward!(fb, p, A, B)
-    return fb, logL
+    return nothing
 end

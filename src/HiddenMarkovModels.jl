@@ -5,6 +5,11 @@ A Julia package for HMM modeling, simulation, inference and learning.
 """
 module HiddenMarkovModels
 
+"""
+    HMMs
+
+Alias for the module `HiddenMarkovModels`.
+"""
 const HMMs = HiddenMarkovModels
 
 using Base.Threads: @threads
@@ -17,39 +22,37 @@ using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require
 using StatsAPI: StatsAPI, fit
 
+include("utils/misc.jl")
 include("utils/probvec.jl")
 include("utils/transmat.jl")
-include("utils/nan.jl")
 include("utils/mynormal.jl")
 include("utils/mydiagnormal.jl")
 
-include("abstract/abstract_transitions.jl")
-include("abstract/abstract_emissions.jl")
+include("abstract/state_process.jl")
+include("abstract/observation_process.jl")
 
 include("hmm.jl")
 
 include("inference/likelihoods.jl")
-include("inference/forward.jl")
-include("inference/backward.jl")
-include("inference/marginals.jl")
 include("inference/forward_backward.jl")
+include("inference/forward_backward_storage.jl")
+include("inference/logdensity.jl")
 include("inference/viterbi.jl")
 
 include("learning/sufficient_stats.jl")
 include("learning/baum_welch.jl")
 
-include("concrete/standard_transitions.jl")
-include("concrete/vector_emissions.jl")
+include("concrete/standard_state_process.jl")
+include("concrete/standard_observation_process.jl")
 
 export HMMs
-export AbstractTransitions, nb_states, initial_distribution, transition_matrix
-export AbstractEmissions, emission_distribution
+export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
 export viterbi
 export forward_backward
 export baum_welch
-export StandardTransitions
-export VectorEmissions
+export StandardStateProcess
+export StandardObservationProcess
 
 if !isdefined(Base, :get_extension)
     function __init__()

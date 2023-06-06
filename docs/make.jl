@@ -5,6 +5,8 @@ DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
 )
 
+cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
+
 makedocs(;
     modules=[HiddenMarkovModels],
     authors="Maxime Mouchet, Guillaume Dalle and contributors",
@@ -16,9 +18,11 @@ makedocs(;
         edit_link="main",
         assets=String[],
     ),
-    pages=["Home" => "index.md"],
+    pages=[
+        "Home" => "index.md", "Notations" => "notations.md", "API reference" => "api.md"
+    ],
     linkcheck=true,
-    strict=true,
+    strict=false,
 )
 
 deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")

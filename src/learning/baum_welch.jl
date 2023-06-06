@@ -1,62 +1,61 @@
-function reestimate!(::Tr, fbs::MultiForwardBackwardStorage) where {Tr<:AbstractTransitions}
-    return error(
-        "`$Tr` needs to implement `reestimate!` for the Baum-Welch algorithm to work."
-    )
+function reestimate!(::SP, p_count, A_count) where {SP<:StateProcess}
+    return error("$SP needs to implement reestimate!(sp, p_count, A_count) for Baum-Welch.")
 end
 
-function reestimate!(
-    ::Em, fbs::MultiForwardBackwardStorage, obs_seqs::Vector{<:Vector}
-) where {Em<:AbstractEmissions}
-    return error(
-        "`$Em` needs to implement `reestimate!` for the Baum-Welch algorithm to work."
-    )
+function reestimate!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
+    return error("$OP needs to implement reestimate!(op, obs_seq, γ) for Baum-Welch.")
 end
 
-"""
-    baum_welch(hmm::HMM, obs_seqs; max_iterations, rtol)
-
-Apply the Baum-Welch algorithm on multiple observation sequences, starting from an initial estimate `hmm`.
-"""
 function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    Bs = [likelihoods(hmm, obs_seq) for obs_seq in obs_seqs]
-
     # Pre-allocate all necessary memory
+    p = initial_distribution(hmm.state_process)
+    A = transition_matrix(hmm.state_process)
+    Bs = [likelihoods(hmm.obs_process, obs_seq) for obs_seq in obs_seqs]
     fbs = [initialize_forward_backward(p, A, B) for B in Bs]
-    p_count, A_count = initialize_transitions_stats(fbs)
-    γ_concat = initialize_emissions_stats(fbs)
+    p_count, A_count = initialize_states_stats(fbs)
+    γ_concat = initialize_observations_stats(fbs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
-    logL_by_seq = fill(NaN, length(obs_seqs))
-    logL_evolution = fill(NaN, max_iterations)
+
+    # First E step by sequence
+    @threads for k in eachindex(obs_seqs, Bs, fbs)
+        likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
+        forward_backward!(fbs[k], p, A, Bs[k])
+    end
+    logL = float(loglikelihood(fbs))
+    logL_evolution = Float64[logL]
 
     for iteration in 1:max_iterations
+        # M step
+        update_states_stats!(p_count, A_count, fbs)
+        update_observations_stats!(γ_concat, fbs)
+        reestimate!(hmm.state_process, p_count, A_count)
+        reestimate!(hmm.obs_process, obs_seqs_concat, γ_concat)
+        initial_distribution!(p, hmm.state_process)
+        transition_matrix!(A, hmm.state_process)
+
         # E step by sequence
         @threads for k in eachindex(obs_seqs, Bs, fbs)
-            obs_seq, B, fb = obs_seqs[k], Bs[k], fbs[k]
-            likelihoods!(B, hmm, obs_seq)
-            logL_by_seq[k] = float(forward_backward!(fb, p, A, B))
+            likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
+            forward_backward!(fbs[k], p, A, Bs[k])
         end
-        logL = sum(logL_by_seq)
-        logL_evolution[iteration] = logL
+        logL = sum(loglikelihood, fbs)
+        push!(logL_evolution, logL)
 
         #  Stopping criterion
-        logL_prev = iteration > 1 ? logL_evolution[iteration - 1] : NaN
+        logL_prev = logL_evolution[end]
         if (logL - logL_prev) / abs(logL_prev) < rtol
-            max_iterations = iteration
             break
         end
-
-        # M step
-        update_transitions_stats!(p_count, A_count, fbs)
-        update_emissions_stats!(γ_concat, fbs)
-        reestimate!(hmm.transitions, p_count, A_count)
-        reestimate!(hmm.emissions, obs_seqs_concat, γ_concat)
     end
 
-    return logL_evolution[1:max_iterations]
+    return logL_evolution
 end
 
+"""
+    baum_welch(hmm_init, obs_seqs; max_iterations, rtol)
+
+Apply the Baum-Welch algorithm to estimate the parameters of an HMM on multiple observation sequences, and return a tuple `(hmm, logL_evolution)`.
+"""
 function baum_welch(hmm_init::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
     hmm = copy(hmm_init)
     logL_evolution = baum_welch!(hmm, obs_seqs; max_iterations, rtol)

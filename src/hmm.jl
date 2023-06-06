@@ -1,45 +1,63 @@
-struct HiddenMarkovModel{Tr<:AbstractTransitions,Em<:AbstractEmissions}
-    transitions::Tr
-    emissions::Em
+"""
+    HiddenMarkovModel{SP<:StateProcess,OP<:ObservationProcess}
+
+Combination of a state and an observation process, amenable to simulation, inference and learning.
+
+# Fields
+
+- `state_process::SP`
+- `obs_process::OP`
+"""
+struct HiddenMarkovModel{SP<:StateProcess,OP<:ObservationProcess}
+    state_process::SP
+    obs_process::OP
 
     function HiddenMarkovModel(
-        transitions::Tr, emissions::Em
-    ) where {Tr<:AbstractTransitions,Em<:AbstractEmissions}
-        check_nb_states(transitions, emissions)
-        check_transitions(transitions)
-        check_emissions(emissions)
-        return new{Tr,Em}(transitions, emissions)
+        state_process::SP, obs_process::OP
+    ) where {SP<:StateProcess,OP<:ObservationProcess}
+        if length(state_process) != length(obs_process)
+            msg = "State process and observation process have different numbers of states"
+            throw(DimensionMismatch(msg))
+        end
+        check(state_process)
+        check(obs_process)
+        return new{SP,OP}(state_process, obs_process)
     end
 end
 
-@inline DensityInterface.DensityKind(::const HMM = HiddenMarkovModel) = HasDensity()
+"""
+    HMM
 
+Alias for the struct `HiddenMarkovModel`.
+"""
 const HMM = HiddenMarkovModel
 
-Base.copy(hmm::HMM) = HiddenMarkovModel(copy(hmm.transitions), copy(hmm.emissions))
+@inline DensityInterface.DensityKind(::HMM) = HasDensity()
 
-function Base.show(io::IO, hmm::HMM{Tr,Em}) where {Tr,Em}
-    return print(io, "HMM{$Tr,$Em} with $(nb_states(hmm)) states")
+function Base.copy(hmm::HMM)
+    return HiddenMarkovModel(copy(hmm.state_process), copy(hmm.obs_process))
 end
 
-function check_nb_states(transitions::AbstractTransitions, emissions::AbstractEmissions)
-    if nb_states(transitions) != nb_states(emissions)
-        throw(
-            DimensionMismatch("Transitions and emissions have different numbers of states")
-        )
-    end
+function Base.show(io::IO, hmm::HMM{SP,OP}) where {SP,OP}
+    return print(io, "HMM{$SP,$OP} with $(length(hmm)) states")
 end
 
-nb_states(hmm::HMM) = nb_states(hmm.transitions)
-initial_distribution(hmm::HMM) = initial_distribution(hmm.transitions)
-transition_matrix(hmm::HMM) = transition_matrix(hmm.transitions)
-emission_distribution(hmm::HMM, i::Integer) = emission_distribution(hmm.emissions, i)
-emission_distributions(hmm::HMM) = emission_distributions(hmm.emissions)
+Base.length(hmm::HMM) = length(hmm.state_process)
 
+"""
+    rand(rng, hmm, T)
+
+Simulate an HMM for `T` time steps with a specified `rng`.
+"""
 function Base.rand(rng::AbstractRNG, hmm::HMM, T::Integer)
-    state_seq = rand(rng, hmm.transitions, T)
-    obs_seq = rand(rng, hmm.emissions, state_seq)
+    state_seq = rand(rng, hmm.state_process, T)
+    obs_seq = rand(rng, hmm.obs_process, state_seq)
     return (state_seq=state_seq, obs_seq=obs_seq)
 end
 
+"""
+    rand(hmm, T)
+
+Simulate an HMM for `T` time steps.
+"""
 Base.rand(hmm::HMM, T::Integer) = rand(GLOBAL_RNG, hmm, T)
