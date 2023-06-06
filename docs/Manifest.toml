@@ -111,7 +111,7 @@ uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "1.1.1"
 
 [[deps.HiddenMarkovModels]]
-deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "Random", "Requires"]
+deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "Random", "Requires", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 version = "0.1.0"
