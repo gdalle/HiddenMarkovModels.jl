@@ -1,4 +1,3 @@
-using BenchmarkTools
 using Documenter
 using HiddenMarkovModels
 using Pkg

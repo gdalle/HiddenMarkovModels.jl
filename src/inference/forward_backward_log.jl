@@ -32,6 +32,7 @@ function forward!(logfb::LogForwardBackwardStorage{R}, logp, logA, logB) where {
         for j in 1:N
             logα[j, t + 1] = logsumexp(_logαA[:, j])
         end
+        logα[:, t + 1] .+= logB[:, t + 1]
     end
     return nothing
 end
