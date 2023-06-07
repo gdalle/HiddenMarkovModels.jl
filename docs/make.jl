@@ -9,6 +9,7 @@ DocMeta.setdocmeta!(
 cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
 
 Pkg.activate(joinpath(@__DIR__, "..", "benchmark"))
+Pkg.instantiate()
 include(joinpath(@__DIR__, "..", "benchmark", "plot_benchmarks.jl"))
 Pkg.activate(@__DIR__)
 
