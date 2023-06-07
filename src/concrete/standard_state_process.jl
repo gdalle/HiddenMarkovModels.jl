@@ -34,10 +34,8 @@ function reestimate!(sp::StandardStateProcess, p_count, A_count)
     sp.p .= p_count
     sum_to_one!(sp.p)
     check_nan(sp.p)
-
     sp.A .= A_count
     foreach(sum_to_one!, eachrow(sp.A))
     check_nan(sp.A)
-
     return nothing
 end

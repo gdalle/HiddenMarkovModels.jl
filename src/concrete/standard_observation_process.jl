@@ -45,3 +45,11 @@ function fit_from_sequence(
 ) where {D<:MultivariateDistribution}
     return fit(D, reduce(hcat, x), w)
 end
+
+function reestimate!(::SP, p_count, A_count) where {SP<:StateProcess}
+    return error("$SP needs to implement reestimate!(sp, p_count, A_count) for Baum-Welch.")
+end
+
+function reestimate!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
+    return error("$OP needs to implement reestimate!(op, obs_seq, γ) for Baum-Welch.")
+end

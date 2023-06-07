@@ -17,19 +17,11 @@ using Test
         include("correctness.jl")
     end
 
-    @testset verbose = true "SparseArrays" begin
+    @testset verbose = true "Sparse" begin
         include("sparse.jl")
-    end
-
-    @testset verbose = true "LogarithmicNumbers" begin
-        include("logarithmic.jl")
     end
 
     @testset verbose = true "ForwardDiff" begin
         include("forwarddiff.jl")
-    end
-
-    @testset verbose = true "Zygote" begin
-        include("zygote.jl")
     end
 end

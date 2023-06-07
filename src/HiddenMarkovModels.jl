@@ -22,11 +22,11 @@ using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require
 using StatsAPI: StatsAPI, fit
 
-include("utils/misc.jl")
 include("utils/probvec.jl")
 include("utils/transmat.jl")
+include("utils/underflow.jl")
+include("utils/scale.jl")
 include("utils/mynormal.jl")
-include("utils/mydiagnormal.jl")
 
 include("abstract/state_process.jl")
 include("abstract/observation_process.jl")
@@ -34,8 +34,9 @@ include("abstract/observation_process.jl")
 include("hmm.jl")
 
 include("inference/likelihoods.jl")
+include("inference/forward_backward_normal.jl")
+include("inference/forward_backward_log.jl")
 include("inference/forward_backward.jl")
-include("inference/forward_backward_storage.jl")
 include("inference/logdensity.jl")
 include("inference/viterbi.jl")
 
@@ -46,6 +47,8 @@ include("concrete/standard_state_process.jl")
 include("concrete/standard_observation_process.jl")
 
 export HMMs
+export rand_prob_vec, rand_trans_mat
+export NormalScale, LogScale
 export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
 export logdensityof

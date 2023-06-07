@@ -31,14 +31,12 @@ end
 
 ## Fallbacks
 
-function initial_distribution!(p, sp::StateProcess)
-    p .= initial_distribution(sp)
-    return nothing
+function log_initial_distribution(sp::StateProcess)
+    return log.(initial_distribution(sp))
 end
 
-function transition_matrix!(A, sp::StateProcess)
-    A .= transition_matrix(sp)
-    return nothing
+function log_transition_matrix(sp::StateProcess)
+    return log.(transition_matrix(sp))
 end
 
 ## Checks

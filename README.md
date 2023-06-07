@@ -14,7 +14,7 @@ A Julia package for HMM modeling, simulation, inference and learning.
 - Efficiency
   - allocation-free versions of core functions
   - linear algebra subroutines
-  - parallelized over multiple sequences
+  - multithreading
 - Generic state process
   - dense or sparse transitions
   - with or without prior
@@ -24,7 +24,8 @@ A Julia package for HMM modeling, simulation, inference and learning.
   - anything that follows [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl)
 - Generic number types
   - floating point precision
-  - [LogarithmicNumbers.jl](https://github.com/cjdoris/LogarithmicNumbers.jl)
+  - uncertainties
+  - dual numbers
 - Automatic differentiation of parameters
   - in forward mode with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
   - in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl) (WIP)
