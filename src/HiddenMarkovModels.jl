@@ -24,9 +24,8 @@ using StatsAPI: StatsAPI, fit
 
 include("utils/probvec.jl")
 include("utils/transmat.jl")
-include("utils/underflow.jl")
+include("utils/logsumexp.jl")
 include("utils/scale.jl")
-include("utils/mynormal.jl")
 
 include("abstract/state_process.jl")
 include("abstract/observation_process.jl")

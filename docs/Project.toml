@@ -1,8 +1,5 @@
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
-LogarithmicNumbers = "aa2f6b4e-9042-5d33-9679-40d3a6b85899"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"

@@ -13,7 +13,6 @@ function forward_light!(αₜ, αₜ₊₁, b, p, A, op::ObservationProcess, obs
         logL -= log(c)
         αₜ₊₁ .*= c
         αₜ .= αₜ₊₁
-        check_nan(αₜ)
     end
     return logL
 end
@@ -31,7 +30,6 @@ function forward_light_log!(
             logαₜ[j] = logsumexp(logαₜA[:, j])
         end
         logαₜ .+= logb
-        check_nan(logαₜ)
     end
     logL = logsumexp(logαₜ)
     return logL

@@ -12,7 +12,6 @@ function viterbi!(q, δₜ, δₜ₋₁, ψ, b, p, A, op::ObservationProcess, ob
             δₜ[j] = δₜ₋₁[i_max] * A[i_max, j] * b[j]
         end
         δₜ₋₁ .= δₜ
-        check_nan(δₜ)
     end
     @views q[T] = argmax(δₜ)
     for t in (T - 1):-1:1
@@ -37,7 +36,6 @@ function viterbi_log!(
             logδₜ[j] = logδₜ₋₁[i_max] + logA[i_max, j] + logb[j]
         end
         logδₜ₋₁ .= logδₜ
-        check_nan(logδₜ)
     end
     @views q[T] = argmax(logδₜ)
     for t in (T - 1):-1:1

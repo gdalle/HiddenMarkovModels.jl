@@ -1,9 +1,7 @@
 using BenchmarkTools
-using Distributions
-using HiddenMarkovModels
-using HMMBase
-using LogarithmicNumbers
 using Documenter
+using HiddenMarkovModels
+using Pkg
 
 DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
@@ -11,9 +9,9 @@ DocMeta.setdocmeta!(
 
 cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
 
-BENCHMARK_PATH = include(joinpath(@__DIR__, "..", "benchmark", "benchmarks.jl"))
-results = run(SUITE; verbose=true)
-BenchmarkTools.save(joinpath(@__DIR__, "src", "benchmarks.json"), results)
+Pkg.activate(joinpath(@__DIR__, "..", "benchmark"))
+include(joinpath(@__DIR__, "..", "benchmark", "plot_benchmarks.jl"))
+Pkg.activate(@__DIR__)
 
 makedocs(;
     modules=[HiddenMarkovModels],

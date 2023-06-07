@@ -51,7 +51,6 @@ function forward!(fb::ForwardBackwardStorage, p, A, B)
         c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= c[t + 1]
     end
-    check_nan(α)
     return nothing
 end
 
@@ -64,7 +63,6 @@ function backward!(fb::ForwardBackwardStorage{R}, A, B) where {R}
         mul!(β[:, t], A, _Bβ[:, t + 1])
         β[:, t] .*= c[t]
     end
-    check_nan(β)
     return nothing
 end
 
@@ -73,14 +71,14 @@ function marginals!(fb::ForwardBackwardStorage, A)
     T = size(γ, 2)
     @views for t in 1:T
         γ[:, t] .= α[:, t] .* β[:, t]
-        γ[:, t] .*= inv(sum(γ[:, t]))
+        normalization = inv(sum(γ[:, t]))
+        γ[:, t] .*= normalization
     end
-    check_nan(γ)
     @views for t in 1:(T - 1)
         ξ[:, :, t] .= α[:, t] .* A .* _Bβ[:, t + 1]'
-        ξ[:, :, t] .*= inv(sum(ξ[:, :, t]))
+        normalization = inv(sum(ξ[:, :, t]))
+        ξ[:, :, t] .*= normalization
     end
-    check_nan(ξ)
     return nothing
 end
 

@@ -32,9 +32,7 @@ function forward!(logfb::LogForwardBackwardStorage{R}, logp, logA, logB) where {
         for j in 1:N
             logα[j, t + 1] = logsumexp(_logαA[:, j])
         end
-        logα[:, t + 1] .+= logB[:, t + 1]
     end
-    check_nan(logα)
     return nothing
 end
 
@@ -48,7 +46,6 @@ function backward!(logfb::LogForwardBackwardStorage{R}, logA, logB) where {R}
             logβ[i, t] = logsumexp(_logABβ[i, :])
         end
     end
-    check_nan(logβ)
     return nothing
 end
 
@@ -57,14 +54,14 @@ function marginals!(logfb::LogForwardBackwardStorage, logA, logB)
     T = size(logγ, 2)
     @views for t in 1:T
         logγ[:, t] .= logα[:, t] .+ logβ[:, t]
-        logγ[:, t] .-= logsumexp(logγ[:, t])
+        normalization = logsumexp(logγ[:, t])
+        logγ[:, t] .-= normalization
     end
-    check_nan(logγ)
     @views for t in 1:(T - 1)
         logξ[:, :, t] .= logα[:, t] .+ logA .+ logB[:, t + 1]' .+ logβ[:, t + 1]'
-        logξ[:, :, t] .-= logsumexp(logξ[:, :, t])
+        normalization = logsumexp(logξ[:, :, t])
+        logξ[:, :, t] .-= normalization
     end
-    check_nan(logξ)
     return nothing
 end
 

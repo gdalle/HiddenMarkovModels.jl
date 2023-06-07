@@ -10,7 +10,9 @@ using Test
     end
 
     @testset verbose = true "Type stability" begin
-        include("type_stability.jl")
+        if VERSION >= v"1.9"
+            include("type_stability.jl")
+        end
     end
 
     @testset verbose = true "Correctness" begin

@@ -1,9 +1,3 @@
-function check_nan(x::AbstractArray)
-    if any(isnan, x)
-        throw(OverflowError("Some values are NaNs"))
-    end
-end
-
 function logsumexp(a)
     T = eltype(a)
     m = first(a)
@@ -20,4 +14,10 @@ function logsumexp(a)
     end
     lse = m + log(se)
     return lse
-end;
+end
+
+function logsumexp_dumb(a)
+    m = maximum(a)
+    se = sum(x -> exp(x - m), a)
+    return m + log(se)
+end

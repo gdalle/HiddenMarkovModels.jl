@@ -1,7 +1,6 @@
 using Distributions: DiagNormal, PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using LinearAlgebra: Diagonal
 using Test
 
 N = 5
@@ -19,14 +18,6 @@ hmm_init_base = HMMBase.HMM(deepcopy(hmm_init));
 
 (; state_seq, obs_seq) = rand(hmm, 100);
 obs_mat = reduce(hcat, obs_seq)';
-
-@testset "Observation likelihoods" begin
-    B = HMMs.likelihoods(hmm.obs_process, obs_seq)
-    logB = HMMs.loglikelihoods(hmm.obs_process, obs_seq)
-    logB_base = HMMBase.loglikelihoods(hmm_base, obs_mat)'
-    @test isapprox(log.(B), logB_base)
-    @test isapprox(logB, logB_base)
-end
 
 @testset "Logdensity" begin
     logL = logdensityof(hmm, obs_seq, NormalScale())

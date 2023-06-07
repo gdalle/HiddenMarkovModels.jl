@@ -1,6 +1,6 @@
 function baum_welch!(hmm::HMM, obs_seqs, scale::Scale; max_iterations, rtol)
     # Pre-allocate nearly all necessary memory
-    Bs = [likelihoods(hmm.obs_process, obs_seq, scale) for obs_seq in obs_seqs]
+    Bs = likelihoods.(Ref(hmm.obs_process), obs_seqs, Ref(scale))
     fbs = [initialize_forward_backward(hmm.state_process, B, scale) for B in Bs]
     p_count, A_count = initialize_states_stats(fbs)
     γ_concat = initialize_observations_stats(fbs)
@@ -19,10 +19,6 @@ function baum_welch!(hmm::HMM, obs_seqs, scale::Scale; max_iterations, rtol)
         if iteration > 1
             for k in eachindex(obs_seqs, Bs, fbs)
                 likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k], scale)
-                if maximum(Bs[k]) == Inf
-                    @show distributions(hmm.obs_process)
-                    error("stop")
-                end
                 forward_backward!(fbs[k], hmm.state_process, Bs[k])
             end
             logL = loglikelihood(fbs)
