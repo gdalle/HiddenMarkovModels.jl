@@ -10,7 +10,7 @@ function Base.rand(rng::AbstractRNG, dist::MyNormal)
 end
 
 function DensityInterface.densityof(dist::MyNormal, x)
-    return inv(sqrt(2π * dist.σ²)) * exp(-(x - dist.μ)^2 * inv(2 * dist.σ²))
+    return exp(-abs2(x - dist.μ) / (2 * dist.σ²)) / sqrt(2π * dist.σ²)
 end
 
 function StatsAPI.fit(MN::Type{<:MyNormal}, xs, ws)

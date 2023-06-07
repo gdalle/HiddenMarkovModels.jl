@@ -3,8 +3,8 @@ using HiddenMarkovModels: MyDiagNormal, rand_prob_vec, rand_trans_mat, sum_to_on
 using LogarithmicNumbers
 using Test: @inferred, @test, @test_throws
 
-N = 10
-D = 100
+N = 4
+D = 500
 
 # True model
 
@@ -37,4 +37,5 @@ hmm_init_log = HMM(sp_init, op_init_log)
 hmm_est_log, logL_evolution = @inferred baum_welch(
     hmm_init_log, [obs_seq]; max_iterations=100, rtol=NaN
 );
+
 @test typeof(hmm_est_log) == typeof(hmm_init_log)

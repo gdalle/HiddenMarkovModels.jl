@@ -1,5 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
-TestEnv = "1e6cf692-eddd-4d53-88a5-2d735e33781b"
+LogarithmicNumbers = "aa2f6b4e-9042-5d33-9679-40d3a6b85899"

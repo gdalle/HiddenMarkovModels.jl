@@ -11,11 +11,12 @@ function Base.rand(rng::AbstractRNG, dist::MyDiagNormal)
     return sqrt.(dist.σ²) .* randn(rng, length(dist)) .+ dist.μ
 end
 
+gaussian_diff((xᵢ, μᵢ, σᵢ²)) = abs2(xᵢ - μᵢ) / σᵢ²
+
 function DensityInterface.densityof(dist::MyDiagNormal, x)
-    return prod(
-        inv(sqrt(2π * σᵢ²)) * exp(-(xᵢ - μᵢ)^2 * inv(2 * σᵢ²)) for
-        (xᵢ, μᵢ, σᵢ²) in zip(x, dist.μ, dist.σ²)
-    )
+    d = -sum(gaussian_diff, zip(x, dist.μ, dist.σ²))
+    s = length(dist) * log(2π) + sum(log, dist.σ²)
+    return exp((d - s) / 2)
 end
 
 function StatsAPI.fit(::Type{MyDiagNormal{T1,T2}}, xs, ws) where {T1,T2}
