@@ -13,8 +13,8 @@ function forward_light!(αₜ, αₜ₊₁, b, p, A, op::ObservationProcess, obs
         logL -= log(c)
         αₜ₊₁ .*= c
         αₜ .= αₜ₊₁
+        check_nan(αₜ)
     end
-    check_nan(αₜ)
     return logL
 end
 

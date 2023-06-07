@@ -16,7 +16,7 @@ using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
 using DensityInterface: densityof, logdensityof
-using Distributions: Categorical
+using Distributions: Categorical, MultivariateDistribution, MatrixDistribution
 using LinearAlgebra: Diagonal, dot, mul!, normalize!
 using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require

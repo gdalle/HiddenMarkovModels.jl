@@ -1,6 +1,10 @@
 # Notations
 
-Our whole package is based on the famous paper by Rabiner (1989), [A tutorial on hidden Markov models and selected applications in speech recognition](https://ieeexplore.ieee.org/document/18626).
+Our whole package is based on the following paper by Rabiner (1989):
+
+> [A tutorial on hidden Markov models and selected applications in speech recognition](https://ieeexplore.ieee.org/document/18626)
+
+Please refer to it for mathematical explanations.
 
 ## State process
 
@@ -24,4 +28,4 @@ Our whole package is based on the famous paper by Rabiner (1989), [A tutorial on
 - `β`: backward variables
 - `γ`: one-state marginals
 - `ξ`: two-state marginals
-- `logL`: posterior loglikelihood of a sequence of observations
+- `logL`: loglikelihood of a sequence of observations

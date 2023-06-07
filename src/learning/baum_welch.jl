@@ -16,8 +16,8 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
     γ_concat = initialize_observations_stats(fbs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
 
-    # First E step by sequence
-    @threads for k in eachindex(obs_seqs, Bs, fbs)
+    # First E step
+    for k in eachindex(obs_seqs, Bs, fbs)
         likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
         forward_backward!(fbs[k], p, A, Bs[k])
     end
@@ -25,6 +25,16 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
     logL_evolution = Float64[logL]
 
     for iteration in 1:max_iterations
+        # E step
+        if iteration > 1
+            for k in eachindex(obs_seqs, Bs, fbs)
+                likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
+                forward_backward!(fbs[k], p, A, Bs[k])
+            end
+            logL = loglikelihood(fbs)
+            push!(logL_evolution, logL)
+        end
+
         # M step
         update_states_stats!(p_count, A_count, fbs)
         update_observations_stats!(γ_concat, fbs)
@@ -33,18 +43,15 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
         initial_distribution!(p, hmm.state_process)
         transition_matrix!(A, hmm.state_process)
 
-        # E step by sequence
-        @threads for k in eachindex(obs_seqs, Bs, fbs)
-            likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k])
-            forward_backward!(fbs[k], p, A, Bs[k])
-        end
-        logL = sum(loglikelihood, fbs)
-        push!(logL_evolution, logL)
-
         #  Stopping criterion
-        logL_prev = logL_evolution[end]
-        if (logL - logL_prev) / abs(logL_prev) < rtol
-            break
+        if iteration > 1
+            progress = (
+                (logL_evolution[end] - logL_evolution[end - 1]) /
+                abs(logL_evolution[end - 1])
+            )
+            if progress < rtol
+                break
+            end
         end
     end
 

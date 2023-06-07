@@ -1,6 +1,6 @@
 using Distributions: Normal
 using HiddenMarkovModels
-using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
+using HiddenMarkovModels: MyNormal, rand_prob_vec, rand_trans_mat
 using JET: @test_opt, @test_call
 using Test: @inferred
 
@@ -8,10 +8,8 @@ N = 5
 
 # True model
 
-p = rand_prob_vec(N);
-A = rand_trans_mat(N);
-sp = StandardStateProcess(p, A)
-op = StandardObservationProcess([Normal(randn(), 1.0) for i in 1:N])
+sp = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
+op = StandardObservationProcess([MyNormal(randn(), 1.0) for i in 1:N])
 hmm = HMM(sp, op)
 
 # Simulation

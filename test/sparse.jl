@@ -1,6 +1,5 @@
-using Distributions: Normal
 using HiddenMarkovModels
-using HiddenMarkovModels: rand_prob_vec, rand_trans_mat, sum_to_one!
+using HiddenMarkovModels: MyNormal, rand_prob_vec, rand_trans_mat, sum_to_one!
 using SparseArrays: sprand, nnz
 using Test: @test
 
@@ -13,7 +12,7 @@ sum_to_one!(p);
 A = sprand(N, N, 0.8);
 foreach(sum_to_one!, eachrow(A))
 sp = StandardStateProcess(p, A)
-op = StandardObservationProcess([Normal(randn(), 1.0) for i in 1:N])
+op = StandardObservationProcess([MyNormal(randn(), 1.0) for i in 1:N])
 hmm = HMM(sp, op)
 
 # Simulation

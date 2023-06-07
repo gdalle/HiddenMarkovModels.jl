@@ -1,18 +1,15 @@
 using HiddenMarkovModels
-using HiddenMarkovModels: MyDiagNormal
-using HiddenMarkovModels: rand_prob_vec, rand_trans_mat, sum_to_one!
+using HiddenMarkovModels: MyDiagNormal, rand_prob_vec, rand_trans_mat, sum_to_one!
 using LogarithmicNumbers
 using Test: @inferred, @test, @test_throws
 
-N = 5
-D = 1000  # op
+N = 10
+D = 100
 
 # True model
 
-p = rand_prob_vec(N);
-A = rand_trans_mat(N);
-sp = StandardStateProcess(p, A)
-op = StandardObservationProcess([MyDiagNormal(randn(), 1.0, D) for i in 1:N])
+sp = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
+op = StandardObservationProcess([MyDiagNormal(randn(D), ones(D)) for i in 1:N])
 hmm = HMM(sp, op)
 
 # Simulation
@@ -23,23 +20,19 @@ hmm = HMM(sp, op)
 
 ## Without logarithmic
 
-p_init = rand_prob_vec(N);
-A_init = rand_trans_mat(N);
-sp_init = StandardStateProcess(p_init, A_init)
-op_init = StandardObservationProcess([MyDiagNormal(rand(), 1.0, D) for i in 1:N])
+sp_init = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
+op_init = StandardObservationProcess([MyDiagNormal(randn(D), ones(D)) for i in 1:N])
 hmm_init = HMM(sp_init, op_init)
 
 @test_throws Exception baum_welch(hmm_init, [obs_seq]; max_iterations=100, rtol=NaN);
 
 ## With logarithmic
 
-p_init_log = rand_prob_vec(N);
-A_init_log = rand_trans_mat(N);
-sp_init_log = StandardStateProcess(p_init, A_init)
+sp_init = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
 op_init_log = StandardObservationProcess([
-    MyDiagNormal(rand(), ULogarithmic(1.0), D) for i in 1:N
+    MyDiagNormal(randn(D), ULogarithmic.(ones(D))) for i in 1:N
 ])
-hmm_init_log = HMM(sp_init_log, op_init_log)
+hmm_init_log = HMM(sp_init, op_init_log)
 
 hmm_est_log, logL_evolution = @inferred baum_welch(
     hmm_init_log, [obs_seq]; max_iterations=100, rtol=NaN

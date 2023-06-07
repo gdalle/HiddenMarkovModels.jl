@@ -1,31 +1,35 @@
 struct MyDiagNormal{T1,T2}
-    μ::T1
-    σ²::T2
-    n::Int
+    μ::Vector{T1}
+    σ²::Vector{T2}
 end
 
 @inline DensityInterface.DensityKind(::MyDiagNormal) = HasDensity()
 
+Base.length(dist::MyDiagNormal) = length(dist.μ)
+
 function Base.rand(rng::AbstractRNG, dist::MyDiagNormal)
-    return sqrt(dist.σ²) .* randn(rng, dist.n) .+ dist.μ
+    return sqrt.(dist.σ²) .* randn(rng, length(dist)) .+ dist.μ
 end
 
 function DensityInterface.densityof(dist::MyDiagNormal, x)
     return prod(
-        inv(sqrt(2π * dist.σ²)) * exp(-(xᵢ - dist.μ)^2 * inv(2 * dist.σ²)) for xᵢ in x
+        inv(sqrt(2π * σᵢ²)) * exp(-(xᵢ - μᵢ)^2 * inv(2 * σᵢ²)) for
+        (xᵢ, μᵢ, σᵢ²) in zip(x, dist.μ, dist.σ²)
     )
 end
 
-function StatsAPI.fit(MDN::Type{<:MyDiagNormal}, xs, ws)
+function StatsAPI.fit(::Type{MyDiagNormal{T1,T2}}, xs, ws) where {T1,T2}
     n = length(first(xs))
-    w_tot = sum(ws) * n
-    μ = sum(w * sum(x) for (x, w) in zip(xs, ws)) / w_tot
-    σ² = zero(μ)
+    μ = zeros(T1, n)
+    σ² = zeros(T2, n)
+    w_tot = sum(ws)
     for (x, w) in zip(xs, ws)
-        for xᵢ in x
-            σ² += w * (xᵢ - μ)^2
-        end
+        μ .+= w .* x
     end
-    σ² /= w_tot
-    return MDN(μ, σ², n)
+    μ ./= w_tot
+    for (x, w) in zip(xs, ws)
+        σ² .+= w .* (x .- μ) .^ 2
+    end
+    σ² ./= w_tot
+    return MyDiagNormal{T1,T2}(μ, σ²)
 end

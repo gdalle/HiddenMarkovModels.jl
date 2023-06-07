@@ -7,15 +7,16 @@
 
 A Julia package for HMM modeling, simulation, inference and learning.
 
-> This is an experimental package, the interface is not yet stable and the documentation is still insufficient. If you find something wrong or missing, open an issue!
+> This is an experimental package, the interface is not yet stable and the documentation is still insufficient. If you find something wrong or missing, please open an issue!
 
 ## Main features
 
 - Efficiency
   - allocation-free versions of core functions
   - linear algebra subroutines
+  - parallelized over multiple sequences
 - Generic state process
-  - dense or sparse
+  - dense or sparse transitions
   - with or without prior
 - Generic observation process
   - [Distributions.jl](https://github.com/JuliaStats/Distributions.jl)

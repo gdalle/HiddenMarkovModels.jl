@@ -12,6 +12,7 @@ function viterbi!(q, δₜ, δₜ₋₁, ψ, b, p, A, op, obs_seq)
             δₜ[j] = δₜ₋₁[i_max] * A[i_max, j] * b[j]
         end
         δₜ₋₁ .= δₜ
+        check_nan(δₜ)
     end
     @views q[T] = argmax(δₜ)
     for t in (T - 1):-1:1
