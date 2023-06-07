@@ -15,7 +15,7 @@ sp = StandardStateProcess(p, A)
 op = StandardObservationProcess([Normal(randn(), 1.0) for i in 1:N])
 hmm = HMM(sp, op)
 
-(; state_seq, obs_seq) = rand(hmm, 100)
+(; state_seq, obs_seq) = rand(hmm, 1000)
 hmm_est, logL_evolution = @inferred baum_welch(hmm, [obs_seq])
 
 @test typeof(hmm_est) == typeof(hmm)
