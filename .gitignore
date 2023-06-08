@@ -8,3 +8,5 @@
 **/.CondaPkg
 *.png
 test/scratchpad.jl
+*.ipynb
+**/__pycache__

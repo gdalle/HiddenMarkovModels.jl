@@ -24,6 +24,7 @@ end
 
 function loglikelihoods(op::ObservationProcess, obs_seq)
     T, N = length(obs_seq), length(op)
-    logB = [logdensityof(distribution(op, i), obs_seq[t]) for i in 1:N, t in 1:T]
+    dists = distribution.(Ref(op), 1:N)
+    logB = [logdensityof(dists[i], obs_seq[t]) for i in 1:N, t in 1:T]
     return logB
 end

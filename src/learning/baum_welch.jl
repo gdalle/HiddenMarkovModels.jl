@@ -1,13 +1,17 @@
 function baum_welch!(hmm::HMM, obs_seqs; max_iterations, rtol)
     # Pre-allocate nearly all necessary memory
-    logBs = loglikelihoods.(Ref(hmm.obs_process), obs_seqs)
+    logB = loglikelihoods(hmm.obs_process, obs_seqs[1])
+    logBs = Vector{typeof(logB)}(undef, length(obs_seqs))
+    for k in eachindex(obs_seqs)
+        logBs[k] = loglikelihoods(hmm.obs_process, obs_seqs[k])
+    end
     fbs = [initialize_forward_backward(hmm.state_process, logB) for logB in logBs]
     p_count, A_count = initialize_states_stats(fbs)
     γ_concat = initialize_observations_stats(fbs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
 
     # First E step
-    @threads for k in eachindex(obs_seqs, logBs, fbs)
+    for k in eachindex(obs_seqs, logBs, fbs)
         loglikelihoods!(logBs[k], hmm.obs_process, obs_seqs[k])
         forward_backward!(fbs[k], hmm.state_process, logBs[k])
     end
@@ -17,7 +21,7 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations, rtol)
     for iteration in 1:max_iterations
         # E step
         if iteration > 1
-            @threads for k in eachindex(obs_seqs, logBs, fbs)
+            for k in eachindex(obs_seqs, logBs, fbs)
                 loglikelihoods!(logBs[k], hmm.obs_process, obs_seqs[k])
                 forward_backward!(fbs[k], hmm.state_process, logBs[k])
             end

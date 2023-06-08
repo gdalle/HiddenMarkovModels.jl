@@ -5,7 +5,7 @@ using Test
 
 function test_correctness(hmm, hmm_init, hmm_base, hmm_init_base; T)
     (; state_seq, obs_seq) = rand(hmm, T)
-    obs_mat = reduce(hcat, obs_seq)'
+    obs_mat = collect(reduce(hcat, obs_seq)')
 
     @testset "Logdensity" begin
         _, logL_base = HMMBase.forward(hmm_base, obs_mat)

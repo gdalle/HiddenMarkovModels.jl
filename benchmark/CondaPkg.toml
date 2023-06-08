@@ -1,4 +1,6 @@
 
 [pip.deps]
-pomegranate = ""
-hmmlearn = ""
+pomegranate = ">=1.0.0"
+ipykernel = ""
+hmmlearn = ">=0.3.0"
+numpy = ">=1.24"

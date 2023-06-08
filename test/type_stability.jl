@@ -1,4 +1,4 @@
-using Distributions: Normal
+using Distributions: DiagNormal, Normal, PDiagMat
 using HiddenMarkovModels
 using JET
 using Test
@@ -32,8 +32,17 @@ function test_type_stability(hmm; T)
 end
 
 N = 5
+D = 3
+
 sp = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
 op = StandardObservationProcess([Normal(randn(), 1.0) for i in 1:N])
 hmm = HMM(sp, op)
 
 test_type_stability(hmm; T=100)
+
+op_multi = StandardObservationProcess([
+    DiagNormal(randn(D), PDiagMat(ones(D))) for n in 1:N
+]);
+hmm_multi = HMM(sp, op_multi)
+
+test_type_stability(hmm_multi; T=100)
