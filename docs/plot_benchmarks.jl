@@ -21,6 +21,7 @@ for algo in keys(results)
         title=algo,
         ylim=(0, 2),
         legend=:topright,
+        margin=5Plots.mm,
     )
     results_implem_hmmbase = results[algo]["HMMBase.jl"]
     for (k, implem) in enumerate(sort(collect(keys(results[algo]))))

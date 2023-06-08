@@ -47,7 +47,7 @@ include("concrete/standard_observation_process.jl")
 
 export HMMs
 export rand_prob_vec, rand_trans_mat
-export NormalScale, LogScale
+export NormalScale, SemiLogScale, LogScale
 export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
 export logdensityof
