@@ -102,7 +102,7 @@ function define_suite(; N_values=2:2:10, D_values=3, T_values=100, max_iteration
         SUITE["Forward-backward"]["hmmlearn"][(N, D, T)] = bench
 
         bench = @benchmarkable pycall(model_learn_new.fit, $obs_mat_py) setup = (
-            model_learn_new = to_hmmlearn(p, A, μ, σ; max_iterations=max_iterations)
+            model_learn_new = to_hmmlearn($p, $A, $μ, $σ; max_iterations=$max_iterations)
         )
         SUITE["Baum-Welch"]["hmmlearn"][(N, D, T)] = bench
     end
