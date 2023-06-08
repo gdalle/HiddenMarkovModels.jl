@@ -4,11 +4,13 @@ using Statistics
 
 cp(
     joinpath(@__DIR__, "..", "benchmark", "results.json"),
-    joinpath(@__DIR__, "assets", "benchmark_results.json");
+    joinpath(@__DIR__, "src", "assets", "benchmark_results.json");
     force=true,
 )
 
-results = BenchmarkTools.load(joinpath(@__DIR__, "assets", "benchmark_results.json"))[1]
+results = BenchmarkTools.load(
+    joinpath(@__DIR__, "src", "assets", "benchmark_results.json")
+)[1]
 
 linestyles = [:solid, :dash, :dashdot, :dot]
 
@@ -39,5 +41,5 @@ for algo in keys(results)
             )
         end
     end
-    savefig(plt, joinpath(@__DIR__, "assets", "benchmark_$algo.png"))
+    savefig(plt, joinpath(@__DIR__, "src", "assets", "benchmark_$algo.png"))
 end
