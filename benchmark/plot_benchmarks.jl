@@ -1,6 +1,10 @@
 using BenchmarkTools
+using GitHubActions: GitHubActionsLogger
+using Logging: global_logger
 using Plots
 using Statistics
+
+get(ENV, "GITHUB_ACTIONS", "false") == "true" && global_logger(GitHubActionsLogger())
 
 include("utils.jl")
 
