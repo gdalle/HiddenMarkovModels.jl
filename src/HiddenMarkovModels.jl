@@ -24,19 +24,14 @@ using StatsAPI: StatsAPI, fit
 
 include("utils/probvec.jl")
 include("utils/transmat.jl")
-include("utils/logsumexp.jl")
-include("utils/scale.jl")
 
 include("abstract/state_process.jl")
 include("abstract/observation_process.jl")
 
 include("hmm.jl")
 
-include("inference/likelihoods.jl")
+include("inference/loglikelihoods.jl")
 include("inference/forward_backward_storage.jl")
-include("inference/forward_backward_normal.jl")
-include("inference/forward_backward_semilog.jl")
-include("inference/forward_backward_log.jl")
 include("inference/forward_backward.jl")
 include("inference/logdensity.jl")
 include("inference/viterbi.jl")
@@ -49,7 +44,6 @@ include("concrete/standard_observation_process.jl")
 
 export HMMs
 export rand_prob_vec, rand_trans_mat
-export NormalScale, SemiLogScale, LogScale
 export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
 export logdensityof

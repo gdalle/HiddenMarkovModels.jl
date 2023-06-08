@@ -5,50 +5,29 @@ using Test
 
 function test_type_stability(hmm; T)
     (; state_seq, obs_seq) = rand(hmm, T)
-    ALL_SCALES = (NormalScale(), SemiLogScale(), LogScale())
 
     @testset "Logdensity" begin
-        for scale in ALL_SCALES
-            @inferred logdensityof(hmm, obs_seq, scale)
-            @test_opt target_modules = (HiddenMarkovModels,) logdensityof(
-                hmm, obs_seq, scale
-            )
-            @test_call target_modules = (HiddenMarkovModels,) logdensityof(
-                hmm, obs_seq, scale
-            )
-        end
+        @inferred logdensityof(hmm, obs_seq)
+        @test_opt target_modules = (HiddenMarkovModels,) logdensityof(hmm, obs_seq)
+        @test_call target_modules = (HiddenMarkovModels,) logdensityof(hmm, obs_seq)
     end
 
     @testset "Viterbi" begin
-        for scale in ALL_SCALES
-            @inferred viterbi(hmm, obs_seq, scale)
-            @test_opt target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seq, scale)
-            @test_call target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seq, scale)
-        end
+        @inferred viterbi(hmm, obs_seq)
+        @test_opt target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seq)
+        @test_call target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seq)
     end
 
     @testset "Forward-backward" begin
-        for scale in ALL_SCALES
-            @inferred forward_backward(hmm, obs_seq, scale)
-            @test_opt target_modules = (HiddenMarkovModels,) forward_backward(
-                hmm, obs_seq, scale
-            )
-            @test_call target_modules = (HiddenMarkovModels,) forward_backward(
-                hmm, obs_seq, scale
-            )
-        end
+        @inferred forward_backward(hmm, obs_seq)
+        @test_opt target_modules = (HiddenMarkovModels,) forward_backward(hmm, obs_seq)
+        @test_call target_modules = (HiddenMarkovModels,) forward_backward(hmm, obs_seq)
     end
 
     @testset "Baum-Welch" begin
-        for scale in ALL_SCALES
-            @inferred baum_welch(hmm, [obs_seq], scale)
-            @test_opt target_modules = (HiddenMarkovModels,) baum_welch(
-                hmm, [obs_seq], scale
-            )
-            @test_call target_modules = (HiddenMarkovModels,) baum_welch(
-                hmm, [obs_seq], scale
-            )
-        end
+        @inferred baum_welch(hmm, [obs_seq])
+        @test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm, [obs_seq])
+        @test_call target_modules = (HiddenMarkovModels,) baum_welch(hmm, [obs_seq])
     end
 end
 

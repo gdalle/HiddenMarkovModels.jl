@@ -13,14 +13,12 @@ hmm = HMM(sp, op)
 
 (; state_seq, obs_seq) = rand(hmm, 100);
 
-function f(μ, scale)
+function f(μ)
     op = StandardObservationProcess([Normal(μ[i], 1.0) for i in 1:N])
     hmm = HMM(sp, op)
-    return logdensityof(hmm, obs_seq, scale)
+    return logdensityof(hmm, obs_seq)
 end
 
-g1 = ForwardDiff.gradient(_μ -> f(_μ, NormalScale()), μ)
-g1_log = ForwardDiff.gradient(_μ -> f(_μ, LogScale()), μ)
-g2 = FiniteDifferences.grad(central_fdm(5, 1), _μ -> f(_μ, LogScale()), μ)[1]
+g1 = ForwardDiff.gradient(f, μ)
+g2 = FiniteDifferences.grad(central_fdm(5, 1), f, μ)[1]
 @test isapprox(g1, g2)
-@test isapprox(g1_log, g2)

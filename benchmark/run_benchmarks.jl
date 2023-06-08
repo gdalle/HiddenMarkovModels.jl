@@ -3,7 +3,7 @@ using Statistics
 
 include(joinpath(@__DIR__, "benchmarks.jl"))
 
-N_values = 2:2:10
+N_values = 2:20
 T = 100
 baum_welch_iterations = 10
 

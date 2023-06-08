@@ -14,17 +14,12 @@ function prepare_models_and_dataset(; N, T)
 end
 
 function define_suite(; N_values, T, baum_welch_iterations)
-    ALL_SCALES = (NormalScale(), SemiLogScale(), LogScale())
-
     SUITE = BenchmarkGroup()
 
     for algo in ["Logdensity", "Viterbi", "Forward-backward", "Baum-Welch"]
         SUITE[algo] = BenchmarkGroup()
         SUITE[algo]["HMMBase.jl"] = BenchmarkGroup()
-        for scale in ALL_SCALES
-            implem = "HMMs.jl ($(typeof(scale)))"
-            SUITE[algo][implem] = BenchmarkGroup()
-        end
+        SUITE[algo]["HiddenMarkovModels.jl"] = BenchmarkGroup()
     end
 
     for N in N_values
@@ -40,19 +35,15 @@ function define_suite(; N_values, T, baum_welch_iterations)
             $hmm_base, $obs_seq; maxiter=baum_welch_iterations, tol=NaN
         )
 
-        for scale in ALL_SCALES
-            implem = "HMMs.jl ($(typeof(scale)))"
-            SUITE["Logdensity"][implem][N] = @benchmarkable logdensityof(
-                $hmm, $obs_seq, $scale
-            )
-            SUITE["Viterbi"][implem][N] = @benchmarkable viterbi($hmm, $obs_seq, $scale)
-            SUITE["Forward-backward"][implem][N] = @benchmarkable forward_backward(
-                $hmm, $obs_seq, $scale
-            )
-            SUITE["Baum-Welch"][implem][N] = @benchmarkable baum_welch(
-                $hmm, $([obs_seq]), $scale; max_iterations=$baum_welch_iterations, rtol=NaN
-            )
-        end
+        implem = "HiddenMarkovModels.jl"
+        SUITE["Logdensity"][implem][N] = @benchmarkable logdensityof($hmm, $obs_seq)
+        SUITE["Viterbi"][implem][N] = @benchmarkable viterbi($hmm, $obs_seq)
+        SUITE["Forward-backward"][implem][N] = @benchmarkable forward_backward(
+            $hmm, $obs_seq
+        )
+        SUITE["Baum-Welch"][implem][N] = @benchmarkable baum_welch(
+            $hmm, $([obs_seq]); max_iterations=$baum_welch_iterations, rtol=NaN
+        )
     end
 
     return SUITE
