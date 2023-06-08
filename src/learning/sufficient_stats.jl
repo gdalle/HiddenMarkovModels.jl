@@ -1,8 +1,5 @@
-const AnyForwardBackwardStorage{R} = Union{
-    ForwardBackwardStorage{R},LogForwardBackwardStorage{R}
-}
 
-function initialize_states_stats(fbs::Vector{<:AnyForwardBackwardStorage{R}}) where {R}
+function initialize_states_stats(fbs::Vector{<:AbstractForwardBackwardStorage{R}}) where {R}
     N = length(first(fbs))
     p_count = Vector{R}(undef, N)
     A_count = Matrix{R}(undef, N, N)
@@ -10,7 +7,7 @@ function initialize_states_stats(fbs::Vector{<:AnyForwardBackwardStorage{R}}) wh
 end
 
 function initialize_observations_stats(
-    fbs::Vector{<:AnyForwardBackwardStorage{R}}
+    fbs::Vector{<:AbstractForwardBackwardStorage{R}}
 ) where {R}
     N = length(first(fbs))
     T_total = sum(duration, fbs)
@@ -19,7 +16,9 @@ function initialize_observations_stats(
 end
 
 function update_states_stats!(
-    p_count, A_count, fbs::Vector{ForwardBackwardStorage{R}}
+    p_count,
+    A_count,
+    fbs::Union{Vector{ForwardBackwardStorage{R}},Vector{SemiLogForwardBackwardStorage{R}}},
 ) where {R}
     p_count .= zero(R)
     for k in eachindex(fbs)
@@ -54,7 +53,8 @@ function update_states_stats!(
 end
 
 function update_observations_stats!(
-    γ_concat, fbs::Vector{ForwardBackwardStorage{R}}
+    γ_concat,
+    fbs::Union{Vector{ForwardBackwardStorage{R}},Vector{SemiLogForwardBackwardStorage{R}}},
 ) where {R}
     T = 1
     for k in eachindex(fbs)

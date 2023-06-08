@@ -38,6 +38,7 @@ for algo in keys(results)
                 times_by_N;
                 linewidth=2,
                 linestyle=linestyles[k],
+                markershape=:circle,
                 label=implem,
             )
         end

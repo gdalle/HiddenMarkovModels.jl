@@ -3,16 +3,37 @@ function forward_light!(αₜ, αₜ₊₁, b, p, A, op::ObservationProcess, obs
     likelihoods_vec!(b, op, obs_seq[1])
     αₜ .= p .* b
     c = inv(sum(αₜ))
-    logL = -log(c)
     αₜ .*= c
+    logL = -log(c)
     for t in 1:(T - 1)
         likelihoods_vec!(b, op, obs_seq[t + 1])
         mul!(αₜ₊₁, A', αₜ)
         αₜ₊₁ .*= b
         c = inv(sum(αₜ₊₁))
-        logL -= log(c)
         αₜ₊₁ .*= c
         αₜ .= αₜ₊₁
+        logL += -log(c)
+    end
+    return logL
+end
+
+function forward_light_semilog!(αₜ, αₜ₊₁, logb, p, A, op::ObservationProcess, obs_seq)
+    T = length(obs_seq)
+    loglikelihoods_vec!(logb, op, obs_seq[1])
+    m = maximum(logb)
+    αₜ .= p .* exp.(logb .- m)
+    c = inv(sum(αₜ))
+    αₜ .*= c
+    logL = -log(c) + m
+    for t in 1:(T - 1)
+        loglikelihoods_vec!(logb, op, obs_seq[t + 1])
+        m = maximum(logb)
+        mul!(αₜ₊₁, A', αₜ)
+        αₜ₊₁ .*= exp.(logb .- m)
+        c = inv(sum(αₜ₊₁))
+        αₜ₊₁ .*= c
+        αₜ .= αₜ₊₁
+        logL += -log(c) + m
     end
     return logL
 end
@@ -54,6 +75,19 @@ function DensityInterface.logdensityof(hmm::HMM, obs_seq, ::NormalScale)
     αₜ = Vector{R}(undef, N)
     αₜ₊₁ = Vector{R}(undef, N)
     logL = forward_light!(αₜ, αₜ₊₁, b, p, A, hmm.obs_process, obs_seq)
+    return logL
+end
+
+function DensityInterface.logdensityof(hmm::HMM, obs_seq, ::SemiLogScale)
+    N = length(hmm)
+    p = initial_distribution(hmm.state_process)
+    A = transition_matrix(hmm.state_process)
+    logb = loglikelihoods_vec(hmm.obs_process, obs_seq[1])
+
+    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    αₜ = Vector{R}(undef, N)
+    αₜ₊₁ = Vector{R}(undef, N)
+    logL = forward_light_semilog!(αₜ, αₜ₊₁, logb, p, A, hmm.obs_process, obs_seq)
     return logL
 end
 

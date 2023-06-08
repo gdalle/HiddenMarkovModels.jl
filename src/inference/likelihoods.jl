@@ -57,10 +57,15 @@ end
 ## Last argument dispatch
 
 likelihoods(op::ObservationProcess, obs_seq, ::NormalScale) = likelihoods(op, obs_seq)
+likelihoods(op::ObservationProcess, obs_seq, ::SemiLogScale) = loglikelihoods(op, obs_seq)
 likelihoods(op::ObservationProcess, obs_seq, ::LogScale) = loglikelihoods(op, obs_seq)
 
 function likelihoods!(B, op::ObservationProcess, obs_seq, ::NormalScale)
     return likelihoods!(B, op, obs_seq)
+end
+
+function likelihoods!(logB, op::ObservationProcess, obs_seq, ::SemiLogScale)
+    return loglikelihoods!(logB, op, obs_seq)
 end
 
 function likelihoods!(logB, op::ObservationProcess, obs_seq, ::LogScale)
