@@ -32,8 +32,12 @@ end
 # HiddenMarkovModels.jl
 
 function create_HMMs(; p, A, μ, σ)
-    N = length(p)
-    dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :])) for n in 1:N]
+    (N, D) = size(μ)
+    if D == 1
+        dists = [Normal(μ[n, 1], σ[n, 1]) for n in 1:N]
+    else
+        dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
+    end
     model = HMM(copy(p), copy(A), dists)
     return model
 end
@@ -54,8 +58,12 @@ end
 # HMMBase.jl
 
 function create_HMMBase(; p, A, μ, σ)
-    N = length(p)
-    dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :])) for n in 1:N]
+    (N, D) = size(μ)
+    if D == 1
+        dists = [Normal(μ[n, 1], σ[n, 1]) for n in 1:N]
+    else
+        dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
+    end
     model = HMMBase.HMM(copy(p), copy(A), dists)
     return model
 end
@@ -109,9 +117,7 @@ end
 
 # Suite
 
-function define_suite(;
-    N_values=2:2:10, D_values=3, T_values=100, max_iterations=10, include_python=false
-)
+function define_suite(; N_values, D_values, T_values, max_iterations, include_python)
     SUITE = BenchmarkGroup()
 
     for algo in ["Logdensity", "Viterbi", "Forward-backward", "Baum-Welch"]
@@ -166,9 +172,8 @@ function run_julia_suite(; N_values, D_values, T_values, max_iterations)
     SUITE = define_suite(;
         N_values, D_values, T_values, max_iterations, include_python=false
     )
-    raw_results = run(SUITE; verbose=true)
-    results = median(raw_results)
-    BenchmarkTools.save(joinpath(@__DIR__, "results", "results_julia.json"), results)
+    raw_results = run(SUITE; verbose=true, seconds=1)
+    BenchmarkTools.save(joinpath(@__DIR__, "results", "results_julia.json"), raw_results)
     return nothing
 end
 
@@ -186,10 +191,10 @@ function run_python_suite(; N_values, D_values, T_values, max_iterations)
         t = pyutils.benchmark_hmmlearn.benchmark(; N, D, T, max_iterations)
         (logdensity_times, viterbi_times, forward_backward_times, baum_welch_times) =
             pyconvert.(Vector, t)
-        results["Logdensity"]["hmmlearn"][(N, D, T)] = median(logdensity_times)
-        results["Viterbi"]["hmmlearn"][(N, D, T)] = median(viterbi_times)
-        results["Forward-backward"]["hmmlearn"][(N, D, T)] = median(forward_backward_times)
-        results["Baum-Welch"]["hmmlearn"][(N, D, T)] = median(baum_welch_times)
+        results["Logdensity"]["hmmlearn"][(N, D, T)] = logdensity_times
+        results["Viterbi"]["hmmlearn"][(N, D, T)] = viterbi_times
+        results["Forward-backward"]["hmmlearn"][(N, D, T)] = forward_backward_times
+        results["Baum-Welch"]["hmmlearn"][(N, D, T)] = baum_welch_times
     end
 
     open(joinpath(@__DIR__, "results", "results_python.json"), "w") do f

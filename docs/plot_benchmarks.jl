@@ -33,37 +33,56 @@ N_values = sort(unique(map(t -> t[1], param_tuples)))
 D_values = sort(unique(map(t -> t[2], param_tuples)))
 T_values = sort(unique(map(t -> t[3], param_tuples)))
 
+aggregator = minimum
+
 for algo in algos
-    for D in D_values, T in T_values
-        plt = plot(;
-            xlabel="Number of states",
-            ylabel="Median CPU time (ns)",
-            title="$algo (D=$D, T=$T)",
-            ylim=(0, Inf),
-            legend=:best,
+    for T in T_values
+        plts = []
+        for D in D_values
+            plt = plot(;
+                xlabel="Number of states",
+                title="Dimension D=$D",
+                ylim=(0, Inf),
+                legend=false,
+                ylabel=D == minimum(D_values) ? "$(string(aggregator)) CPU time (s)" : "",
+                leftmargin=D == minimum(D_values) ? 10Plots.mm : -10Plots.mm,
+            )
+            results_ref = results_julia[algo]["HMMs.jl"]
+            for (k, implem) in enumerate(implems)
+                if implem in julia_implems
+                    results_implem = results_julia[algo][implem]
+                    times = [
+                        aggregator(results_implem[(N, D, T)].times) / 1e9 for N in N_values
+                    ]
+                elseif implem in python_implems
+                    results_implem = results_python[algo][implem]
+                    times = [
+                        aggregator(results_implem[string((N, D, T))]) for N in N_values
+                    ]
+                end
+                bar!(
+                    plt,
+                    N_values .+ (((k - 1) - (K ÷ 2)) / K),
+                    times;
+                    bar_width=1 / K,
+                    label=implem,
+                )
+            end
+            push!(plts, plt)
+        end
+        megaplt = plot(
+            plts...;
+            size=(1000, 500),
+            layout=(1, 3),
+            plot_title="$algo (T=$T)",
+            legend=:topleft,
+            link=:all,
             margin=10Plots.mm,
         )
-        results_ref = results_julia[algo]["HMMs.jl"]
-        for (k, implem) in enumerate(implems)
-            if implem in julia_implems
-                results_implem = results_julia[algo][implem]
-                times = [results_implem[(N, D, T)].time for N in N_values]
-            elseif implem in python_implems
-                results_implem = results_python[algo][implem]
-                times = [results_implem[string((N, D, T))] for N in N_values] * 1e9
-            end
-            bar!(
-                plt,
-                N_values .+ (((k - 1) - (K ÷ 2)) / 2K),
-                times;
-                bar_width=0.5 / K,
-                label=implem,
-            )
-        end
         if get(ENV, "CI", "false") == "false"
-            display(plt)
+            display(megaplt)
         end
-        filename = "benchmark_$(algo)_D=$(D)_T=$(T).png"
-        savefig(plt, joinpath(@__DIR__, "src", "assets", filename))
+        filename = "benchmark_$(algo)_T=$(T).png"
+        savefig(megaplt, joinpath(@__DIR__, "src", "assets", filename))
     end
 end

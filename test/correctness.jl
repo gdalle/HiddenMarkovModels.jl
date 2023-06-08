@@ -67,7 +67,7 @@ test_correctness(hmm_norm, hmm_norm_init; T=100)
 # DiagNormal
 
 dists_diagnorm = [DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N]
-dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N]
+dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
 
 hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
