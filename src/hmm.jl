@@ -26,6 +26,19 @@ struct HiddenMarkovModel{SP<:StateProcess,OP<:ObservationProcess}
 end
 
 """
+    HMM(p, A, dists)
+
+Construct an HMM from a vector of initial probabilities, a matrix of transition probabilities and a vector of observation distributions.
+
+Same constructor as in HMMBase.jl.
+"""
+function HiddenMarkovModel(p::AbstractVector, A::AbstractMatrix, dists::AbstractVector)
+    sp = StandardStateProcess(p, A)
+    op = StandardObservationProcess(dists)
+    return HiddenMarkovModel(sp, op)
+end
+
+"""
     HMM
 
 Alias for the struct `HiddenMarkovModel`.

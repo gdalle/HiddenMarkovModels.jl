@@ -1,11 +1,15 @@
-using Distributions: DiagNormal, PDiagMat
+using Distributions
+using Distributions: PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
 using Test
 
-function test_correctness(hmm, hmm_init, hmm_base, hmm_init_base; T)
+function test_correctness(hmm, hmm_init; T)
     (; state_seq, obs_seq) = rand(hmm, T)
     obs_mat = collect(reduce(hcat, obs_seq)')
+
+    hmm_base = HMMBase.HMM(deepcopy(hmm))
+    hmm_init_base = HMMBase.HMM(deepcopy(hmm_init))
 
     @testset "Logdensity" begin
         _, logL_base = HMMBase.forward(hmm_base, obs_mat)
@@ -27,11 +31,11 @@ function test_correctness(hmm, hmm_init, hmm_base, hmm_init_base; T)
 
     @testset "Baum-Welch" begin
         hmm_est_base, hist_base = HMMBase.fit_mle(
-            hmm_init_base, obs_mat; maxiter=100, tol=NaN
+            hmm_init_base, obs_mat; maxiter=100, tol=-Inf
         )
         logL_evolution_base = hist_base.logtots
         hmm_est, logL_evolution = @inferred baum_welch(
-            hmm_init, [obs_seq]; max_iterations=100, rtol=NaN
+            hmm_init, [obs_seq]; max_iterations=100, rtol=-Inf
         )
         @test isapprox(
             logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)]
@@ -42,16 +46,30 @@ function test_correctness(hmm, hmm_init, hmm_base, hmm_init_base; T)
 end
 
 N = 5
-D = 2
+D = 3
 
-sp = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
-op = StandardObservationProcess([DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N])
-hmm = HMM(sp, op)
-hmm_base = HMMBase.HMM(deepcopy(hmm));
+p = rand_prob_vec(N)
+p_init = rand_prob_vec(N)
 
-sp_init = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
-op_init = StandardObservationProcess([DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N])
-hmm_init = HMM(sp_init, op_init)
-hmm_init_base = HMMBase.HMM(deepcopy(hmm_init));
+A = rand_trans_mat(N)
+A_init = rand_trans_mat(N)
 
-test_correctness(hmm, hmm_init, hmm_base, hmm_init_base; T=100)
+# Normal
+
+dists_norm = [Normal(randn(), 1.0) for i in 1:N]
+dists_norm_init = [Normal(randn(), 1) for i in 1:N]
+
+hmm_norm = HMM(p, A, dists_norm)
+hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
+
+test_correctness(hmm_norm, hmm_norm_init; T=100)
+
+# DiagNormal
+
+dists_diagnorm = [DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N]
+dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N]
+
+hmm_diagnorm = HMM(p, A, dists_diagnorm)
+hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
+
+test_correctness(hmm_diagnorm, hmm_diagnorm_init; T=100)

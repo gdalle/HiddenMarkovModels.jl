@@ -1,10 +1,5 @@
-using BenchmarkTools
-using Statistics
+include("utils.jl")
 
-include(joinpath(@__DIR__, "benchmarks.jl"))
+run_full_suite(; N_values=2:2:10, D_values=3, T_values=500, max_iterations=10)
 
-SUITE = define_suite()
-
-raw_results = run(SUITE; verbose=true)
-
-BenchmarkTools.save(joinpath(@__DIR__, "results.json"), raw_results)
+run_python_suite(; N_values=2:2:10, D_values=3, T_values=500, max_iterations=10)

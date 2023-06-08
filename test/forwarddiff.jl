@@ -1,4 +1,4 @@
-using Distributions: Normal
+using Distributions
 using FiniteDifferences: FiniteDifferences, central_fdm
 using ForwardDiff: ForwardDiff
 using HiddenMarkovModels
@@ -6,16 +6,17 @@ using Test
 
 N = 5
 
-sp = StandardStateProcess(rand_prob_vec(N), rand_trans_mat(N))
-μ = randn(N)
-op = StandardObservationProcess([Normal(μ[i], 1.0) for i in 1:N])
-hmm = HMM(sp, op)
+p = rand_prob_vec(N)
+A = rand_trans_mat(N)
+μ = rand(N)
+dists = [Normal(μ[i], 1.0) for i in 1:N]
+hmm = HMM(p, A, dists)
 
 (; state_seq, obs_seq) = rand(hmm, 100);
 
 function f(μ)
-    op = StandardObservationProcess([Normal(μ[i], 1.0) for i in 1:N])
-    hmm = HMM(sp, op)
+    new_dists = [Normal(μ[i], 1.0) for i in 1:N]
+    hmm = HMM(p, A, new_dists)
     return logdensityof(hmm, obs_seq)
 end
 

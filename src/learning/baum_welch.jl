@@ -58,7 +58,7 @@ end
 Apply the Baum-Welch algorithm to estimate the parameters of an HMM on multiple observation sequences, and return a tuple `(hmm, logL_evolution)`.
 """
 function baum_welch(hmm_init::HMM, obs_seqs; max_iterations=100, rtol=1e-3)
-    hmm = copy(hmm_init)
+    hmm = deepcopy(hmm_init)
     logL_evolution = baum_welch!(hmm, obs_seqs; max_iterations, rtol)
     return hmm, logL_evolution
 end
