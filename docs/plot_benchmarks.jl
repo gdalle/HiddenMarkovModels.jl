@@ -16,11 +16,7 @@ for algo in keys(results)
     plt = plot(;
         xlabel="Number of states",
         ylabel="Normalized median CPU time",
-        title=if algo == "Baum-Welch"
-            "$algo ($baum_welch_iterations iter.), T=$T"
-        else
-            "$algo, T=$T"
-        end,
+        title=algo,
         ylim=(0, 2),
         legend=:topright,
     )
@@ -28,6 +24,7 @@ for algo in keys(results)
     for (k, implem) in enumerate(sort(collect(keys(results[algo]))))
         results_implem = results[algo][implem]
         if !isempty(results_implem)
+            N_values = sort(parse.(Int, collect(keys(results_implem))))
             times_by_N = [
                 results_implem[string(N)].time / results_implem_hmmbase[string(N)].time for
                 N in N_values

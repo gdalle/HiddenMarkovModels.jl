@@ -37,7 +37,9 @@ function baum_welch!(hmm::HMM, obs_seqs, scale::Scale; max_iterations, rtol)
                 (logL_evolution[end] - logL_evolution[end - 1]) /
                 abs(logL_evolution[end - 1])
             )
-            if progress < rtol
+            if progress < eps(progress)
+                error("Loglikelihood decreased in Baum-Welch")
+            elseif progress < rtol
                 break
             end
         end
