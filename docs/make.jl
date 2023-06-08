@@ -8,10 +8,7 @@ DocMeta.setdocmeta!(
 
 cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
 
-if get(ENV, "CI", "false") == "false"
-    # TODO: run benchmarks during CI with
-    include("plot_benchmarks.jl")
-end
+include("plot_benchmarks.jl")
 
 makedocs(;
     modules=[HiddenMarkovModels],

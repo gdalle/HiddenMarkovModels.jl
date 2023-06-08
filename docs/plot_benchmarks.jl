@@ -1,31 +1,18 @@
-using Pkg
-
-Pkg.activate(joinpath(@__DIR__, "..", "benchmark"))
-Pkg.instantiate()
-
 using BenchmarkTools
-
-include(joinpath(@__DIR__, "..", "benchmark", "benchmarks.jl"))
-
-N_values = 2:10
-T = 100
-baum_welch_iterations = 100
-
-SUITE = define_suite(; N_values, T, baum_welch_iterations)
-
-results = run(SUITE; verbose=get(ENV, "CI", "false") == "false")
-
-BenchmarkTools.save(joinpath(@__DIR__, "assets", "benchmark.json"), results)
-
-Pkg.activate(@__DIR__)
-
 using Plots
 using Statistics
+
+cp(
+    joinpath(@__DIR__, "..", "benchmark", "results.json"),
+    joinpath(@__DIR__, "assets", "benchmark_results.json");
+    force=true,
+)
+
+results = BenchmarkTools.load(joinpath(@__DIR__, "assets", "benchmark_results.json"))[1]
 
 linestyles = [:solid, :dash, :dashdot, :dot]
 
 for algo in keys(results)
-    @info "$algo"
     plt = plot(;
         xlabel="Number of states",
         ylabel="Normalized median CPU time",
@@ -39,12 +26,11 @@ for algo in keys(results)
     )
     results_implem_hmmbase = results[algo]["HMMBase.jl"]
     for (k, implem) in enumerate(sort(collect(keys(results[algo]))))
-        @info " $implem"
         results_implem = results[algo][implem]
         if !isempty(results_implem)
             times_by_N = [
-                median(results_implem[N].times) / median(results_implem_hmmbase[N].times)
-                for N in N_values
+                results_implem[string(N)].time / results_implem_hmmbase[string(N)].time for
+                N in N_values
             ]
             plot!(
                 plt,
