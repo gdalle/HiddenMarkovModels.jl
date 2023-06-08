@@ -32,7 +32,7 @@ function to_hmmlearn(p, A, μ, σ; max_iterations)
     return model
 end
 
-function define_suite(; N_values=2:2:20, D_values=3, T_values=100, max_iterations=10)
+function define_suite(; N_values=2:2:10, D_values=3, T_values=100, max_iterations=10)
     SUITE = BenchmarkGroup()
 
     for algo in ["Logdensity", "Viterbi", "Forward-backward", "Baum-Welch"]
