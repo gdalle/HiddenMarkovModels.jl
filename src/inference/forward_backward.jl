@@ -54,6 +54,12 @@ function forward_backward!(fb::ForwardBackwardStorage, sp::StateProcess, logB)
     return nothing
 end
 
+function forward_backward_from_loglikelihoods(sp::StateProcess, logB)
+    fb = initialize_forward_backward(sp, logB)
+    forward_backward!(fb, sp, logB)
+    return fb
+end
+
 """
     forward_backward(hmm, obs_seq)
 
@@ -61,7 +67,5 @@ Apply the forward-backward algorithm to estimate the posterior state marginals o
 """
 function forward_backward(hmm::HMM, obs_seq)
     logB = loglikelihoods(hmm.obs_process, obs_seq)
-    fb = initialize_forward_backward(hmm.state_process, logB)
-    forward_backward!(fb, hmm.state_process, logB)
-    return fb
+    return forward_backward_from_loglikelihoods(hmm.state_process, logB)
 end
