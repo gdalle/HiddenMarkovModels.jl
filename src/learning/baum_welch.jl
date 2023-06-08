@@ -7,7 +7,7 @@ function baum_welch!(hmm::HMM, obs_seqs, scale::Scale; max_iterations, rtol)
     obs_seqs_concat = reduce(vcat, obs_seqs)
 
     # First E step
-    for k in eachindex(obs_seqs, Bs, fbs)
+    @threads for k in eachindex(obs_seqs, Bs, fbs)
         likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k], scale)
         forward_backward!(fbs[k], hmm.state_process, Bs[k])
     end
@@ -17,7 +17,7 @@ function baum_welch!(hmm::HMM, obs_seqs, scale::Scale; max_iterations, rtol)
     for iteration in 1:max_iterations
         # E step
         if iteration > 1
-            for k in eachindex(obs_seqs, Bs, fbs)
+            @threads for k in eachindex(obs_seqs, Bs, fbs)
                 likelihoods!(Bs[k], hmm.obs_process, obs_seqs[k], scale)
                 forward_backward!(fbs[k], hmm.state_process, Bs[k])
             end
