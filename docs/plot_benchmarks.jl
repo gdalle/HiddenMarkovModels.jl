@@ -1,4 +1,5 @@
 using BenchmarkTools
+using JSON
 using Plots
 using Statistics
 
