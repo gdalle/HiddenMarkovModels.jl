@@ -10,7 +10,7 @@ baum_welch_iterations = 100
 
 SUITE = define_suite(; N_values, T, baum_welch_iterations)
 
-results = run(SUITE; verbose=true)
+results = run(SUITE; verbose=get(ENV, "CI", "false") == "false")
 
 # BenchmarkTools.save(joinpath(@__DIR__, "results", "results.json"), results)
 
