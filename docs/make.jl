@@ -6,8 +6,6 @@ DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
 )
 
-cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force=true)
-
 include("plot_benchmarks.jl")
 
 makedocs(;

@@ -14,7 +14,11 @@ function Base.copy(op::StandardObservationProcess)
 end
 
 function Base.show(io::IO, op::StandardObservationProcess{D,V}) where {D,V}
-    return print(io, "StandardObservationProcess{$D,$V} with $(length(op)) states")
+    print(io, "StandardObservationProcess:")
+    for dist in op.distributions
+        print(io, "\n    $dist")
+    end
+    return nothing
 end
 
 Base.length(op::StandardObservationProcess) = length(op.distributions)

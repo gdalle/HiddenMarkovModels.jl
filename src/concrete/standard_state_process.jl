@@ -23,7 +23,7 @@ function Base.copy(sp::StandardStateProcess)
 end
 
 function Base.show(io::IO, sp::StandardStateProcess{V,M}) where {V,M}
-    return print(io, "StandardStateProcess{$V,$M} with $(length(sp)) states")
+    return print(io, "StandardStateProcess:\n    p=$(sp.p)\n    A=$(sp.A)")
 end
 
 Base.length(sp::StandardStateProcess) = length(sp.p)

@@ -5,13 +5,6 @@ A Julia package for HMM modeling, simulation, inference and learning.
 """
 module HiddenMarkovModels
 
-"""
-    HMMs
-
-Alias for the module `HiddenMarkovModels`.
-"""
-const HMMs = HiddenMarkovModels
-
 using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
@@ -42,7 +35,6 @@ include("learning/baum_welch.jl")
 include("concrete/standard_state_process.jl")
 include("concrete/standard_observation_process.jl")
 
-export HMMs
 export rand_prob_vec, rand_trans_mat
 export initial_distribution, transition_matrix
 export HiddenMarkovModel, HMM
