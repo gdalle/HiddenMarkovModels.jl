@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "bf0b603018a4f54215dc8ff096e60bd3b869133b"
+project_hash = "73685be606616f7e7372b176af65e82fbe0bb3cd"
 
 [[deps.ArgCheck]]
 git-tree-sha1 = "a3a402a35a2f7e0b87828ccabbd5ebfbebe356b4"
@@ -287,9 +287,9 @@ version = "2.28.2+0"
 
 [[deps.MicroMamba]]
 deps = ["Pkg", "Scratch", "micromamba_jll"]
-git-tree-sha1 = "6f0e43750a94574c18933e9456b18d4d94a4a671"
+git-tree-sha1 = "a6a4771aba1dc8942bc0f44ff9f8ee0f893ef888"
 uuid = "0b3b1443-0f03-428d-bdfb-f27f9c1191ea"
-version = "0.1.13"
+version = "0.1.12"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -573,9 +573,9 @@ version = "5.8.0+0"
 
 [[deps.micromamba_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "087555b0405ed6adf526cef22b6931606b5af8ac"
+git-tree-sha1 = "fc7a2e6bb2a48e08ec739fd1ea855203a3f568dc"
 uuid = "f8abcde7-e9b7-5caa-b8af-a437887ae8e4"
-version = "1.4.1+0"
+version = "1.4.3+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
