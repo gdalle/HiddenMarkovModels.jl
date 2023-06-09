@@ -62,7 +62,13 @@ for algo in algos
                     ]
                 end
                 plot!(
-                    plt, N_values, times; label=implem, markershape=:auto, linestyle=:auto
+                    plt,
+                    N_values,
+                    times;
+                    label=implem,
+                    markershape=:auto,
+                    linestyle=:auto,
+                    linewidth=2,
                 )
             end
             push!(plts, plt)

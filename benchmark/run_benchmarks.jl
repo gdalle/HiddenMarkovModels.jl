@@ -27,7 +27,7 @@ PYTHON_RESULTS_PATH = joinpath(@__DIR__, "results", "results_python.json")
     N_values=2:2:10,
     D_values=(1, 5),
     T_values=200,
-    I=10,
+    I=5,
     julia_path=JULIA_RESULTS_PATH,
     python_path=PYTHON_RESULTS_PATH,
 )
