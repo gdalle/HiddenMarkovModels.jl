@@ -47,7 +47,6 @@ for algo in algos
                 ylim=(0, Inf),
                 legend=false,
                 ylabel=D == minimum(D_values) ? "$(string(aggregator)) CPU time (s)" : "",
-                leftmargin=D == minimum(D_values) ? 10Plots.mm : -10Plots.mm,
             )
             results_ref = results_julia[algo]["HMMs.jl"]
             for (k, implem) in enumerate(implems)
@@ -80,7 +79,7 @@ for algo in algos
             plot_title="$algo (T=$T)",
             legend=:topleft,
             link=:all,
-            margin=10Plots.mm,
+            margin=15Plots.mm,
         )
         if get(ENV, "CI", "false") == "false"
             display(megaplt)
