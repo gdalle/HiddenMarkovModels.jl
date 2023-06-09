@@ -24,7 +24,9 @@ algos = ["Logdensity", "Viterbi", "Forward-backward", "Baum-Welch"]
 julia_implems = ["HMMs.jl", "HMMBase.jl"]
 python_implems = ["hmmlearn"]
 implems = vcat(julia_implems, python_implems)
+
 linestyles = [:solid, :dash, :dashdot, :dot]
+markershapes = [:circle, :square, :diamond]
 
 K = length(implems)
 
@@ -60,12 +62,13 @@ for algo in algos
                         aggregator(results_implem[string((N, D, T))]) for N in N_values
                     ]
                 end
-                bar!(
+                plot!(
                     plt,
-                    N_values .+ (((k - 1) - (K ÷ 2)) / K),
+                    N_values,
                     times;
-                    bar_width=1 / K,
                     label=implem,
+                    markershape=markershapes[k],
+                    linestyle=linestyles[k],
                 )
             end
             push!(plts, plt)
