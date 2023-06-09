@@ -49,7 +49,9 @@ dists_norm_init = [Normal(randn(), 1) for i in 1:N]
 hmm_norm = HMM(p, A, dists_norm)
 hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
 
-test_type_stability(hmm_norm, hmm_norm_init; T=100)
+@testset verbose = true "Normal" begin
+    test_type_stability(hmm_norm, hmm_norm_init; T=100)
+end
 
 # DiagNormal
 
@@ -59,4 +61,6 @@ dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N
 hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
-test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T=100)
+@testset verbose = true "DiagNormal" begin
+    test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T=100)
+end
