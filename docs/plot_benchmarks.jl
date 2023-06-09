@@ -17,16 +17,14 @@ cp(
 
 results_julia = BenchmarkTools.load(
     joinpath(@__DIR__, "src", "assets", "results_julia.json")
-)[1]
-results_python = JSON.parsefile(joinpath(@__DIR__, "src", "assets", "results_python.json"))
+)[1];
+results_python = JSON.parsefile(joinpath(@__DIR__, "src", "assets", "results_python.json"));
 
-algos = ["Logdensity", "Viterbi", "Forward-backward", "Baum-Welch"]
-julia_implems = ["HMMs.jl", "HMMBase.jl"]
-python_implems = ["hmmlearn"]
-implems = vcat(julia_implems, python_implems)
-
-linestyles = [:solid, :dash, :dashdot, :dot]
-markershapes = [:circle, :square, :diamond]
+algos = identity.(collect(keys(results_julia)))
+julia_implems = identity.(collect(keys(results_julia[algos[1]])))
+python_implems = identity.(collect(keys(results_python[algos[1]])))
+implems = sort(vcat(julia_implems, python_implems))
+implems = [implem for implem in implems if !startswith(implem, "pomegranate")]
 
 K = length(implems)
 
@@ -34,6 +32,7 @@ param_tuples = identity.(collect(keys(results_julia[algos[1]][implems[1]])))
 N_values = sort(unique(map(t -> t[1], param_tuples)))
 D_values = sort(unique(map(t -> t[2], param_tuples)))
 T_values = sort(unique(map(t -> t[3], param_tuples)))
+I = only(unique(map(t -> t[4], param_tuples)))
 
 aggregator = minimum
 
@@ -53,21 +52,17 @@ for algo in algos
                 if implem in julia_implems
                     results_implem = results_julia[algo][implem]
                     times = [
-                        aggregator(results_implem[(N, D, T)].times) / 1e9 for N in N_values
+                        aggregator(results_implem[(N, D, T, I)].times) / 1e9 for
+                        N in N_values
                     ]
                 elseif implem in python_implems
                     results_implem = results_python[algo][implem]
                     times = [
-                        aggregator(results_implem[string((N, D, T))]) for N in N_values
+                        aggregator(results_implem[string((N, D, T, I))]) for N in N_values
                     ]
                 end
                 plot!(
-                    plt,
-                    N_values,
-                    times;
-                    label=implem,
-                    markershape=markershapes[k],
-                    linestyle=linestyles[k],
+                    plt, N_values, times; label=implem, markershape=:auto, linestyle=:auto
                 )
             end
             push!(plts, plt)
@@ -75,8 +70,8 @@ for algo in algos
         megaplt = plot(
             plts...;
             size=(1000, 500),
-            layout=(1, 3),
-            plot_title="$algo (T=$T)",
+            layout=(1, length(plts)),
+            plot_title=algo == "Baum-Welch" ? "$algo (T=$T, iter=$I)" : "$algo (T=$T)",
             legend=:topleft,
             link=:all,
             margin=15Plots.mm,
@@ -84,7 +79,7 @@ for algo in algos
         if get(ENV, "CI", "false") == "false"
             display(megaplt)
         end
-        filename = "benchmark_$(algo)_T=$(T).png"
+        filename = "benchmark_$(algo)_T=$(T).svg"
         savefig(megaplt, joinpath(@__DIR__, "src", "assets", filename))
     end
 end

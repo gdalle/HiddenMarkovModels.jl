@@ -8,7 +8,7 @@ function check_prob_vec(p::AbstractVector)
     end
 end
 
-sum_to_one!(x) = normalize!(x, 1)
+sum_to_one!(x) = x ./= sum(x)
 
 function rand_prob_vec(rng::AbstractRNG, N)
     p = rand(rng, N)

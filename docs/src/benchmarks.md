@@ -1,18 +1,30 @@
 # Benchmarks
 
 These benchmarks were generated with the following setup:
+
 ```@repl
 using InteractiveUtils
 versioninfo()
 ```
 
-The test case was a HMM with multi-dimensional Gaussian observations, initialized randomly.
-Since HiddenMarkovModels.jl and [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl) give the exact same results, the only thing to compare is their speed of execution. We also compare them against the Python library [hmmlearn](https://github.com/hmmlearn/hmmlearn).
+The test case is an HMM with multi-dimensional Gaussian observations, initialized randomly.
+We compare the following packages:
 
-![Logdensity benchmark](./assets/benchmark_Logdensity_T=200.png)
+- HiddenMarkovModels.jl (abbreviated to HMMs.jl)
+- [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl)
+- [hmmlearn](https://github.com/hmmlearn/hmmlearn)
+- [pomegranate](https://github.com/jmschrei/pomegranate)
 
-![Viterbi benchmark](./assets/benchmark_Viterbi_T=200.png)
+For now, pomegranate is not included on the plots because it looks much slower.
+I have reached out to the lead dev to make sure my benchmark is fair.
 
-![Forward-backward benchmark](./assets/benchmark_Forward-backward_T=200.png)
+![Logdensity benchmark](./assets/benchmark_Logdensity_T=200.svg)
 
-![Baum-Welch benchmark](./assets/benchmark_Baum-Welch_T=200.png)
+![Viterbi benchmark](./assets/benchmark_Viterbi_T=200.svg)
+
+![Forward-backward benchmark](./assets/benchmark_Forward-backward_T=200.svg)
+
+![Baum-Welch benchmark](./assets/benchmark_Baum-Welch_T=200.svg)
+
+The full benchmark logs are available in JSON format: [results from Julia](./assets/results_julia.json) and [results from Python](./assets/results_python.json).
+Take a look at the code in `benchmark/utils` to see how they were generated.

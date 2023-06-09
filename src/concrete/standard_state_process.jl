@@ -35,5 +35,6 @@ function reestimate!(sp::StandardStateProcess, p_count, A_count)
     sum_to_one!(sp.p)
     sp.A .= A_count
     foreach(sum_to_one!, eachrow(sp.A))
+    check(sp)
     return nothing
 end
