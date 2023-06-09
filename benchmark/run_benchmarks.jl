@@ -1,4 +1,7 @@
+using Random
 using Revise
+
+Random.seed!(63)
 
 includet("utils/julia_suite.jl")
 includet("utils/python_suite.jl")

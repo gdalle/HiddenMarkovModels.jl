@@ -79,7 +79,7 @@ for algo in algos
             layout=(1, length(plts)),
             plot_title=algo == "Baum-Welch" ? "$algo (T=$T, iter=$I)" : "$algo (T=$T)",
             legend=:topleft,
-            link=:all,
+            link=:x,
             margin=15Plots.mm,
         )
         if get(ENV, "CI", "false") == "false"
