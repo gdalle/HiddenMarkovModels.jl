@@ -6,7 +6,6 @@
 /docs/src/index.md
 *.json
 **/.CondaPkg
-*.png
 **/scratchpad.jl
 *.ipynb
 **/__pycache__
