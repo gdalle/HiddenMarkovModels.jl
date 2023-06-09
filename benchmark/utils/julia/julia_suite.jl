@@ -24,11 +24,11 @@ function define_julia_suite(; implems, N_values, D_values, T_values, I_values)
 end
 
 function run_julia_suite(;
-    implems, N_values, D_values, T_values, I_values, path=nothing, kwargs...
+    implems, N_values, D_values, T_values, I_values, samples, path=nothing
 )
     @info "Julia benchmarks"
     SUITE = define_julia_suite(; implems, N_values, D_values, T_values, I_values)
-    raw_results = BenchmarkTools.run(SUITE; verbose=true, kwargs...)
+    raw_results = BenchmarkTools.run(SUITE; verbose=true, samples=samples)
     if !isnothing(path)
         BenchmarkTools.save(path, raw_results)
     end

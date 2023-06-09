@@ -29,50 +29,42 @@ def create_model(N, D, T, I):
     return model
 
 
-def benchmark(N, D, T, I, number, repeat):
+def benchmark(N, D, T, I, repeat):
     setup = (
         "model = create_model(N, D, T, I); " + "obs_mat_py = np.random.randn(T, D); "
     )
-    logdensity = np.array(
-        timeit.repeat(
-            stmt="model.score(obs_mat_py)",
-            setup=setup,
-            number=number,
-            repeat=repeat,
-            globals={**locals(), **globals()},
-        )
+    logdensity = timeit.repeat(
+        stmt="model.score(obs_mat_py)",
+        setup=setup,
+        number=1,
+        repeat=repeat,
+        globals={**locals(), **globals()},
     )
-    viterbi = np.array(
-        timeit.repeat(
-            stmt="model.predict(obs_mat_py)",
-            setup=setup,
-            number=number,
-            repeat=repeat,
-            globals={**locals(), **globals()},
-        )
+    viterbi = timeit.repeat(
+        stmt="model.predict(obs_mat_py)",
+        setup=setup,
+        number=1,
+        repeat=repeat,
+        globals={**locals(), **globals()},
     )
-    forward_backward = np.array(
-        timeit.repeat(
-            stmt="model.predict_proba(obs_mat_py)",
-            setup=setup,
-            number=number,
-            repeat=repeat,
-            globals={**locals(), **globals()},
-        )
+    forward_backward = timeit.repeat(
+        stmt="model.predict_proba(obs_mat_py)",
+        setup=setup,
+        number=1,
+        repeat=repeat,
+        globals={**locals(), **globals()},
     )
-    baum_welch = np.array(
-        timeit.repeat(
-            stmt="model.fit(obs_mat_py)",
-            setup=setup,
-            number=number,
-            repeat=repeat,
-            globals={**locals(), **globals()},
-        )
+    baum_welch = timeit.repeat(
+        stmt="model.fit(obs_mat_py)",
+        setup=setup,
+        number=1,
+        repeat=repeat,
+        globals={**locals(), **globals()},
     )
     results = (
-        logdensity / number,
-        viterbi / number,
-        forward_backward / number,
-        baum_welch / number,
+        logdensity,
+        viterbi,
+        forward_backward,
+        baum_welch,
     )
     return results
