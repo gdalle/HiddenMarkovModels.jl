@@ -20,6 +20,10 @@ end
     include("sparse.jl")
 end
 
+@testitem "Static" begin
+    include("static.jl")
+end
+
 @testitem "ForwardDiff" begin
     include("forwarddiff.jl")
 end

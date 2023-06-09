@@ -23,6 +23,10 @@ using Test
         include("sparse.jl")
     end
 
+    @testset verbose = true "Static" begin
+        include("static.jl")
+    end
+
     @testset verbose = true "ForwardDiff" begin
         include("forwarddiff.jl")
     end
