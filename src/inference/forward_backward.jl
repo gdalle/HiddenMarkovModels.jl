@@ -14,6 +14,7 @@ function forward!(fb::ForwardBackwardStorage, p, A, logB)
         _c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= _c[t + 1]
     end
+    check_nan(α)
     return nothing
 end
 
@@ -26,6 +27,7 @@ function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
         mul!(β[:, t], A, _Bβ[:, t + 1])
         β[:, t] .*= _c[t]
     end
+    check_nan(β)
     return nothing
 end
 
@@ -37,11 +39,13 @@ function marginals!(fb::ForwardBackwardStorage, A)
         normalization = inv(sum(γ[:, t]))
         γ[:, t] .*= normalization
     end
+    check_nan(γ)
     @views for t in 1:(T - 1)
         ξ[:, :, t] .= α[:, t] .* A .* _Bβ[:, t + 1]'
         normalization = inv(sum(ξ[:, :, t]))
         ξ[:, :, t] .*= normalization
     end
+    check_nan(ξ)
     return nothing
 end
 
@@ -76,6 +80,9 @@ end
 Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for multiple observation sequences.
 """
 function forward_backward(hmm::HMM, obs_seqs, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    end
     fb1 = forward_backward(hmm, first(obs_seqs))
     fbs = Vector{typeof(fb1)}(undef, nb_seqs)
     fbs[1] = fb1

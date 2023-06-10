@@ -2,6 +2,7 @@ using BenchmarkTools
 using CondaPkg
 using CSV
 using DataFrames
+using InteractiveUtils
 using LinearAlgebra
 using Pkg
 using Revise
@@ -47,20 +48,47 @@ function define_suite(; implems, N_vals, D_vals, T_vals, K_vals)
     return SUITE
 end
 
+julia_implems(implems) = filter(i -> contains(i, ".jl"), implems)
+python_implems(implems) = filter(i -> !contains(i, ".jl"), implems)
+
 function run_suite(; implems, N_vals, D_vals, T_vals, K_vals, path=nothing, kwargs...)
-    SUITE = define_suite(; implems, N_vals, D_vals, T_vals, K_vals)
-    raw_results = BenchmarkTools.run(SUITE; verbose=true, kwargs...)
-    results = minimum(raw_results)  # min aggregation
+    julia_suite = define_suite(;
+        implems=julia_implems(implems), N_vals, D_vals, T_vals, K_vals
+    )
+    python_suite = define_suite(;
+        implems=python_implems(implems), N_vals, D_vals, T_vals, K_vals
+    )
+
+    default_openblas_threads = BLAS.get_num_threads()
+
+    @info "Running Python benchmarks with OPENBLAS_NUM_THREADS=$default_openblas_threads"
+    raw_python_results = BenchmarkTools.run(python_suite; verbose=true, evals=1, kwargs...)
+
+    @info "Running Julia benchmarks with OPENBLAS_NUM_THREADS=1"
+    BLAS.set_num_threads(1)
+    raw_julia_results = nothing
+    try
+        raw_julia_results = BenchmarkTools.run(
+            julia_suite; verbose=true, evals=1, kwargs...
+        )
+    finally
+        BLAS.set_num_threads(default_openblas_threads)
+    end
+
+    julia_results = minimum(raw_julia_results)
+    python_results = minimum(raw_python_results)
 
     data = DataFrame()
-    for implem in identity.(keys(results))
-        for algo in identity.(keys(results[implem]))
-            for (N, D, T, K) in identity.(keys(results[implem][algo]))
-                I = BAUM_WELCH_ITER
-                perf = results[implem][algo][(N, D, T, K)]
-                (; time, gctime, memory, allocs) = perf
-                row = (; implem, algo, N, D, T, K, I, time, gctime, memory, allocs)
-                push!(data, row)
+    for results in (julia_results, python_results)
+        for implem in identity.(keys(results))
+            for algo in identity.(keys(results[implem]))
+                for (N, D, T, K) in identity.(keys(results[implem][algo]))
+                    I = BAUM_WELCH_ITER
+                    perf = results[implem][algo][(N, D, T, K)]
+                    (; time, gctime, memory, allocs) = perf
+                    row = (; implem, algo, N, D, T, K, I, time, gctime, memory, allocs)
+                    push!(data, row)
+                end
             end
         end
     end

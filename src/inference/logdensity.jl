@@ -43,6 +43,9 @@ end
 Apply the forward algorithm to compute the total loglikelihood of multiple observation sequences for an HMM
 """
 function DensityInterface.logdensityof(hmm::HMM, obs_seqs, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    end
     logL1 = logdensityof(hmm, first(obs_seqs))
     logLs = Vector{typeof(logL1)}(undef, nb_seqs)
     @threads for k in 2:nb_seqs

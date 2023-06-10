@@ -52,7 +52,8 @@ function Base.copy(hmm::HMM)
 end
 
 function Base.show(io::IO, hmm::HMM{SP,OP}) where {SP,OP}
-    return print(io, "HiddenMarkovModel:\n  $(hmm.state_process)\n  $(hmm.obs_process)")
+    print(io, "HiddenMarkovModel{$SP,$OP}")
+    return nothing
 end
 
 Base.length(hmm::HMM) = length(hmm.state_process)

@@ -14,10 +14,7 @@ function Base.copy(op::StandardObservationProcess)
 end
 
 function Base.show(io::IO, op::StandardObservationProcess{D,V}) where {D,V}
-    print(io, "StandardObservationProcess:")
-    for dist in op.distributions
-        print(io, "\n    $dist")
-    end
+    print(io, "StandardObservationProcess{$D,$V}")
     return nothing
 end
 
@@ -28,32 +25,48 @@ distributions(op::StandardObservationProcess) = op.distributions
 
 function reestimate!(op::StandardObservationProcess{D}, obs_seq, γ) where {D}
     for i in 1:length(op)
-        @views op.distributions[i] = fit_from_sequence(D, obs_seq, γ[i, :])
+        fit_element_from_sequence!(op.distributions, i, obs_seq, γ[i, :])
     end
 end
 
 """
-    fit_from_sequence(::Type{D}, x, w)
+    fit_element_from_sequence!(dists, i, x, w)
 
-Fit a distribution of type `D` based on a single sequence of observations `x` associated with a single sequence of weights `w`.
+Modify the `i`-th element of `dists` by fitting it to an observation sequence `x` with associated weight sequence `w`.
 
-Default to `StatsAPI.fit`, with a special case for Distributions.jl and vectors of vectors (because this implementation of `fit` accepts matrices instead).
-Users are free to override this default for concrete distributions.
+The default behavior is a fallback on `StatsAPI.fit!(dists[i], x, w)`, which users are encouraged to implement if their observation distributions are mutable.
+If not, they should implement `HMMs.fit_element!` instead, as is already done for Distributions.jl in the source code.
 """
-function fit_from_sequence(::Type{D}, x::AbstractVector, w::AbstractVector) where {D}
-    return fit(D, x, w)
+function fit_element_from_sequence!(dists, i::Integer, x, w)
+    fit!(dists[i], x, w)
+    return nothing
 end
 
-function fit_from_sequence(
-    ::Type{D}, x::AbstractVector{<:AbstractVector}, w::AbstractVector
+function fit_element_from_sequence!(
+    dists::AbstractVector{D}, i::Integer, x::AbstractVector, w::AbstractVector
+) where {D<:UnivariateDistribution}
+    dists[i] = fit(D, x, w)
+    return nothing
+end
+
+function fit_element_from_sequence!(
+    dists::AbstractVector{D},
+    i::Integer,
+    x::AbstractVector{<:AbstractVector},
+    w::AbstractVector,
 ) where {D<:MultivariateDistribution}
-    return fit(D, reduce(hcat, x), w)
+    dists[i] = fit(D, reduce(hcat, x), w)
+    return nothing
 end
 
-function reestimate!(::SP, p_count, A_count) where {SP<:StateProcess}
-    return error("$SP needs to implement reestimate!(sp, p_count, A_count) for Baum-Welch.")
+function fit_element_from_sequence!(
+    dists::AbstractVector{D},
+    i::Integer,
+    x::AbstractVector{<:AbstractMatrix},
+    w::AbstractVector,
+) where {D<:MatrixDistribution}
+    dists[i] = fit(D, reduce(dcat, x), w)
+    return nothing
 end
 
-function reestimate!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
-    return error("$OP needs to implement reestimate!(op, obs_seq, γ) for Baum-Welch.")
-end
+dcat(M1, M2) = cat(M1, M2; dims=3)

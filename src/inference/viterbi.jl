@@ -49,6 +49,9 @@ end
 Apply the Viterbi algorithm to compute the most likely state sequences of an HMM for multiple observation sequences.
 """
 function viterbi(hmm::HMM, obs_seqs, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    end
     qs = Vector{Vector{Int}}(undef, nb_seqs)
     @threads for k in 1:nb_seqs
         qs[k] = viterbi(hmm, obs_seqs[k])

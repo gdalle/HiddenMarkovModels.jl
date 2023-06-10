@@ -8,10 +8,10 @@ run_suite(;
     implems=("HMMs.jl", "HMMBase.jl", "hmmlearn", "pomegranate"),
     N_vals=2:2:10,
     D_vals=(1, 5),
-    T_vals=500,
-    K_vals=(1, 10),
-    path=joinpath(@__DIR__, "results", "results.csv"),
+    T_vals=1000,
+    K_vals=(1, 3),
     seconds=5,
+    path=joinpath(@__DIR__, "results", "results.csv"),
 );
 
 print_setup(; path=joinpath(@__DIR__, "results", "setup.txt"))

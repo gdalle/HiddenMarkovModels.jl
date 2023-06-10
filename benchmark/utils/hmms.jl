@@ -1,6 +1,4 @@
 using BenchmarkTools
-using Distributions
-using Distributions: PDiagMat
 using HiddenMarkovModels: HMMs
 
 function rand_params_hmms(; N, D)
@@ -13,8 +11,8 @@ end
 
 function rand_model_hmms(; N, D)
     (; p, A, μ, σ) = rand_params_hmms(; N, D)
-    dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
-    model = HMMs.HMM(copy(p), copy(A), dists)
+    dists = [HMMs.LightDiagNormal(μ[n, :], σ[n, :]) for n in 1:N]
+    model = HMMs.HMM(p, A, dists)
     return model
 end
 

@@ -14,7 +14,7 @@ end
 function rand_model_hmmbase(; N, D)
     (; p, A, μ, σ) = rand_params_hmmbase(; N, D)
     dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
-    model = HMMBase.HMM(copy(p), copy(A), dists)
+    model = HMMBase.HMM(p, A, dists)
     return model
 end
 

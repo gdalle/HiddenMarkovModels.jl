@@ -69,6 +69,9 @@ Apply the Baum-Welch algorithm to estimate the parameters of an HMM based on mul
 function baum_welch(
     hmm_init::HMM, obs_seqs, nb_seqs::Integer; max_iterations=100, rtol=1e-3
 )
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    end
     hmm = deepcopy(hmm_init)
     logL_evolution = baum_welch!(hmm, obs_seqs; max_iterations, rtol)
     return hmm, logL_evolution

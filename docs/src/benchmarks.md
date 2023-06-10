@@ -29,7 +29,7 @@ For now, pomegranate is not included on the plots because it is much slower on v
 
 ![Baum-Welch benchmark](./assets/benchmark_baum_welch.svg)
 
-The full benchmark logs are available in CSV format: [`results.csv`](./assets/.results.csv).
+The full benchmark logs are available in CSV format: [`results.csv`](./assets/results.csv).
 
 ## Reproducibility
 
@@ -50,16 +50,16 @@ If you want to run them on your machine:
 
 The packages we include have different approaches to parallelism, which can bias the evaluation in complex ways:
 
-| Package               | States $N$        | Observations $D$ | Trajectories $K$ |
-| --------------------- | ----------------- | ---------------- | ---------------- |
-| HiddenMarkovModels.jl | LinearAlgebra$^2$ | depends$^2$      | Threads$^1$      |
-| HMMBase.jl            | -                 | depends$^2$      | -                |
-| hmmlearn              | NumPy$^2$         | NumPy$^2$        | NumPy$^2$        |
-| hmmlearn              | PyTorch$^3$       | PyTorch$^3$      | PyTorch$^3$      |
+| Package    | States $N$        | Observations $D$ | Trajectories $K$ |
+| ---------- | ----------------- | ---------------- | ---------------- |
+| HMMs.jl    | LinearAlgebra[^2] | depends[^2]      | Threads[^1]      |
+| HMMBase.jl | -                 | depends[^2]      | -                |
+| hmmlearn   | NumPy[^2]         | NumPy[^2]        | NumPy[^2]        |
+| hmmlearn   | PyTorch[^3]       | PyTorch[^3]      | PyTorch[^3]      |
 
-``^1`` possibly affected by `JULIA_NUM_THREADS`
-``^2`` possibly affected by `OPENBLAS_NUM_THREADS`
-``^3`` possibly affected by `MKL_NUM_THREADS`
+[^1]: possibly affected by `JULIA_NUM_THREADS`
+[^2]: possibly affected by `OPENBLAS_NUM_THREADS`
+[^3]: possibly affected by `MKL_NUM_THREADS`
 
 In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
-We are still reflecting on the best settings to ensure a fair comparison.
+To overcome this obstacle, we run the Julia benchmarks (and only those) with `OPENBLAS_NUM_THREADS=1`.

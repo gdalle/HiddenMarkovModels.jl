@@ -17,11 +17,15 @@ abstract type ObservationProcess end
 ## Interface
 
 function Base.length(::OP) where {OP<:ObservationProcess}
-    return error("length needs to be implemented for $OP")
+    return error("$OP needs to implement Base.length")
 end
 
 function distribution(::OP, ::Integer) where {OP<:ObservationProcess}
-    return error("distribution(op, i) needs to be implemented for $OP")
+    return error("$OP needs to implement distribution(op, i)")
+end
+
+function reestimate!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
+    return error("$OP needs to implement reestimate!(op, obs_seq, γ) for Baum-Welch.")
 end
 
 ## Fallbacks

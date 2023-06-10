@@ -18,15 +18,19 @@ abstract type StateProcess end
 ## Interface
 
 function Base.length(::SP) where {SP<:StateProcess}
-    return error("length needs to be implemented for $St")
+    return error("$SP needs to implement length(sp)")
 end
 
 function initial_distribution(::SP) where {SP<:StateProcess}
-    return error("initial_distribution needs to be implemented for $St")
+    return error("$SP needs to implement initial_distribution(sp)")
 end
 
 function transition_matrix(::SP) where {SP<:StateProcess}
-    return error("transition_matrix needs to be implemented for $St")
+    return error("$SP needs to implement transition_matrix(sp)")
+end
+
+function reestimate!(::SP, p_count, A_count) where {SP<:StateProcess}
+    return error("$SP needs to implement reestimate!(sp, p_count, A_count) for Baum-Welch.")
 end
 
 ## Fallbacks

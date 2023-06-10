@@ -16,14 +16,18 @@ using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
 using DensityInterface: densityof, logdensityof
-using Distributions: Categorical, MultivariateDistribution, MatrixDistribution
-using LinearAlgebra: Diagonal, dot, mul!, normalize!
+using Distributions: Categorical
+using Distributions: UnivariateDistribution
+using Distributions: MultivariateDistribution, MatrixDistribution
+using LinearAlgebra: Diagonal, dot, mul!
 using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require
-using StatsAPI: StatsAPI, fit
+using StatsAPI: StatsAPI, fit, fit!
 
+include("utils/nan.jl")
 include("utils/probvec.jl")
 include("utils/transmat.jl")
+include("utils/lightdiagnormal.jl")
 
 include("abstract/state_process.jl")
 include("abstract/observation_process.jl")
