@@ -1,3 +1,6 @@
+using Pkg
+Pkg.activate(@__DIR__)
+
 using BenchmarkTools
 using JSON
 using Plots
@@ -27,7 +30,7 @@ aggregator = minimum
 implems_julia = identity.(collect(keys(results_julia)))
 implems_python = identity.(collect(keys(results_python)))
 implems = sort(vcat(implems_julia, implems_python))
-implems = filter(implem -> contains(implem, "pomegranate"), implems)
+implems = filter(implem -> !contains(implem, "pomegranate"), implems)
 
 param_tuples = identity.(keys(results_julia[implems_julia[1]][algos[1]]))
 N_vals = sort(unique(map(t -> t[1], param_tuples)))
