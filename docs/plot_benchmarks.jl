@@ -21,10 +21,13 @@ cp(
 results_julia = BenchmarkTools.load(joinpath(DOCS_FOLDER, "results_julia.json"))[1];
 results_python = JSON.parsefile(joinpath(DOCS_FOLDER, "results_python.json"));
 
+algos = ["logdensity", "viterbi", "forward_backward", "baum_welch"]
+aggregator = minimum
+
 implems_julia = identity.(collect(keys(results_julia)))
 implems_python = identity.(collect(keys(results_python)))
 implems = sort(vcat(implems_julia, implems_python))
-implems = filter(implem -> implem != "pomegranate", implems)
+implems = filter(implem -> contains(implem, "pomegranate"), implems)
 
 param_tuples = identity.(keys(results_julia[implems_julia[1]][algos[1]]))
 N_vals = sort(unique(map(t -> t[1], param_tuples)))
@@ -32,12 +35,6 @@ D_vals = sort(unique(map(t -> t[2], param_tuples)))
 T_vals = sort(unique(map(t -> t[3], param_tuples)))
 K_vals = sort(unique(map(t -> t[4], param_tuples)))
 I_vals = sort(unique(map(t -> t[5], param_tuples)))
-
-aggregator = minimum
-
-algos = ["logdensity", "viterbi", "forward_backward", "baum_welch"]
-
-collect(keys(results_julia["HMMs.jl"]["viterbi"]))
 
 for algo in algos, T in T_vals, K in K_vals, I in I_vals
     plts = []
