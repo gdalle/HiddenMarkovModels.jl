@@ -35,7 +35,7 @@ function test_correctness(hmm, hmm_init; T)
         )
         logL_evolution_base = hist_base.logtots
         hmm_est, logL_evolution = @inferred baum_welch(
-            hmm_init, [obs_seq]; max_iterations=10, rtol=-Inf
+            hmm_init, obs_seq; max_iterations=10, rtol=-Inf
         )
         @test isapprox(
             logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)]

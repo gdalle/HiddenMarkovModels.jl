@@ -63,9 +63,24 @@ end
 """
     forward_backward(hmm, obs_seq)
 
-Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM.
+Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for a single observation sequence.
 """
 function forward_backward(hmm::HMM, obs_seq)
     logB = loglikelihoods(hmm.obs_process, obs_seq)
     return forward_backward_from_loglikelihoods(hmm.state_process, logB)
+end
+
+"""
+    forward_backward(hmm, obs_seqs, nb_seqs)
+
+Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for multiple observation sequences.
+"""
+function forward_backward(hmm::HMM, obs_seqs, nb_seqs::Integer)
+    fb1 = forward_backward(hmm, first(obs_seqs))
+    fbs = Vector{typeof(fb1)}(undef, nb_seqs)
+    fbs[1] = fb1
+    @threads for k in 2:nb_seqs
+        fbs[k] = forward_backward(hmm, obs_seqs[k])
+    end
+    return fbs
 end

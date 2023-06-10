@@ -21,7 +21,7 @@ logdensityof(hmm, obs_seq)  # loglikelihood
 
 most_likely_state_seq = viterbi(hmm, obs_seq);  # inference
 
-hmm_est, logL_evolution = baum_welch(random_gaussian_hmm(2), [obs_seq]);  # estimation
+hmm_est, logL_evolution = baum_welch(random_gaussian_hmm(2), obs_seq);  # estimation
 hmm_est
 first(logL_evolution), last(logL_evolution)
 ```

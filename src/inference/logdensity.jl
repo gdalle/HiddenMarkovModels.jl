@@ -22,7 +22,7 @@ end
 """
     DensityInterface.logdensityof(hmm, obs_seq)
 
-Apply the forward algorithm to compute the loglikelihood of a sequence of observations.
+Apply the forward algorithm to compute the loglikelihood of a single observation sequence for an HMM.
 """
 function DensityInterface.logdensityof(hmm::HMM, obs_seq)
     N = length(hmm)
@@ -35,4 +35,18 @@ function DensityInterface.logdensityof(hmm::HMM, obs_seq)
     αₜ₊₁ = Vector{R}(undef, N)
     logL = forward_light!(αₜ, αₜ₊₁, logb, p, A, hmm.obs_process, obs_seq)
     return logL
+end
+
+"""
+    DensityInterface.logdensityof(hmm, obs_seqs, nb_seqs)
+
+Apply the forward algorithm to compute the total loglikelihood of multiple observation sequences for an HMM
+"""
+function DensityInterface.logdensityof(hmm::HMM, obs_seqs, nb_seqs::Integer)
+    logL1 = logdensityof(hmm, first(obs_seqs))
+    logLs = Vector{typeof(logL1)}(undef, nb_seqs)
+    @threads for k in 2:nb_seqs
+        logLs[k] = logdensityof(hmm, obs_seqs[k])
+    end
+    return sum(logLs)
 end

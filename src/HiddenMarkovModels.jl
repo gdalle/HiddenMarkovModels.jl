@@ -5,6 +5,11 @@ A Julia package for HMM modeling, simulation, inference and learning.
 """
 module HiddenMarkovModels
 
+"""
+    HMMs
+
+An alias for the module HiddenMarkovModels.
+"""
 const HMMs = HiddenMarkovModels
 
 using Base.Threads: @threads

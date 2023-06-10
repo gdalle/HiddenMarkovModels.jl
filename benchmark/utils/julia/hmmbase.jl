@@ -18,8 +18,9 @@ function rand_model_hmmbase(; N, D)
     return model
 end
 
-function benchmarkables_hmmbase(; N, D, T, I)
-    obs_mat = randn(T, D)
+function benchmarkables_hmmbase(; N, D, T, K, I)
+    rand_model_hmmbase(; N, D)
+    obs_mat = randn(K * T, D)
     logdensity = @benchmarkable HMMBase.forward(model, $obs_mat) setup = (
         model = rand_model_hmmbase(; N=$N, D=$D)
     )

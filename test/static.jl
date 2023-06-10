@@ -15,6 +15,6 @@ hmm = HMM(p, A, dists)
 hmm_init = HMM(p, A, dists_init)
 
 (; state_seq, obs_seq) = rand(hmm, 1000)
-hmm_est, logL_evolution = @inferred baum_welch(hmm_init, [obs_seq])
+hmm_est, logL_evolution = @inferred baum_welch(hmm_init, obs_seq)
 
 @test typeof(hmm_est) == typeof(hmm)

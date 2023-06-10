@@ -26,41 +26,42 @@ implems_python = identity.(collect(keys(results_python)))
 implems = sort(vcat(implems_julia, implems_python))
 implems = filter(implem -> implem != "pomegranate", implems)
 
-param_tuples = identity.(keys(results_julia[implems_julia[1]]))
-N_values = sort(unique(map(t -> t[1], param_tuples)))
-D_values = sort(unique(map(t -> t[2], param_tuples)))
-T_values = sort(unique(map(t -> t[3], param_tuples)))
-I_values = sort(unique(map(t -> t[4], param_tuples)))
+param_tuples = identity.(keys(results_julia[implems_julia[1]][algos[1]]))
+N_vals = sort(unique(map(t -> t[1], param_tuples)))
+D_vals = sort(unique(map(t -> t[2], param_tuples)))
+T_vals = sort(unique(map(t -> t[3], param_tuples)))
+K_vals = sort(unique(map(t -> t[4], param_tuples)))
+I_vals = sort(unique(map(t -> t[5], param_tuples)))
 
 aggregator = minimum
 
 algos = ["logdensity", "viterbi", "forward_backward", "baum_welch"]
 
-for algo in algos, T in T_values, I in I_values
+collect(keys(results_julia["HMMs.jl"]["viterbi"]))
+
+for algo in algos, T in T_vals, K in K_vals, I in I_vals
     plts = []
-    for D in D_values
+    for D in D_vals
         plt = plot(;
             xlabel="number of states N",
             title="dimension D=$D",
             ylim=(0, Inf),
             legend=false,
-            ylabel=D == minimum(D_values) ? "$(string(aggregator)) CPU time (s)" : "",
+            ylabel=D == minimum(D_vals) ? "$(string(aggregator)) CPU time (s)" : "",
         )
         for implem in implems
             if implem in implems_julia
+                local_results = results_julia[implem][algo]
                 times = [
-                    aggregator(results_julia[implem][(N, D, T, I)][algo].times) / 1e9 for
-                    N in N_values
+                    aggregator(local_results[(N, D, T, K, I)].times) / 1e9 for N in N_vals
                 ]
             else
-                times = [
-                    aggregator(results_python[implem][string((N, D, T, I))][algo]) for
-                    N in N_values
-                ]
+                local_times = results_python[implem][algo]
+                times = [aggregator(local_times[string((N, D, T, K, I))]) for N in N_vals]
             end
             plot!(
                 plt,
-                N_values,
+                N_vals,
                 times;
                 label=implem,
                 markershape=:auto,
@@ -74,7 +75,11 @@ for algo in algos, T in T_values, I in I_values
         plts...;
         size=(1000, 500),
         layout=(1, length(plts)),
-        plot_title=algo == "baum_welch" ? "$algo (T=$T, iter=$I)" : "$algo (T=$T)",
+        plot_title=if algo == "baum_welch"
+            "$algo (T=$T, K=$K, I=$I)"
+        else
+            "$algo (T=$T, K=$K)"
+        end,
         legend=:topleft,
         link=:x,
         margin=15Plots.mm,
@@ -82,6 +87,6 @@ for algo in algos, T in T_values, I in I_values
     if get(ENV, "CI", "false") == "false"
         display(megaplt)
     end
-    filename = "benchmark_$(algo)_T=$(T)_I=$I.svg"
+    filename = "benchmark_$(algo)_T=$(T)_K=$(K)_I=$(I).svg"
     savefig(megaplt, joinpath(@__DIR__, "src", "assets", filename))
 end

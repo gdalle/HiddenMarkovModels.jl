@@ -3,7 +3,7 @@ import hmmlearn.hmm
 import timeit
 
 
-def create_model(N, D, T, I):
+def create_model(N, D, I):
     p = np.random.rand(N)
     p /= p.sum()
     A = np.random.rand(N, N)
@@ -29,33 +29,36 @@ def create_model(N, D, T, I):
     return model
 
 
-def benchmark(N, D, T, I, repeat):
+def benchmark(N, D, T, K, I, repeat):
     setup = (
-        "model = create_model(N, D, T, I); " + "obs_mat_py = np.random.randn(T, D); "
+        "model = create_model(N, D, I); "
+        + "obs_mats_list_py = [np.random.randn(T, D) for k in range(K)]; "
+        + "obs_mat_concat_py = np.concatenate(obs_mats_list_py); "
+        + "obs_mat_len_py = np.full(K, T); "
     )
     logdensity = timeit.repeat(
-        stmt="model.score(obs_mat_py)",
+        stmt="model.score(obs_mat_concat_py, obs_mat_len_py)",
         setup=setup,
         number=1,
         repeat=repeat,
         globals={**locals(), **globals()},
     )
     viterbi = timeit.repeat(
-        stmt="model.predict(obs_mat_py)",
+        stmt="model.predict(obs_mat_concat_py, obs_mat_len_py)",
         setup=setup,
         number=1,
         repeat=repeat,
         globals={**locals(), **globals()},
     )
     forward_backward = timeit.repeat(
-        stmt="model.predict_proba(obs_mat_py)",
+        stmt="model.predict_proba(obs_mat_concat_py, obs_mat_len_py)",
         setup=setup,
         number=1,
         repeat=repeat,
         globals={**locals(), **globals()},
     )
     baum_welch = timeit.repeat(
-        stmt="model.fit(obs_mat_py)",
+        stmt="model.fit(obs_mat_concat_py, obs_mat_len_py)",
         setup=setup,
         number=1,
         repeat=repeat,

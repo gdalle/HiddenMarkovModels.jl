@@ -18,20 +18,20 @@ function rand_model_hmms(; N, D)
     return model
 end
 
-function benchmarkables_hmms(; N, D, T, I)
-    obs_seq = [randn(D) for t in 1:T]
-    obs_seqs = [obs_seq]
-    logdensity = @benchmarkable HMMs.logdensityof(model, $obs_seq) setup = (
+function benchmarkables_hmms(; N, D, T, K, I)
+    rand_model_hmms(; N, D)
+    obs_seqs = [[randn(D) for t in 1:T] for k in 1:K]
+    logdensity = @benchmarkable HMMs.logdensityof(model, $obs_seqs, $K) setup = (
         model = rand_model_hmms(; N=$N, D=$D)
     )
-    viterbi = @benchmarkable HMMs.viterbi(model, $obs_seq) setup = (
+    viterbi = @benchmarkable HMMs.viterbi(model, $obs_seqs, $K) setup = (
         model = rand_model_hmms(; N=$N, D=$D)
     )
-    forward_backward = @benchmarkable HMMs.forward_backward(model, $obs_seq) setup = (
+    forward_backward = @benchmarkable HMMs.forward_backward(model, $obs_seqs, $K) setup = (
         model = rand_model_hmms(; N=$N, D=$D)
     )
     baum_welch = @benchmarkable HMMs.baum_welch(
-        model, $obs_seqs; max_iterations=$I, rtol=-Inf
+        model, $obs_seqs, $K; max_iterations=$I, rtol=-Inf
     ) setup = (model = rand_model_hmms(; N=$N, D=$D))
     return (; logdensity, viterbi, forward_backward, baum_welch)
 end

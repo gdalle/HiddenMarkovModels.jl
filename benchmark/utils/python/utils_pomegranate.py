@@ -5,7 +5,7 @@ import numpy as np
 import timeit
 
 
-def create_model(N, D, T, I):
+def create_model(N, D, I):
     p = torch.rand(N)
     p /= p.sum()
     A = torch.rand(N, N)
@@ -26,7 +26,6 @@ def create_model(N, D, T, I):
         distributions=distributions,
         edges=A,
         starts=p,
-        sample_length=T,
         max_iter=I,
         tol=1e-10,
         verbose=False,
@@ -34,9 +33,9 @@ def create_model(N, D, T, I):
     return model
 
 
-def benchmark(N, D, T, I, repeat):
+def benchmark(N, D, T, K, I, repeat):
     setup = (
-        "model = create_model(N, D, T, I); " + "obs_tens_py = torch.randn(1, T, D); "
+        "model = create_model(N, D, I); " + "obs_tens_py = torch.randn(K, T, D); "
     )
     logdensity = timeit.repeat(
         stmt="model.forward(obs_tens_py)",
