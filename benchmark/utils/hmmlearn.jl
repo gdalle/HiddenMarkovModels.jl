@@ -13,12 +13,12 @@ function rand_params_hmmlearn(; N, D)
     return (; p, A, μ, σ)
 end
 
-function rand_model_hmmlearn(; N, D, I)
+function rand_model_hmmlearn(; N, D)
     (; p, A, μ, σ) = rand_params_hmmlearn(; N, D)
     model = hmmlearn.hmm.GaussianHMM(;
         n_components=N,
         covariance_type="diag",
-        n_iter=I,
+        n_iter=BAUM_WELCH_ITER,
         tol=-np.inf,
         implementation="scaling",
         init_params="",
@@ -30,26 +30,26 @@ function rand_model_hmmlearn(; N, D, I)
     return model
 end
 
-function benchmarkables_hmmlearn(; N, D, T, K, I)
-    rand_model_hmmlearn(; N, D, I)
+function benchmarkables_hmmlearn(; N, D, T, K)
+    rand_model_hmmlearn(; N, D)
     obs_mats_list_py = pylist([np.random.randn(T, D) for k in 1:K])
     obs_mat_concat_py = np.concatenate(obs_mats_list_py)
     obs_mat_len_py = np.full(K, T)
 
     logdensity = @benchmarkable pycall(model_score, $obs_mat_concat_py, $obs_mat_len_py) setup = (
-        model_score = rand_model_hmmlearn(; N=$N, D=$D, I=$I).score
+        model_score = rand_model_hmmlearn(; N=$N, D=$D).score
     )
 
     viterbi = @benchmarkable pycall(model_predict, $obs_mat_concat_py, $obs_mat_len_py) setup = (
-        model_predict = rand_model_hmmlearn(; N=$N, D=$D, I=$I).predict
+        model_predict = rand_model_hmmlearn(; N=$N, D=$D).predict
     )
 
     forward_backward = @benchmarkable pycall(
         model_predict_proba, $obs_mat_concat_py, $obs_mat_len_py
-    ) setup = (model_predict_proba = rand_model_hmmlearn(; N=$N, D=$D, I=$I).predict_proba)
+    ) setup = (model_predict_proba = rand_model_hmmlearn(; N=$N, D=$D).predict_proba)
 
     baum_welch = @benchmarkable pycall(model_fit, $obs_mat_concat_py, $obs_mat_len_py) setup = (
-        model_fit = rand_model_hmmlearn(; N=$N, D=$D, I=$I).fit
+        model_fit = rand_model_hmmlearn(; N=$N, D=$D).fit
     )
 
     return (; logdensity, viterbi, forward_backward, baum_welch)

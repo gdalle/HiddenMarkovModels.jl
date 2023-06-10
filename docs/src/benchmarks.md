@@ -1,11 +1,5 @@
 # Benchmarks
 
-These benchmarks were generated with the following setup:
-
-```@repl
-using InteractiveUtils
-versioninfo()
-```
 
 The test case is an HMM with multi-dimensional Gaussian observations, initialized randomly.
 We compare the following packages:
@@ -17,21 +11,55 @@ We compare the following packages:
 
 For now, pomegranate is not included on the plots because it is much slower on very small inputs.
 
-Notations:
+## Notations
 
-- `N`: number of states
-- `D`: dimension of the Gaussian observations
-- `T`: trajectory length
-- `K`: number of trajectories
-- `I`: iterations in the Baum-Welch algorithm
+- ``N``: number of states
+- ``D``: dimension of the Gaussian observations
+- ``T``: trajectory length
+- ``K``: number of trajectories
+- ``I``: iterations in the Baum-Welch algorithm
 
-![Logdensity benchmark](./assets/benchmark_logdensity_T=500_K=10_I=10.svg)
+## Results
 
-![Viterbi benchmark](./assets/benchmark_viterbi_T=500_K=10_I=10.svg)
+![Logdensity benchmark](./assets/benchmark_logdensity.svg)
 
-![Forward-backward benchmark](./assets/benchmark_forward_backward_T=500_K=10_I=10.svg)
+![Viterbi benchmark](./assets/benchmark_viterbi.svg)
 
-![Baum-Welch benchmark](./assets/benchmark_baum_welch_T=500_K=10_I=10.svg)
+![Forward-backward benchmark](./assets/benchmark_forward_backward.svg)
 
-The full benchmark logs are available in JSON format: [results from Julia](./assets/results_julia.json) and [results from Python](./assets/results_python.json).
-Take a look at the code in `benchmark/utils` to see how they were generated.
+![Baum-Welch benchmark](./assets/benchmark_baum_welch.svg)
+
+The full benchmark logs are available in CSV format: [`results.csv`](./assets/.results.csv).
+
+## Reproducibility
+
+These benchmarks were generated in the following environment: [`setup.txt`](./assets/setup.txt).
+
+If you want to run them on your machine:
+
+1. Clone the [HiddenMarkovModels.jl](https://github.com/gdalle/HiddenMarkovModels.jl) repository
+2. Open a Julia REPL at the root
+3. Run the following commands
+
+   ```julia
+   include("benchmark/run_benchmarks.jl")
+   include("docs/process_benchmarks.jl")
+   ```
+
+## Remarks on parallelism
+
+The packages we include have different approaches to parallelism, which can bias the evaluation in complex ways:
+
+| Package               | States $N$        | Observations $D$ | Trajectories $K$ |
+| --------------------- | ----------------- | ---------------- | ---------------- |
+| HiddenMarkovModels.jl | LinearAlgebra$^2$ | depends$^2$      | Threads$^1$      |
+| HMMBase.jl            | -                 | depends$^2$      | -                |
+| hmmlearn              | NumPy$^2$         | NumPy$^2$        | NumPy$^2$        |
+| hmmlearn              | PyTorch$^3$       | PyTorch$^3$      | PyTorch$^3$      |
+
+``^1`` possibly affected by `JULIA_NUM_THREADS`
+``^2`` possibly affected by `OPENBLAS_NUM_THREADS`
+``^3`` possibly affected by `MKL_NUM_THREADS`
+
+In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
+We are still reflecting on the best settings to ensure a fair comparison.

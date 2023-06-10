@@ -1,12 +1,11 @@
 using Documenter
 using HiddenMarkovModels
-using Pkg
 
 DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
 )
 
-include("plot_benchmarks.jl")
+include("process_benchmarks.jl")
 
 makedocs(;
     modules=[HiddenMarkovModels],

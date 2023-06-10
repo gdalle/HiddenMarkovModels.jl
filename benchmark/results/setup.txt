@@ -1,0 +1,45 @@
+Julia Version 1.9.1
+Commit 147bdf428cd (2023-06-07 08:27 UTC)
+Platform Info:
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 12 × Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-14.0.6 (ORCJIT, skylake)
+  Threads: 12 on 12 virtual cores
+Environment:
+  JULIA_EDITOR = code
+
+# Multithreading
+
+JULIA_NUM_THREADS = 12
+OPENBLAS_NUM_THREADS = 6
+MKL_NUM_THREADS = ?
+
+# Julia packages
+
+Status `~/Documents/GitHub/Julia/HiddenMarkovModels.jl/benchmark/Project.toml`
+  [6e4b80f9] BenchmarkTools v1.3.2
+  [336ed68f] CSV v0.10.11
+  [992eb4ea] CondaPkg v0.2.18
+  [a93c6f00] DataFrames v1.5.0
+  [31c24e10] Distributions v0.25.95
+  [b2b3ca75] HMMBase v1.0.7
+  [84ca31d5] HiddenMarkovModels v0.1.0 `..`
+  [6099a3de] PythonCall v0.9.13
+  [295af30f] Revise v3.5.3
+  [b77e0a4c] InteractiveUtils
+  [37e2e46d] LinearAlgebra
+  [9a3f8284] Random
+
+# Python packages
+
+CondaPkg Status /home/guillaume/Documents/GitHub/Julia/HiddenMarkovModels.jl/benchmark/CondaPkg.toml
+Environment
+  /home/guillaume/Documents/GitHub/Julia/HiddenMarkovModels.jl/benchmark/.CondaPkg/env
+Pip packages
+  hmmlearn v0.3.0
+  ipykernel v6.23.1
+  numpy v1.24.3
+  pomegranate v1.0.0
+  torch v2.0.1

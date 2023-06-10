@@ -18,7 +18,7 @@ function rand_model_hmmbase(; N, D)
     return model
 end
 
-function benchmarkables_hmmbase(; N, D, T, K, I)
+function benchmarkables_hmmbase(; N, D, T, K)
     rand_model_hmmbase(; N, D)
     obs_mat = randn(K * T, D)
     logdensity = @benchmarkable HMMBase.forward(model, $obs_mat) setup = (
@@ -30,8 +30,8 @@ function benchmarkables_hmmbase(; N, D, T, K, I)
     forward_backward = @benchmarkable HMMBase.posteriors(model, $obs_mat) setup = (
         model = rand_model_hmmbase(; N=$N, D=$D)
     )
-    baum_welch = @benchmarkable HMMBase.fit_mle(model, $obs_mat; maxiter=$I, tol=-Inf) setup = (
-        model = rand_model_hmmbase(; N=$N, D=$D)
-    )
+    baum_welch = @benchmarkable HMMBase.fit_mle(
+        model, $obs_mat; maxiter=BAUM_WELCH_ITER, tol=-Inf
+    ) setup = (model = rand_model_hmmbase(; N=$N, D=$D))
     return (; logdensity, viterbi, forward_backward, baum_welch)
 end
