@@ -1,6 +1,7 @@
 using Distributions
 using Distributions: PDiagMat
 using HiddenMarkovModels
+using HiddenMarkovModels: LightDiagNormal
 using JET
 using Test
 
@@ -55,7 +56,7 @@ end
 
 # DiagNormal
 
-dists_diagnorm = [DiagNormal(randn(D), PDiagMat(ones(D))) for i in 1:N]
+dists_diagnorm = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
 dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
 
 hmm_diagnorm = HMM(p, A, dists_diagnorm)
@@ -63,4 +64,16 @@ hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
 @testset verbose = true "DiagNormal" begin
     test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T=100, K=3)
+end
+
+## LightDiagNormal
+
+dists_lightdiagnorm = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
+dists_lightdiagnorm_init = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
+
+hmm_lightdiagnorm = HMM(p, A, dists_lightdiagnorm)
+hmm_lightdiagnorm_init = HMM(p, A, dists_lightdiagnorm_init)
+
+@testset verbose = true "LightDiagNormal" begin
+    test_type_stability(hmm_lightdiagnorm, hmm_lightdiagnorm_init; T=100, K=3)
 end
