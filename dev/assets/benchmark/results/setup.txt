@@ -2,18 +2,19 @@ Julia Version 1.9.1
 Commit 147bdf428cd (2023-06-07 08:27 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.30GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, broadwell)
-  Threads: 2 on 2 virtual cores
+  LLVM: libLLVM-14.0.6 (ORCJIT, skylake-avx512)
+  Threads: 1 on 2 virtual cores
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
+  JULIA_IMAGE_THREADS = 1
   JULIA_PYTHONCALL_EXE = /home/runner/work/HiddenMarkovModels.jl/HiddenMarkovModels.jl/benchmark/.CondaPkg/env/bin/python
 
 # Multithreading
 
-JULIA_NUM_THREADS = 2
+JULIA_NUM_THREADS = 1
 OPENBLAS_NUM_THREADS = 1
 MKL_NUM_THREADS = ?
 
