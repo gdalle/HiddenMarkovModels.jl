@@ -23,7 +23,7 @@ Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/
 
 ![Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_baum_welch.svg)
 
-Here pomegranate is not included because it is much slower on very small inputs.
+Here, pomegranate is not included because it is much slower on very small inputs.
 
 ### Multiple sequences
 
@@ -75,6 +75,8 @@ The packages we include have different approaches to parallelism, which can bias
 [^1]: possibly affected by `JULIA_NUM_THREADS`
 [^2]: possibly affected by `OPENBLAS_NUM_THREADS`
 [^3]: possibly affected by `MKL_NUM_THREADS`
+
+For a fairer comparison, we set `JULIA_NUM_THREADS=1`, even though it robs HMMs.jl of its parallel speedup on multiple sequences.
 
 In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
 To overcome this obstacle, we run the Julia benchmarks (and only those) with `OPENBLAS_NUM_THREADS=1`.

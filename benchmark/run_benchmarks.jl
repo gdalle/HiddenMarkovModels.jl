@@ -19,7 +19,8 @@ run_suite(;
     D_vals=(1, 10),
     T_vals=1000,
     K_vals=1,
-    seconds=5,
+    seconds=10,
+    samples=100,
     path=joinpath(@__DIR__, "results", "results_single_sequence.csv"),
 );
 
@@ -31,5 +32,6 @@ run_suite(;
     T_vals=100,
     K_vals=100,
     seconds=10,
+    samples=100,
     path=joinpath(@__DIR__, "results", "results_multiple_sequences.csv"),
 );
