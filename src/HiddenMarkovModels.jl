@@ -35,7 +35,7 @@ export HiddenMarkovModel, HMM
 export logdensityof, viterbi, forward_backward, baum_welch
 export StandardStateProcess, StandardObservationProcess
 
-include("utils/nan.jl")
+include("utils/check.jl")
 include("utils/probvec.jl")
 include("utils/transmat.jl")
 include("utils/fit.jl")

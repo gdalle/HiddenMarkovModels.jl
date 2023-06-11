@@ -11,7 +11,11 @@ struct LightDiagNormal{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
     logσ::V2
 end
 
-LightDiagNormal(μ, σ) = LightDiagNormal(μ, σ, log.(σ))
+function LightDiagNormal(μ, σ)
+    check_no_nan(μ)
+    check_positive(σ)
+    return LightDiagNormal(μ, σ, log.(σ))
+end
 
 @inline DensityInterface.DensityKind(::LightDiagNormal) = HasDensity()
 
@@ -24,11 +28,15 @@ end
 function DensityInterface.logdensityof(dist::LightDiagNormal, x)
     a = -sum(abs2, (x[i] - dist.μ[i]) / dist.σ[i] for i in eachindex(x, dist.μ, dist.σ))
     b = -sum(dist.logσ)
-    return (a / 2) + b
+    check_no_nan(a)
+    check_no_nan(b)
+    logd = (a / 2) + b
+    return logd
 end
 
 function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     w_tot = sum(w)
+    check_positive(w_tot)
     dist.μ .= zero(T1)
     dist.σ .= zero(T2)
     for i in eachindex(x, w)
@@ -40,6 +48,7 @@ function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     end
     dist.σ ./= w_tot
     dist.σ .= sqrt.(dist.σ)
+    check_positive(dist.σ)
     dist.logσ .= log.(dist.σ)
     return nothing
 end
