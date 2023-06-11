@@ -58,7 +58,7 @@ for algo in algos
                 plt,
                 local_results[!, :N],
                 local_results[!, :time] ./ 1e9;
-                label=implem,
+                label=implem == "HMMs.jl" ? "$implem (ours)" : implem,
                 markershape=:auto,
                 linestyle=:auto,
                 linewidth=2,
@@ -77,7 +77,7 @@ for algo in algos
         layout=(1, length(plts)),
         plot_title=megaplot_title,
         legend=:topleft,
-        link=:x,
+        link=:all,
         margin=15Plots.mm,
     )
     if get(ENV, "CI", "false") == "false"
