@@ -8,25 +8,37 @@ module HiddenMarkovModels
 """
     HMMs
 
-An alias for the module HiddenMarkovModels.
+Alias for the module HiddenMarkovModels.
 """
 const HMMs = HiddenMarkovModels
 
 using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore
-using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity
-using DensityInterface: densityof, logdensityof
-using Distributions: Categorical
-using Distributions: UnivariateDistribution
-using Distributions: MultivariateDistribution, MatrixDistribution
+using DensityInterface:
+    DensityInterface, DensityKind, HasDensity, NoDensity, densityof, logdensityof
+using Distributions:
+    Distributions,
+    Categorical,
+    Distribution,
+    UnivariateDistribution,
+    MultivariateDistribution,
+    MatrixDistribution
 using LinearAlgebra: Diagonal, dot, mul!
 using Random: AbstractRNG, GLOBAL_RNG
 using Requires: @require
 using StatsAPI: StatsAPI, fit, fit!
 
+export HMMs
+export rand_prob_vec, rand_trans_mat
+export initial_distribution, transition_matrix, obs_distribution
+export HiddenMarkovModel, HMM
+export logdensityof, viterbi, forward_backward, baum_welch
+export StandardStateProcess, StandardObservationProcess
+
 include("utils/nan.jl")
 include("utils/probvec.jl")
 include("utils/transmat.jl")
+include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 
 include("abstract/state_process.jl")
@@ -45,17 +57,6 @@ include("learning/baum_welch.jl")
 
 include("concrete/standard_state_process.jl")
 include("concrete/standard_observation_process.jl")
-
-export HMMs
-export rand_prob_vec, rand_trans_mat
-export initial_distribution, transition_matrix
-export HiddenMarkovModel, HMM
-export logdensityof
-export viterbi
-export forward_backward
-export baum_welch
-export StandardStateProcess
-export StandardObservationProcess
 
 if !isdefined(Base, :get_extension)
     function __init__()

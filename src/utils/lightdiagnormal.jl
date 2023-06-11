@@ -1,3 +1,10 @@
+"""
+    LightDiagonalNormal
+
+An HMMs-compatible implementation of a multivariate normal distribution with diagonal covariance, enabling allocation-free estimation.
+
+This is not part of the public API and is expected to change.
+"""
 struct LightDiagNormal{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
     μ::V1
     σ::V2
@@ -15,13 +22,8 @@ function Base.rand(rng::AbstractRNG, dist::LightDiagNormal)
 end
 
 function DensityInterface.logdensityof(dist::LightDiagNormal, x)
-    check_nan(dist.μ)
-    check_nan(dist.σ)
-    check_nan(dist.logσ)
     a = -sum(abs2, (x[i] - dist.μ[i]) / dist.σ[i] for i in eachindex(x, dist.μ, dist.σ))
     b = -sum(dist.logσ)
-    check_nan(a)
-    check_nan(b)
     return (a / 2) + b
 end
 

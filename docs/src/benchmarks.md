@@ -1,7 +1,6 @@
 # Benchmarks
 
-
-The test case is an HMM with multi-dimensional Gaussian observations, initialized randomly.
+The test case is an HMM with diagonal multivariate normal observations.
 We compare the following packages:
 
 - HiddenMarkovModels.jl (abbreviated to HMMs.jl)
@@ -9,15 +8,8 @@ We compare the following packages:
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 - [pomegranate](https://github.com/jmschrei/pomegranate)
 
+Since HMMBase.jl does not support multiple trajectories, we concatenate them instead.
 For now, pomegranate is not included on the plots because it is much slower on very small inputs.
-
-## Notations
-
-- ``N``: number of states
-- ``D``: dimension of the Gaussian observations
-- ``T``: trajectory length
-- ``K``: number of trajectories
-- ``I``: iterations in the Baum-Welch algorithm
 
 ## Results
 
@@ -46,11 +38,22 @@ If you want to run them on your machine:
    include("docs/process_benchmarks.jl")
    ```
 
-## Remarks on parallelism
+## Remarks
+
+### Allocations
+
+A major bottleneck of performance in Julia is memory allocations.
+The benchmarks for HMMs.jl thus employ a custom implementation of diagonal multivariate normals, which is entirely allocation-free.
+
+This partly explains the performance gap with HMMBase.jl as the dimension `D` grows beyond 1.
+Such a trick is also possible with HMMBase.jl, but slightly more demanding since it requires subtyping `Distribution` from Distributions.jl, instead of just implementing DensityInterface.jl.
+We might do it in future benchmarks.
+
+### Parallelism
 
 The packages we include have different approaches to parallelism, which can bias the evaluation in complex ways:
 
-| Package    | States $N$        | Observations $D$ | Trajectories $K$ |
+| Package    | States `N`        | Observations `D` | Trajectories `K` |
 | ---------- | ----------------- | ---------------- | ---------------- |
 | HMMs.jl    | LinearAlgebra[^2] | depends[^2]      | Threads[^1]      |
 | HMMBase.jl | -                 | depends[^2]      | -                |

@@ -13,14 +13,22 @@ end
 
 function rand_model_hmmbase(; N, D)
     (; p, A, μ, σ) = rand_params_hmmbase(; N, D)
-    dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
+    if D == 1
+        dists = [Normal(μ[n, 1], σ[n, 1]) for n in 1:N]
+    else
+        dists = [DiagNormal(μ[n, :], PDiagMat(σ[n, :] .^ 2)) for n in 1:N]
+    end
     model = HMMBase.HMM(p, A, dists)
     return model
 end
 
 function benchmarkables_hmmbase(; N, D, T, K)
     rand_model_hmmbase(; N, D)
-    obs_mat = randn(K * T, D)
+    if D == 1
+        obs_mat = randn(K * T)
+    else
+        obs_mat = randn(K * T, D)
+    end
     logdensity = @benchmarkable HMMBase.forward(model, $obs_mat) setup = (
         model = rand_model_hmmbase(; N=$N, D=$D)
     )

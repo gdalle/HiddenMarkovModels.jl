@@ -5,33 +5,42 @@ Abstract type for the observation part of an HMM.
 
 # Required methods
 
-- `Base.length(op)`
-- `distribution(op, i)`
+- `length(op)`
+- `obs_distribution(op, i)`
 
 # Optional methods
 
-- `reestimate!(op, obs_seq, γ)`
+- `fit!(op, obs_seq, γ)`
 """
 abstract type ObservationProcess end
 
 ## Interface
 
+"""
+    length(op::ObservationProcess)
+
+Return the number of states of `op`.
+"""
 function Base.length(::OP) where {OP<:ObservationProcess}
     return error("$OP needs to implement Base.length")
 end
 
-function distribution(::OP, ::Integer) where {OP<:ObservationProcess}
-    return error("$OP needs to implement distribution(op, i)")
+"""
+    obs_distribution(op::ObservationProcess, i)
+
+Return the observation distribution of `op` associated with state `i`.
+"""
+function obs_distribution(::OP, ::Integer) where {OP<:ObservationProcess}
+    return error("$OP needs to implement HMMs.obs_distribution(op, i)")
 end
 
-function reestimate!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
-    return error("$OP needs to implement reestimate!(op, obs_seq, γ) for Baum-Welch.")
-end
+"""
+    StatsAPI.fit!(op::ObservationProcess, obs_seq, γ)
 
-## Fallbacks
-
-function distributions(op::ObservationProcess)
-    return [distribution(op, i) for i in 1:length(op)]
+Update all observation distributions of `op` based on an observation sequence `obs_seq`, weighted by `γ[i, :]` for each state `i`.
+"""
+function StatsAPI.fit!(::OP, obs_seq, γ) where {OP<:ObservationProcess}
+    return error("$OP needs to implement StatsAPI.fit!(op, obs_seq, γ) for Baum-Welch.")
 end
 
 ## Checks
@@ -42,7 +51,7 @@ function check(op::ObservationProcess)
         throw(ArgumentError("No states in observation process"))
     else
         for i in 1:N
-            if DensityKind(distribution(op, i)) == NoDensity()
+            if DensityKind(obs_distribution(op, i)) == NoDensity()
                 err_msg = "Observation process does not satisfy DensityInterface.jl"
                 throw(ArgumentError(err_msg))
             end
@@ -53,7 +62,7 @@ end
 ## Simulation
 
 function Base.rand(rng::AbstractRNG, op::ObservationProcess, state_seq)
-    obs_seq = [rand(rng, distribution(op, i)) for i in state_seq]
+    obs_seq = [rand(rng, obs_distribution(op, i)) for i in state_seq]
     return obs_seq
 end
 

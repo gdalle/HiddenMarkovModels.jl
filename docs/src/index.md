@@ -14,7 +14,8 @@ A Julia package for HMM modeling, simulation, inference and learning.[^1]
 
 !!! info "Genericity"
     - transition matrices can be dense or sparse
-    - emission distributions `d` must only implement `x = rand(d)` and `logdensityof(d, x)` (as per [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl))
+    - observations can be arbitrary Julia objects (not just numbers or arrays)
+    - emission distributions `d` must only implement `rand(d)` and `logdensityof(d, x)` (as per [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl))
     - possibility to add priors
     - number types are not restricted
 

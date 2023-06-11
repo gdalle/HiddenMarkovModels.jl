@@ -30,7 +30,7 @@ Base.length(sp::StandardStateProcess) = length(sp.p)
 initial_distribution(sp::StandardStateProcess) = sp.p
 transition_matrix(sp::StandardStateProcess) = sp.A
 
-function reestimate!(sp::StandardStateProcess, p_count, A_count)
+function StatsAPI.fit!(sp::StandardStateProcess, p_count, A_count)
     sp.p .= p_count
     sum_to_one!(sp.p)
     sp.A .= A_count

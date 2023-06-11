@@ -5,42 +5,54 @@ Abstract type for the state part of an HMM.
 
 # Required methods
 
-- `Base.length(sp)`
+- `length(sp)`
 - `initial_distribution(sp)`
 - `transition_matrix(sp)`
 
 # Optional methods
 
-- `reestimate!(sp, p_count, A_count)`
+- `fit!(sp, p_count, A_count)`
 """
 abstract type StateProcess end
 
 ## Interface
 
+"""
+    length(sp::StateProcess)
+
+Return the number of states of `sp`.
+"""
 function Base.length(::SP) where {SP<:StateProcess}
     return error("$SP needs to implement length(sp)")
 end
 
+"""
+    initial_distribution(sp::StateProcess)
+
+Return the initial state probabilities of `sp`.
+"""
 function initial_distribution(::SP) where {SP<:StateProcess}
-    return error("$SP needs to implement initial_distribution(sp)")
+    return error("$SP needs to implement HMMs.initial_distribution(sp)")
 end
 
+"""
+    transition_matrix(sp::StateProcess)
+
+Return the state transition probabilities of `sp`.
+"""
 function transition_matrix(::SP) where {SP<:StateProcess}
-    return error("$SP needs to implement transition_matrix(sp)")
+    return error("$SP needs to implement HMMs.transition_matrix(sp)")
 end
 
-function reestimate!(::SP, p_count, A_count) where {SP<:StateProcess}
-    return error("$SP needs to implement reestimate!(sp, p_count, A_count) for Baum-Welch.")
-end
+"""
+    StatsAPI.fit!(op::ObservationProcess, obs_seq, γ)
 
-## Fallbacks
-
-function log_initial_distribution(sp::StateProcess)
-    return log.(initial_distribution(sp))
-end
-
-function log_transition_matrix(sp::StateProcess)
-    return log.(transition_matrix(sp))
+Update the initial distribution and transition matrix of `sp` based on weighted initialization counts `p_count` and transition counts `A_count`.
+"""
+function StatsAPI.fit!(::SP, p_count, A_count) where {SP<:StateProcess}
+    return error(
+        "$SP needs to implement StatsAPI.fit!(sp, p_count, A_count) for Baum-Welch."
+    )
 end
 
 ## Checks

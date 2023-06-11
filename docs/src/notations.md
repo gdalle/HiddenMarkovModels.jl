@@ -6,6 +6,13 @@ Our whole package is based on the following paper by Rabiner (1989):
 
 Please refer to it for mathematical explanations.
 
+## Integers
+
+- `N`: number of states
+- `D`: dimension of the observations
+- `T`: trajectory length
+- `K`: number of trajectories
+
 ## State process
 
 - `sp` or `state_process`: a `StateProcess`
@@ -16,9 +23,9 @@ Please refer to it for mathematical explanations.
 ## Observation process
 
 - `op` or `obs_process`: an `ObservationProcess`
-- `(log)b`: vector of observation (log)likelihoods by state for a single observation
+- `(log)b`: vector of observation (log)likelihoods by state for an individual observation
 - `(log)B`: matrix of observation (log)likelihoods by state for a sequence of observations
-- `obs_seq`: a sequence of observations
+- `obs_seq`: a sequence of observations (vector of individual observations)
 - `obs_seqs`: several sequences of observations
 
 ## Forward backward

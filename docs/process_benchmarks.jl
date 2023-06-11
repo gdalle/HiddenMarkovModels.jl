@@ -19,15 +19,15 @@ cp(joinpath(BENCHMARKS_FOLDER, "setup.txt"), joinpath(DOCS_FOLDER, "setup.txt");
 
 results = DataFrame(CSV.File(joinpath(DOCS_FOLDER, "results.csv")))
 
-algos = unique(results[!, :algo])
-implems = unique(results[!, :implem])
+algos = sort(unique(results[!, :algo]); rev=true)
+implems = sort(unique(results[!, :implem]))
 filter!(implem -> !contains(implem, "pomegranate"), implems)
 
-N_vals = unique(results[!, :N])
-D_vals = unique(results[!, :D])
-T_vals = unique(results[!, :T])
-K_vals = unique(results[!, :K])
-I_vals = unique(results[!, :I])
+N_vals = sort(unique(results[!, :N]))
+D_vals = sort(unique(results[!, :D]))
+T_vals = sort(unique(results[!, :T]))
+K_vals = sort(unique(results[!, :K]))
+I_vals = sort(unique(results[!, :I]))
 
 T = maximum(T_vals)
 K = maximum(K_vals)
@@ -69,7 +69,7 @@ for algo in algos
     end
 
     megaplot_title =
-        algo == "baum_welch" ? "$algo (T=$T, K=$K, I=$I)" : "$algo (T=$T, K=$K)"
+        algo == "baum_welch" ? "$algo (T=$T, K=$K, iter=$I)" : "$algo (T=$T, K=$K)"
 
     megaplt = plot(
         plts...;

@@ -30,8 +30,8 @@ function baum_welch!(hmm::HMM, obs_seqs; max_iterations, rtol)
         # M step
         update_states_stats!(p_count, A_count, fbs)
         update_observations_stats!(γ_concat, fbs)
-        reestimate!(hmm.state_process, p_count, A_count)
-        reestimate!(hmm.obs_process, obs_seqs_concat, γ_concat)
+        fit!(hmm.state_process, p_count, A_count)
+        fit!(hmm.obs_process, obs_seqs_concat, γ_concat)
 
         #  Stopping criterion
         if iteration > 1
