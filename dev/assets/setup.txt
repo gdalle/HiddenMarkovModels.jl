@@ -6,7 +6,7 @@ Platform Info:
   WORD_SIZE: 64
   LIBM: libopenlibm
   LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
-  Threads: 1 on 2 virtual cores
+  Threads: 2 on 2 virtual cores
 Environment:
   JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
   JULIA_IMAGE_THREADS = 1
@@ -14,7 +14,7 @@ Environment:
 
 # Multithreading
 
-JULIA_NUM_THREADS = 1
+JULIA_NUM_THREADS = 2
 OPENBLAS_NUM_THREADS = 1
 MKL_NUM_THREADS = ?
 
