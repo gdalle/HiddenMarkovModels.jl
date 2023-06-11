@@ -8,24 +8,36 @@ We compare the following packages:
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 - [pomegranate](https://github.com/jmschrei/pomegranate)
 
-Since HMMBase.jl does not support multiple trajectories, we concatenate them instead.
-For now, pomegranate is not included on the plots because it is much slower on very small inputs.
 
 ## Results
 
-![Logdensity benchmark](./assets/benchmark_logdensity.svg)
+### Single sequence
 
-![Viterbi benchmark](./assets/benchmark_viterbi.svg)
+Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/results_single_sequence.csv).
 
-![Forward-backward benchmark](./assets/benchmark_forward_backward.svg)
+![Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_logdensity.svg)
 
-![Baum-Welch benchmark](./assets/benchmark_baum_welch.svg)
+![Viterbi single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_viterbi.svg)
 
-The full benchmark logs are available in CSV format: [`results.csv`](./assets/results.csv).
+![Forward-backward single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_forward_backward.svg)
+
+![Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_baum_welch.svg)
+
+Here pomegranate is not included because it is much slower on very small inputs.
+
+### Multiple sequences
+
+Full benchmark logs: [`results_multiple_sequences.csv`](./assets/benchmark/results/results_multiple_sequences.csv).
+
+![Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_logdensity.svg)
+
+![Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_baum_welch.svg)
+
+Here, HMMBase.jl is not included because it does not support multiple sequences.
 
 ## Reproducibility
 
-These benchmarks were generated in the following environment: [`setup.txt`](./assets/setup.txt).
+These benchmarks were generated in the following environment: [`setup.txt`](./assets/benchmark/results/setup.txt).
 
 If you want to run them on your machine:
 
@@ -53,7 +65,7 @@ We might do it in future benchmarks.
 
 The packages we include have different approaches to parallelism, which can bias the evaluation in complex ways:
 
-| Package    | States `N`        | Observations `D` | Trajectories `K` |
+| Package    | States `N`        | Observations `D` | Sequences `K` |
 | ---------- | ----------------- | ---------------- | ---------------- |
 | HMMs.jl    | LinearAlgebra[^2] | depends[^2]      | Threads[^1]      |
 | HMMBase.jl | -                 | depends[^2]      | -                |
@@ -66,3 +78,7 @@ The packages we include have different approaches to parallelism, which can bias
 
 In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
 To overcome this obstacle, we run the Julia benchmarks (and only those) with `OPENBLAS_NUM_THREADS=1`.
+
+## Acknowledgements
+
+A big thank you to [Maxime Mouchet](https://www.maxmouchet.com/) and [Jacob Schreiber](https://jmschrei.github.io/), the respective lead devs of HMMBase.jl and pomegranate, for their help.

@@ -22,24 +22,33 @@ function rand_model_hmmbase(; N, D)
     return model
 end
 
-function benchmarkables_hmmbase(; N, D, T, K)
+function benchmarkables_hmmbase(; algos, N, D, T, K)
     rand_model_hmmbase(; N, D)
     if D == 1
         obs_mat = randn(K * T)
     else
         obs_mat = randn(K * T, D)
     end
-    logdensity = @benchmarkable HMMBase.forward(model, $obs_mat) setup = (
-        model = rand_model_hmmbase(; N=$N, D=$D)
-    )
-    viterbi = @benchmarkable HMMBase.viterbi(model, $obs_mat) setup = (
-        model = rand_model_hmmbase(; N=$N, D=$D)
-    )
-    forward_backward = @benchmarkable HMMBase.posteriors(model, $obs_mat) setup = (
-        model = rand_model_hmmbase(; N=$N, D=$D)
-    )
-    baum_welch = @benchmarkable HMMBase.fit_mle(
-        model, $obs_mat; maxiter=BAUM_WELCH_ITER, tol=-Inf
-    ) setup = (model = rand_model_hmmbase(; N=$N, D=$D))
-    return (; logdensity, viterbi, forward_backward, baum_welch)
+    benchs = Dict()
+    if "logdensity" in algos
+        benchs["logdensity"] = @benchmarkable HMMBase.forward(model, $obs_mat) setup = (
+            model = rand_model_hmmbase(; N=$N, D=$D)
+        )
+    end
+    if "viterbi" in algos
+        benchs["viterbi"] = @benchmarkable HMMBase.viterbi(model, $obs_mat) setup = (
+            model = rand_model_hmmbase(; N=$N, D=$D)
+        )
+    end
+    if "forward_backward" in algos
+        benchs["forward_backward"] = @benchmarkable HMMBase.posteriors(model, $obs_mat) setup = (
+            model = rand_model_hmmbase(; N=$N, D=$D)
+        )
+    end
+    if "baum_welch" in algos
+        benchs["baum_welch"] = @benchmarkable HMMBase.fit_mle(
+            model, $obs_mat; maxiter=BAUM_WELCH_ITER, tol=-Inf
+        ) setup = (model = rand_model_hmmbase(; N=$N, D=$D))
+    end
+    return benchs
 end

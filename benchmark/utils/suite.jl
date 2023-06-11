@@ -14,21 +14,21 @@ includet("hmmbase.jl")
 includet("hmmlearn.jl")
 includet("pomegranate.jl")
 
-function benchmarkables_by_implem(; implem::String, kwargs...)
+function benchmarkables_by_implem(; implem, algos, kwargs...)
     if implem == "HMMs.jl"
-        return benchmarkables_hmms(; kwargs...)
+        return benchmarkables_hmms(; algos, kwargs...)
     elseif implem == "HMMBase.jl"
-        return benchmarkables_hmmbase(; kwargs...)
+        return benchmarkables_hmmbase(; algos, kwargs...)
     elseif implem == "hmmlearn"
-        return benchmarkables_hmmlearn(; kwargs...)
+        return benchmarkables_hmmlearn(; algos, kwargs...)
     elseif implem == "pomegranate"
-        return benchmarkables_pomegranate(; kwargs...)
+        return benchmarkables_pomegranate(; algos, kwargs...)
     else
         throw(ArgumentError("Unknown implementation"))
     end
 end
 
-function define_suite(; implems, N_vals, D_vals, T_vals, K_vals)
+function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals)
     SUITE = BenchmarkGroup()
     if ("HMMBase.jl" in implems) && any(>(1), K_vals)
         @warn "HMMBase.jl doesn't support multiple observation sequences, concatenating instead."
@@ -36,7 +36,7 @@ function define_suite(; implems, N_vals, D_vals, T_vals, K_vals)
     for implem in implems
         SUITE[implem] = BenchmarkGroup()
         for N in N_vals, D in D_vals, T in T_vals, K in K_vals
-            bench_tup = benchmarkables_by_implem(; implem, N, D, T, K)
+            bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K)
             for (algo, bench) in pairs(bench_tup)
                 if !haskey(SUITE[implem], algo)
                     SUITE[implem][algo] = BenchmarkGroup()
@@ -51,12 +51,14 @@ end
 julia_implems(implems) = filter(i -> contains(i, ".jl"), implems)
 python_implems(implems) = filter(i -> !contains(i, ".jl"), implems)
 
-function run_suite(; implems, N_vals, D_vals, T_vals, K_vals, path=nothing, kwargs...)
+function run_suite(;
+    implems, algos, N_vals, D_vals, T_vals, K_vals, path=nothing, kwargs...
+)
     julia_suite = define_suite(;
-        implems=julia_implems(implems), N_vals, D_vals, T_vals, K_vals
+        implems=julia_implems(implems), algos, N_vals, D_vals, T_vals, K_vals
     )
     python_suite = define_suite(;
-        implems=python_implems(implems), N_vals, D_vals, T_vals, K_vals
+        implems=python_implems(implems), algos, N_vals, D_vals, T_vals, K_vals
     )
 
     default_openblas_threads = BLAS.get_num_threads()

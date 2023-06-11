@@ -32,17 +32,26 @@ function rand_model_pomegranate(; N, D)
     return model
 end
 
-function benchmarkables_pomegranate(; N, D, T, K)
+function benchmarkables_pomegranate(; algos, N, D, T, K)
     rand_model_pomegranate(; N, D)
     obs_tens_py = torch.randn(K, T, D)
-    logdensity = @benchmarkable pycall(model_forward, $obs_tens_py) setup = (
-        model_forward = rand_model_pomegranate(; N=$N, D=$D).forward
-    )
-    forward_backward = @benchmarkable pycall(model_forward_backward, $obs_tens_py) setup = (
-        model_forward_backward = rand_model_pomegranate(; N=$N, D=$D).forward_backward
-    )
-    baum_welch = @benchmarkable pycall(model_fit, $obs_tens_py) setup = (
-        model_fit = rand_model_pomegranate(; N=$N, D=$D).fit
-    )
-    return (; logdensity, forward_backward, baum_welch)
+    bench = Dict()
+    if "logdensity" in algos
+        bench["logdensity"] = @benchmarkable pycall(model_forward, $obs_tens_py) setup = (
+            model_forward = rand_model_pomegranate(; N=$N, D=$D).forward
+        )
+    end
+    if "forward_backward" in algos
+        bench["forward_backward"] = @benchmarkable pycall(
+            model_forward_backward, $obs_tens_py
+        ) setup = (
+            model_forward_backward = rand_model_pomegranate(; N=$N, D=$D).forward_backward
+        )
+    end
+    if "baum_welch" in algos
+        bench["baum_welch"] = @benchmarkable pycall(model_fit, $obs_tens_py) setup = (
+            model_fit = rand_model_pomegranate(; N=$N, D=$D).fit
+        )
+    end
+    return bench
 end

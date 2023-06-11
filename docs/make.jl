@@ -20,8 +20,8 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Notations" => "notations.md",
         "Tutorial" => "tutorial.md",
+        "Notations" => "notations.md",
         "API reference" => "api.md",
         "Benchmarks" => "benchmarks.md",
     ],

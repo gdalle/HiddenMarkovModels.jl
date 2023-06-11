@@ -3,10 +3,11 @@
 *.jl.mem
 /Manifest.toml
 /docs/build/
-*.json
 **/.CondaPkg
 **/scratchpad.jl
-*.ipynb
 **/__pycache__
+*.ipynb
 *.svg
 *.csv
+*.txt
+*.json

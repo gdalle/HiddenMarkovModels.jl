@@ -20,24 +20,33 @@ function rand_model_hmms(; N, D)
     return model
 end
 
-function benchmarkables_hmms(; N, D, T, K)
+function benchmarkables_hmms(; algos, N, D, T, K)
     rand_model_hmms(; N, D)
     if D == 1
         obs_seqs = [[randn() for t in 1:T] for k in 1:K]
     else
         obs_seqs = [[randn(D) for t in 1:T] for k in 1:K]
     end
-    logdensity = @benchmarkable HMMs.logdensityof(model, $obs_seqs, $K) setup = (
-        model = rand_model_hmms(; N=$N, D=$D)
-    )
-    viterbi = @benchmarkable HMMs.viterbi(model, $obs_seqs, $K) setup = (
-        model = rand_model_hmms(; N=$N, D=$D)
-    )
-    forward_backward = @benchmarkable HMMs.forward_backward(model, $obs_seqs, $K) setup = (
-        model = rand_model_hmms(; N=$N, D=$D)
-    )
-    baum_welch = @benchmarkable HMMs.baum_welch(
-        model, $obs_seqs, $K; max_iterations=BAUM_WELCH_ITER, rtol=-Inf
-    ) setup = (model = rand_model_hmms(; N=$N, D=$D))
-    return (; logdensity, viterbi, forward_backward, baum_welch)
+    benchs = Dict()
+    if "logdensity" in algos
+        benchs["logdensity"] = @benchmarkable HMMs.logdensityof(model, $obs_seqs, $K) setup = (
+            model = rand_model_hmms(; N=$N, D=$D)
+        )
+    end
+    if "viterbi" in algos
+        benchs["viterbi"] = @benchmarkable HMMs.viterbi(model, $obs_seqs, $K) setup = (
+            model = rand_model_hmms(; N=$N, D=$D)
+        )
+    end
+    if "forward_backward" in algos
+        benchs["forward_backward"] = @benchmarkable HMMs.forward_backward(
+            model, $obs_seqs, $K
+        ) setup = (model = rand_model_hmms(; N=$N, D=$D))
+    end
+    if "baum_welch" in algos
+        benchs["baum_welch"] = @benchmarkable HMMs.baum_welch(
+            model, $obs_seqs, $K; max_iterations=BAUM_WELCH_ITER, rtol=-Inf
+        ) setup = (model = rand_model_hmms(; N=$N, D=$D))
+    end
+    return benchs
 end
