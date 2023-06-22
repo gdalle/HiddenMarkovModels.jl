@@ -19,11 +19,6 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/julia-buildpkg@v1
-      - run: |
-          julia --threads=1 --project=benchmark -e '
-          using Pkg
-          Pkg.instantiate()
-          include("benchmark/run_benchmarks.jl")'
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
