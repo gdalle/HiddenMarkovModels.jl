@@ -1,4 +1,4 @@
-name: CI-nightly
+name: test-nightly
 on:
   push:
     branches:
