@@ -8,7 +8,6 @@ We compare the following packages:
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 - [pomegranate](https://github.com/jmschrei/pomegranate)
 
-
 ## Results
 
 ### Single sequence
@@ -65,12 +64,12 @@ We might do it in future benchmarks.
 
 The packages we include have different approaches to parallelism, which can bias the evaluation in complex ways:
 
-| Package    | States `N`        | Observations `D` | Sequences `K` |
-| ---------- | ----------------- | ---------------- | ---------------- |
-| HMMs.jl    | LinearAlgebra[^2] | depends[^2]      | Threads[^1]      |
-| HMMBase.jl | -                 | depends[^2]      | -                |
-| hmmlearn   | NumPy[^2]         | NumPy[^2]        | NumPy[^2]        |
-| hmmlearn   | PyTorch[^3]       | PyTorch[^3]      | PyTorch[^3]      |
+| Package     | States `N`        | Observations `D` | Sequences `K` |
+| ----------- | ----------------- | ---------------- | ------------- |
+| HMMs.jl     | LinearAlgebra[^2] | depends[^2]      | Threads[^1]   |
+| HMMBase.jl  | -                 | depends[^2]      | -             |
+| hmmlearn    | NumPy[^2]         | NumPy[^2]        | NumPy[^2]     |
+| pomegranate | PyTorch[^3]       | PyTorch[^3]      | PyTorch[^3]   |
 
 [^1]: possibly affected by `JULIA_NUM_THREADS`
 [^2]: possibly affected by `OPENBLAS_NUM_THREADS`
@@ -80,7 +79,3 @@ For a fairer comparison, we set `JULIA_NUM_THREADS=1`, even though it robs HMMs.
 
 In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
 To overcome this obstacle, we run the Julia benchmarks (and only those) with `OPENBLAS_NUM_THREADS=1`.
-
-## Acknowledgements
-
-A big thank you to [Maxime Mouchet](https://www.maxmouchet.com/) and [Jacob Schreiber](https://jmschrei.github.io/), the respective lead devs of HMMBase.jl and pomegranate, for their help.
