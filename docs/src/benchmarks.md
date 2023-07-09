@@ -10,6 +10,9 @@ We compare the following packages:
 
 ## Results
 
+!!! warning "Warning"
+   The benchmark suite is computationally expensive, and we only run it once for each new release. If this section is empty, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
+
 ### Single sequence
 
 Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/results_single_sequence.csv).
