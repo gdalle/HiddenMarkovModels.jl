@@ -1,12 +1,12 @@
-function viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, op::ObservationProcess, obs_seq)
-    N, T = length(op), length(obs_seq)
-    loglikelihoods_vec!(logb, op, obs_seq[1])
+function viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm::AbstractHMM, obs_seq)
+    N, T = length(hmm), length(obs_seq)
+    loglikelihoods_vec!(logb, hmm, obs_seq[1])
     m = maximum(logb)
     δₜ .= p .* exp.(logb .- m)
     δₜ₋₁ .= δₜ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
-        loglikelihoods_vec!(logb, op, obs_seq[t])
+        loglikelihoods_vec!(logb, hmm, obs_seq[t])
         m = maximum(logb)
         for j in 1:N
             i_max = argmax(δₜ₋₁[i] * A[i, j] for i in 1:N)
@@ -27,11 +27,11 @@ end
 
 Apply the Viterbi algorithm to compute the most likely state sequence of an HMM for a single observation sequence.
 """
-function viterbi(hmm::HMM, obs_seq)
+function viterbi(hmm::AbstractHMM, obs_seq)
     T, N = length(obs_seq), length(hmm)
-    p = initial_distribution(hmm.state_process)
-    A = transition_matrix(hmm.state_process)
-    logb = loglikelihoods_vec(hmm.obs_process, obs_seq[1])
+    p = initial_distribution(hmm)
+    A = transition_matrix(hmm)
+    logb = loglikelihoods_vec(hmm, obs_seq[1])
 
     R = promote_type(eltype(p), eltype(A), eltype(logb))
     δₜ = Vector{R}(undef, N)
@@ -39,7 +39,7 @@ function viterbi(hmm::HMM, obs_seq)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
 
-    viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm.obs_process, obs_seq)
+    viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm, obs_seq)
     return q
 end
 
@@ -48,7 +48,7 @@ end
 
 Apply the Viterbi algorithm to compute the most likely state sequences of an HMM for multiple observation sequences.
 """
-function viterbi(hmm::HMM, obs_seqs, nb_seqs::Integer)
+function viterbi(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end

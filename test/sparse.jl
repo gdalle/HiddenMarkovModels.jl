@@ -20,5 +20,4 @@ hmm_init = HMM(p, A, dists_init)
 hmm_est, logL_evolution = @inferred baum_welch(hmm_init, obs_seq)
 
 @test typeof(hmm_est) == typeof(hmm)
-@test nnz(transition_matrix(hmm_est.state_process)) <=
-    nnz(transition_matrix(hmm.state_process))
+@test nnz(transition_matrix(hmm_est)) <= nnz(transition_matrix(hmm))

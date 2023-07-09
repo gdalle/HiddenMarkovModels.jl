@@ -15,6 +15,10 @@ using Test
         end
     end
 
+    @testset verbose = true "Interface" begin
+        include("interface.jl")
+    end
+
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
     end

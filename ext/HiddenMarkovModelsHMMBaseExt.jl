@@ -4,10 +4,10 @@ using HiddenMarkovModels
 using HMMBase: HMMBase
 
 function HiddenMarkovModels.HMM(hmm_base::HMMBase.HMM)
-    p = deepcopy(hmm_base.a)
-    A = deepcopy(hmm_base.A)
+    init = deepcopy(hmm_base.a)
+    trans = deepcopy(hmm_base.A)
     dists = deepcopy(hmm_base.B)
-    return HiddenMarkovModels.HMM(p, A, dists)
+    return HiddenMarkovModels.HMM(init, trans, dists)
 end
 
 function HMMBase.HMM(hmm::HiddenMarkovModels.HMM)

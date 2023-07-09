@@ -1,3 +1,18 @@
+"""
+    ForwardBackwardStorage{R}
+
+Store forward-backward quantities with element type `R`.
+
+# Fields
+
+- `α::Matrix{R}`: forward variables
+- `β::Matrix{R}`: backward variables
+- `γ::Matrix{R}`: one-state marginals
+- `ξ::Array{R,3}`: two-state marginals
+- `_c::Vector{R}`: forward variable inverse normalizations
+- `_m::Vector{R}`: maximum of `logB`
+- `_Bβ::Matrix{R}`: stabilized product `Bβ`
+"""
 struct ForwardBackwardStorage{R}
     α::Matrix{R}
     β::Matrix{R}
@@ -27,10 +42,10 @@ function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
     return logL
 end
 
-function initialize_forward_backward(sp::StateProcess, logB)
+function initialize_forward_backward(hmm::AbstractHMM, logB)
     N, T = size(logB)
-    p = initial_distribution(sp)
-    A = transition_matrix(sp)
+    p = initial_distribution(hmm)
+    A = transition_matrix(hmm)
     R = promote_type(eltype(p), eltype(A), eltype(logB))
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
