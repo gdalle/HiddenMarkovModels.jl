@@ -4,7 +4,7 @@
 Modify the `i`-th element of `dists` by fitting it to an observation sequence `x` with associated weight sequence `w`.
 
 The default behavior is a fallback on `StatsAPI.fit!(dists[i], x, w)`, which users are encouraged to implement if their observation distributions are mutable.
-If not, check out the source code to see the hack we used for Distributions.jl, and imitate it.
+If not, check out the source code below to see the hack we used for Distributions.jl, and imitate it.
 """
 function fit_element_from_sequence!(dists, i::Integer, x, w)
     fit!(dists[i], x, w)

@@ -2,7 +2,6 @@
 
 Here are some of the things that I would like to work on soon-ish:
 
-- specification and testing for an `AbstractHMM` interface, perhaps with [Interfaces.jl](https://github.com/rafaqz/Interfaces.jl)
 - numerical stability in large-dimensional settings with sparse transitions
 - reverse mode autodiff with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)
 - SIMD optimization with [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) or [Tullio.jl](https://github.com/mcabbott/Tullio.jl)

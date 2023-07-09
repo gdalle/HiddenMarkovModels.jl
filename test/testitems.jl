@@ -11,7 +11,11 @@ end
 @testitem "Type stability" begin
     include("type_stability.jl")
 end
-
+#=
+@testitem "Interface" begin
+    include("interface.jl")
+end
+=#
 @testitem "Correctness" begin
     include("correctness.jl")
 end

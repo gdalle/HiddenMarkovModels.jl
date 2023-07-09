@@ -2,7 +2,9 @@ using Test
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     @testset "Code quality" begin
-        include("quality.jl")
+        if VERSION >= v"1.9"
+            include("quality.jl")
+        end
     end
 
     @testset "Code formatting" begin
@@ -14,7 +16,11 @@ using Test
             include("type_stability.jl")
         end
     end
-
+    #=
+    @testset verbose = true "Interface" begin
+        include("interface.jl")
+    end
+    =#
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
     end

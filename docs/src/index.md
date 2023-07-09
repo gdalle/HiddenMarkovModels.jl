@@ -11,9 +11,11 @@ A Julia package for HMM modeling, simulation, inference and learning.
     - compatibility with [SparseArrays](https://github.com/JuliaSparse/SparseArrays.jl) and [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 
 !!! info "Genericity"
-    - observations can be arbitrary Julia objects (not just numbers or arrays)
-    - emission distributions `d` must only implement `rand(d)` and `logdensityof(d, x)` (as per [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl))
     - number types are not restricted
+    - observations can be arbitrary Julia objects (not just scalars or arrays)
+    - emission distributions `dist` only need to implement
+      - `rand(rng, dist)`
+      - `logdensityof(dist, x)` (following [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl))
 
 !!! info "Automatic differentiation"
     - in forward mode with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)

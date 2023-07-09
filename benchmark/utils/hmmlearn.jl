@@ -1,5 +1,6 @@
 using BenchmarkTools
 using PythonCall
+using SimpleUnPack
 
 np = pyimport("numpy")
 hmmlearn = pyimport("hmmlearn")
@@ -14,7 +15,7 @@ function rand_params_hmmlearn(; N, D)
 end
 
 function rand_model_hmmlearn(; N, D)
-    (; p, A, μ, σ) = rand_params_hmmlearn(; N, D)
+    @unpack p, A, μ, σ = rand_params_hmmlearn(; N, D)
     model = hmmlearn.hmm.GaussianHMM(;
         n_components=N,
         covariance_type="diag",

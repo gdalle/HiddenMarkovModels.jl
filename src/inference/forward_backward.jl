@@ -1,5 +1,5 @@
 function forward!(fb::ForwardBackwardStorage, p, A, logB)
-    (; α, _c, _m) = fb
+    @unpack α, _c, _m = fb
     T = size(α, 2)
     @views begin
         _m[1] = maximum(logB[:, 1])
@@ -19,7 +19,7 @@ function forward!(fb::ForwardBackwardStorage, p, A, logB)
 end
 
 function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
-    (; β, _c, _m, _Bβ) = fb
+    @unpack β, _c, _m, _Bβ = fb
     T = size(β, 2)
     β[:, T] .= one(R)
     @views for t in (T - 1):-1:1
@@ -32,7 +32,7 @@ function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
 end
 
 function marginals!(fb::ForwardBackwardStorage, A)
-    (; α, β, _Bβ, γ, ξ) = fb
+    @unpack α, β, _Bβ, γ, ξ = fb
     T = size(γ, 2)
     @views for t in 1:T
         γ[:, t] .= α[:, t] .* β[:, t]
@@ -49,37 +49,37 @@ function marginals!(fb::ForwardBackwardStorage, A)
     return nothing
 end
 
-function forward_backward!(fb::ForwardBackwardStorage, sp::StateProcess, logB)
-    p = initial_distribution(sp)
-    A = transition_matrix(sp)
+function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, logB)
+    p = initial_distribution(hmm)
+    A = transition_matrix(hmm)
     forward!(fb, p, A, logB)
     backward!(fb, A, logB)
     marginals!(fb, A)
     return nothing
 end
 
-function forward_backward_from_loglikelihoods(sp::StateProcess, logB)
-    fb = initialize_forward_backward(sp, logB)
-    forward_backward!(fb, sp, logB)
+function forward_backward_from_loglikelihoods(hmm::AbstractHMM, logB)
+    fb = initialize_forward_backward(hmm, logB)
+    forward_backward!(fb, hmm, logB)
     return fb
 end
 
 """
     forward_backward(hmm, obs_seq)
 
-Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for a single observation sequence.
+Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for a single observation sequence, and return a [`ForwardBackwardStorage`](@ref).
 """
-function forward_backward(hmm::HMM, obs_seq)
-    logB = loglikelihoods(hmm.obs_process, obs_seq)
-    return forward_backward_from_loglikelihoods(hmm.state_process, logB)
+function forward_backward(hmm::AbstractHMM, obs_seq)
+    logB = loglikelihoods(hmm, obs_seq)
+    return forward_backward_from_loglikelihoods(hmm, logB)
 end
 
 """
     forward_backward(hmm, obs_seqs, nb_seqs)
 
-Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for multiple observation sequences.
+Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for multiple observation sequences, and return a [`ForwardBackwardStorage`](@ref).
 """
-function forward_backward(hmm::HMM, obs_seqs, nb_seqs::Integer)
+function forward_backward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end

@@ -1,5 +1,5 @@
 """
-    LightDiagonalNormal
+    LightDiagNormal
 
 An HMMs-compatible implementation of a multivariate normal distribution with diagonal covariance, enabling allocation-free estimation.
 

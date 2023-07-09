@@ -2,10 +2,11 @@ using Distributions
 using Distributions: PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
+using SimpleUnPack
 using Test
 
 function test_correctness(hmm, hmm_init; T)
-    (; state_seq, obs_seq) = rand(hmm, T)
+    @unpack state_seq, obs_seq = rand(hmm, T)
     obs_mat = collect(reduce(hcat, obs_seq)')
 
     hmm_base = HMMBase.HMM(deepcopy(hmm))
@@ -40,8 +41,8 @@ function test_correctness(hmm, hmm_init; T)
         @test isapprox(
             logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)]
         )
-        @test isapprox(initial_distribution(hmm_est.state_process), hmm_est_base.a)
-        @test isapprox(transition_matrix(hmm_est.state_process), hmm_est_base.A)
+        @test isapprox(initial_distribution(hmm_est), hmm_est_base.a)
+        @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)
     end
 end
 

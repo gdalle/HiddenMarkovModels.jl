@@ -1,33 +1,33 @@
 ## Vector
 
-function loglikelihoods_vec!(logb, op::ObservationProcess, obs)
-    for i in 1:length(op)
-        logb[i] = logdensityof(obs_distribution(op, i), obs)
+function loglikelihoods_vec!(logb, hmm::AbstractHMM, obs)
+    for i in 1:length(hmm)
+        logb[i] = logdensityof(obs_distribution(hmm, i), obs)
     end
     check_no_nan(logb)
     return nothing
 end
 
-function loglikelihoods_vec(op::ObservationProcess, obs)
-    logb = [logdensityof(obs_distribution(op, i), obs) for i in 1:length(op)]
+function loglikelihoods_vec(hmm::AbstractHMM, obs)
+    logb = [logdensityof(obs_distribution(hmm, i), obs) for i in 1:length(hmm)]
     check_no_nan(logb)
     return logb
 end
 
 ## Matrix
 
-function loglikelihoods!(logB, op::ObservationProcess, obs_seq)
-    T, N = length(obs_seq), length(op)
+function loglikelihoods!(logB, hmm::AbstractHMM, obs_seq)
+    T, N = length(obs_seq), length(hmm)
     for t in 1:T, i in 1:N
-        logB[i, t] = logdensityof(obs_distribution(op, i), obs_seq[t])
+        logB[i, t] = logdensityof(obs_distribution(hmm, i), obs_seq[t])
     end
     check_no_nan(logB)
     return nothing
 end
 
-function loglikelihoods(op::ObservationProcess, obs_seq)
-    T, N = length(obs_seq), length(op)
-    dists = obs_distribution.(Ref(op), 1:N)
+function loglikelihoods(hmm::AbstractHMM, obs_seq)
+    T, N = length(obs_seq), length(hmm)
+    dists = obs_distribution.(Ref(hmm), 1:N)
     logB = [logdensityof(dists[i], obs_seq[t]) for i in 1:N, t in 1:T]
     check_no_nan(logB)
     return logB

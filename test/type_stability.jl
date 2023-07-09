@@ -3,6 +3,7 @@ using Distributions: PDiagMat
 using HiddenMarkovModels
 using HiddenMarkovModels: LightDiagNormal
 using JET
+using SimpleUnPack
 using Test
 
 function test_type_stability(hmm, hmm_init; T, K)

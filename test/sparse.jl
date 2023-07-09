@@ -3,6 +3,7 @@ using HiddenMarkovModels
 using HiddenMarkovModels: sum_to_one!
 using LinearAlgebra
 using SparseArrays
+using SimpleUnPack
 using Test
 
 N = 5
@@ -16,9 +17,8 @@ dists_init = [Normal(randn(), 1.0) for i in 1:N]
 hmm = HMM(p, A, dists)
 hmm_init = HMM(p, A, dists_init)
 
-(; state_seq, obs_seq) = rand(hmm, 1000)
+@unpack state_seq, obs_seq = rand(hmm, 1000)
 hmm_est, logL_evolution = @inferred baum_welch(hmm_init, obs_seq)
 
 @test typeof(hmm_est) == typeof(hmm)
-@test nnz(transition_matrix(hmm_est.state_process)) <=
-    nnz(transition_matrix(hmm.state_process))
+@test nnz(transition_matrix(hmm_est)) <= nnz(transition_matrix(hmm))
