@@ -96,6 +96,9 @@ Simulate `hmm` for `T` time steps with the global RNG.
 """
 Base.rand(hmm::AbstractHMM, T::Integer) = rand(GLOBAL_RNG, hmm, T)
 
+#=
+@required AbstractHMM Base.length(::AbstractHMM)
 @required AbstractHMM initial_distribution(::AbstractHMM)
 @required AbstractHMM transition_matrix(::AbstractHMM)
 @required AbstractHMM obs_distribution(::AbstractHMM, ::Integer)
+=#

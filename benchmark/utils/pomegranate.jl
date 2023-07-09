@@ -1,5 +1,6 @@
 using BenchmarkTools
 using PythonCall
+using SimpleUnPack
 
 torch = pyimport("torch")
 pomegranate = pyimport("pomegranate")
@@ -15,7 +16,7 @@ function rand_params_pomegranate(; N, D)
 end
 
 function rand_model_pomegranate(; N, D)
-    (; p, A, μ, σ) = rand_params_pomegranate(; N, D)
+    @unpack p, A, μ, σ = rand_params_pomegranate(; N, D)
     distributions = pylist([
         pomegranate.distributions.Normal(;
             means=μ[n], covs=torch.square(σ[n]), covariance_type="diag"

@@ -14,11 +14,11 @@ using Test
             include("type_stability.jl")
         end
     end
-
+    #=
     @testset verbose = true "Interface" begin
         include("interface.jl")
     end
-
+    =#
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
     end

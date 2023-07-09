@@ -26,8 +26,9 @@ using Distributions:
 using LinearAlgebra: Diagonal, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: AbstractRNG, GLOBAL_RNG
-using RequiredInterfaces: @required
+# using RequiredInterfaces: @required  # not compatible with 1.7
 using Requires: @require
+using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
 export HMMs
@@ -71,7 +72,7 @@ end
     dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
     hmm = HMM(p, A, dists)
 
-    (; state_seq, obs_seq) = rand(hmm, T)
+    @unpack state_seq, obs_seq = rand(hmm, T)
     logdensityof(hmm, obs_seq)
     viterbi(hmm, obs_seq)
     forward_backward(hmm, obs_seq)

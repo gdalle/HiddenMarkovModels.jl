@@ -1,5 +1,5 @@
 function forward!(fb::ForwardBackwardStorage, p, A, logB)
-    (; α, _c, _m) = fb
+    @unpack α, _c, _m = fb
     T = size(α, 2)
     @views begin
         _m[1] = maximum(logB[:, 1])
@@ -19,7 +19,7 @@ function forward!(fb::ForwardBackwardStorage, p, A, logB)
 end
 
 function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
-    (; β, _c, _m, _Bβ) = fb
+    @unpack β, _c, _m, _Bβ = fb
     T = size(β, 2)
     β[:, T] .= one(R)
     @views for t in (T - 1):-1:1
@@ -32,7 +32,7 @@ function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
 end
 
 function marginals!(fb::ForwardBackwardStorage, A)
-    (; α, β, _Bβ, γ, ξ) = fb
+    @unpack α, β, _Bβ, γ, ξ = fb
     T = size(γ, 2)
     @views for t in 1:T
         γ[:, t] .= α[:, t] .* β[:, t]

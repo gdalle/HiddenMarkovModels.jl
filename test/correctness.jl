@@ -2,10 +2,11 @@ using Distributions
 using Distributions: PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
+using SimpleUnPack
 using Test
 
 function test_correctness(hmm, hmm_init; T)
-    (; state_seq, obs_seq) = rand(hmm, T)
+    @unpack state_seq, obs_seq = rand(hmm, T)
     obs_mat = collect(reduce(hcat, obs_seq)')
 
     hmm_base = HMMBase.HMM(deepcopy(hmm))

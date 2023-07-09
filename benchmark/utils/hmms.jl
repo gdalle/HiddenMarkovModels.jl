@@ -1,5 +1,6 @@
 using BenchmarkTools
 using HiddenMarkovModels: HMMs
+using SimpleUnPack
 
 function rand_params_hmms(; N, D)
     p = ones(N) / N
@@ -10,7 +11,7 @@ function rand_params_hmms(; N, D)
 end
 
 function rand_model_hmms(; N, D)
-    (; p, A, μ, σ) = rand_params_hmms(; N, D)
+    @unpack p, A, μ, σ = rand_params_hmms(; N, D)
     if D == 1
         dists = [Normal(μ[n, 1], σ[n, 1]) for n in 1:N]
     else

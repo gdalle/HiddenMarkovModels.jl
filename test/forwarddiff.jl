@@ -2,6 +2,7 @@ using Distributions
 using FiniteDifferences: FiniteDifferences, central_fdm
 using ForwardDiff: ForwardDiff
 using HiddenMarkovModels
+using SimpleUnPack
 using Test
 
 N = 5
@@ -12,7 +13,7 @@ A = rand_trans_mat(N)
 dists = [Normal(μ[i], 1.0) for i in 1:N]
 hmm = HMM(p, A, dists)
 
-(; state_seq, obs_seq) = rand(hmm, 100);
+@unpack state_seq, obs_seq = rand(hmm, 100);
 
 function f(μ)
     new_dists = [Normal(μ[i], 1.0) for i in 1:N]

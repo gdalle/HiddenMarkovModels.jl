@@ -314,7 +314,7 @@ uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
 
 [[deps.HiddenMarkovModels]]
-deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "PrecompileTools", "Random", "RequiredInterfaces", "Requires", "StatsAPI"]
+deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "PrecompileTools", "Random", "Requires", "SimpleUnPack", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 version = "0.2.0"
@@ -764,12 +764,6 @@ git-tree-sha1 = "90bc7a7c96410424509e4263e277e43250c05691"
 uuid = "05181044-ff0b-4ac5-8273-598c1e38db00"
 version = "1.0.0"
 
-[[deps.RequiredInterfaces]]
-deps = ["InteractiveUtils", "Logging", "Test"]
-git-tree-sha1 = "6af11f9b36a4852099865fc8eb0df8e152eb65da"
-uuid = "97f35ef4-7bc5-4ec1-a41a-dcc69c7308c6"
-version = "0.1.2"
-
 [[deps.Requires]]
 deps = ["UUIDs"]
 git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
@@ -816,6 +810,11 @@ version = "1.0.3"
 [[deps.SimpleBufferStream]]
 git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
 uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
+version = "1.1.0"
+
+[[deps.SimpleUnPack]]
+git-tree-sha1 = "58e6353e72cde29b90a69527e56df1b5c3d8c437"
+uuid = "ce78b400-467f-4804-87d8-8f486da07d0a"
 version = "1.1.0"
 
 [[deps.SnoopPrecompile]]

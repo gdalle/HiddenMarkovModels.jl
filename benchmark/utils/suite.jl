@@ -87,7 +87,7 @@ function run_suite(;
                 for (N, D, T, K) in identity.(keys(results[implem][algo]))
                     I = BAUM_WELCH_ITER
                     perf = results[implem][algo][(N, D, T, K)]
-                    (; time, gctime, memory, allocs) = perf
+                    @unpack time, gctime, memory, allocs = perf
                     row = (; implem, algo, N, D, T, K, I, time, gctime, memory, allocs)
                     push!(data, row)
                 end

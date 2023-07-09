@@ -2,6 +2,7 @@ using BenchmarkTools
 using Distributions
 using Distributions: PDiagMat
 using HMMBase: HMMBase
+using SimpleUnPack
 
 function rand_params_hmmbase(; N, D)
     p = ones(N) / N
@@ -12,7 +13,7 @@ function rand_params_hmmbase(; N, D)
 end
 
 function rand_model_hmmbase(; N, D)
-    (; p, A, μ, σ) = rand_params_hmmbase(; N, D)
+    @unpack p, A, μ, σ = rand_params_hmmbase(; N, D)
     if D == 1
         dists = [Normal(μ[n, 1], σ[n, 1]) for n in 1:N]
     else
