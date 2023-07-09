@@ -1,4 +1,4 @@
-function viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm::AbstractHMM, obs_seq)
+function viterbi!(q, δₜ, δₜ₋₁, δA_tmp, ψ, logb, p, A, hmm::AbstractHMM, obs_seq)
     N, T = length(hmm), length(obs_seq)
     loglikelihoods_vec!(logb, hmm, obs_seq[1])
     m = maximum(logb)
@@ -9,9 +9,10 @@ function viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm::AbstractHMM, obs_s
         loglikelihoods_vec!(logb, hmm, obs_seq[t])
         m = maximum(logb)
         for j in 1:N
-            i_max = argmax(δₜ₋₁[i] * A[i, j] for i in 1:N)
+            @views δA_tmp .= δₜ₋₁ .* A[:, j]
+            i_max = argmax(δA_tmp)
             ψ[j, t] = i_max
-            δₜ[j] = δₜ₋₁[i_max] * A[i_max, j] * exp(logb[j] - m)
+            δₜ[j] = δA_tmp[i_max] * exp(logb[j] - m)
         end
         δₜ₋₁ .= δₜ
     end
@@ -36,10 +37,11 @@ function viterbi(hmm::AbstractHMM, obs_seq)
     R = promote_type(eltype(p), eltype(A), eltype(logb))
     δₜ = Vector{R}(undef, N)
     δₜ₋₁ = Vector{R}(undef, N)
+    δA_tmp = Vector{R}(undef, N)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
 
-    viterbi!(q, δₜ, δₜ₋₁, ψ, logb, p, A, hmm, obs_seq)
+    viterbi!(q, δₜ, δₜ₋₁, δA_tmp, ψ, logb, p, A, hmm, obs_seq)
     return q
 end
 
