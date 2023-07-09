@@ -317,7 +317,7 @@ version = "2.8.1+1"
 deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "PrecompileTools", "Random", "RequiredInterfaces", "Requires", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
-version = "0.2.0-DEV"
+version = "0.2.0"
 
     [deps.HiddenMarkovModels.extensions]
     HiddenMarkovModelsHMMBaseExt = "HMMBase"
