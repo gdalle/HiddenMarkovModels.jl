@@ -11,16 +11,22 @@ using Test
         include("formatting.jl")
     end
 
+    @testset "Code linting" begin
+        if VERSION >= v"1.9"
+            include("linting.jl")
+        end
+    end
+
+    @testset "Doctests" begin
+        include("doctests.jl")
+    end
+
     @testset verbose = true "Type stability" begin
         if VERSION >= v"1.9"
             include("type_stability.jl")
         end
     end
-    #=
-    @testset verbose = true "Interface" begin
-        include("interface.jl")
-    end
-    =#
+
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
     end

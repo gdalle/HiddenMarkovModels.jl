@@ -8,14 +8,18 @@ end
     include("formatting.jl")
 end
 
+@testitem "Code linting" begin
+    include("linting.jl")
+end
+
+@testset "Doctests" begin
+    include("doctests.jl")
+end
+
 @testitem "Type stability" begin
     include("type_stability.jl")
 end
-#=
-@testitem "Interface" begin
-    include("interface.jl")
-end
-=#
+
 @testitem "Correctness" begin
     include("correctness.jl")
 end
