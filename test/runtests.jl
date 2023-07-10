@@ -1,28 +1,24 @@
 using Test
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
-    @testset "Code quality" begin
-        if VERSION >= v"1.9"
-            include("quality.jl")
-        end
-    end
-
     @testset "Code formatting" begin
         include("formatting.jl")
     end
 
-    @testset "Code linting" begin
-        if VERSION >= v"1.9"
+    if VERSION >= v"1.9"
+        @testset "Code quality" begin
+            include("quality.jl")
+        end
+
+        @testset "Code linting" begin
             include("linting.jl")
         end
-    end
 
-    @testset "Doctests" begin
-        include("doctests.jl")
-    end
+        @testset "Interface" begin
+            include("interface.jl")
+        end
 
-    @testset verbose = true "Type stability" begin
-        if VERSION >= v"1.9"
+        @testset verbose = true "Type stability" begin
             include("type_stability.jl")
         end
     end
@@ -41,5 +37,9 @@ using Test
 
     @testset verbose = true "ForwardDiff" begin
         include("forwarddiff.jl")
+    end
+
+    @testset "Doctests" begin
+        include("doctests.jl")
     end
 end
