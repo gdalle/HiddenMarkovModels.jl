@@ -4,10 +4,13 @@
     In the meantime, you can take a look at the files in `test`, which demonstrate more sophisticated ways to use the package.
 
 ```@repl tuto
-using HiddenMarkovModels, Distributions
+using HiddenMarkovModels
+using Distributions
 ```
 
-Constructing an HMM:
+## Using the built-in HMM
+
+Constructing a model:
 
 ```@repl tuto
 function random_gaussian_hmm(N)
@@ -56,3 +59,22 @@ first(logL_evolution), last(logL_evolution)
 transition_matrix(hmm_est)
 [obs_distribution(hmm_est, i) for i in 1:length(hmm)]
 ```
+
+## Making your own HMM
+
+The built-in HMM is perfect when the initial state distribution `p`, transition matrix `A` and emission distributions `dists` are three separate objects, which means their re-estimation can be done separately.
+But in some cases these parameters might be correlated.
+For instance, you may want an HMM whose initial state distribution always corresponds to the equilibrium distribution associated with the transition matrix.
+
+In such cases, it is necessary to implement a new subtype of [`AbstractHMM`](@ref) with all its required methods.
+To ascertain that your type indeed satisfies the interface, you can use [RequiredInterfaces.jl](https://github.com/Seelengrab/RequiredInterfaces.jl) as follows:
+
+```@repl tuto
+using RequiredInterfaces: check_interface_implemented
+using Test
+
+@test check_interface_implemented(AbstractHMM, HMM)
+```
+
+Note that this test does not check the `fit!` method.
+Since it is only used in the Baum-Welch algorithm, it is an optional part of the `AbstractHMM` interface.

@@ -14,13 +14,13 @@ using Test
             include("linting.jl")
         end
 
-        @testset "Interface" begin
-            include("interface.jl")
-        end
-
         @testset verbose = true "Type stability" begin
             include("type_stability.jl")
         end
+    end
+
+    @testset "Interface" begin
+        include("interface.jl")
     end
 
     @testset verbose = true "Correctness" begin

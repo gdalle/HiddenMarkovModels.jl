@@ -29,6 +29,13 @@ const AbstractHMM = AbstractHiddenMarkovModel
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
+@required AbstractHMM begin
+    Base.length(::AbstractHMM)
+    initial_distribution(::AbstractHMM)
+    transition_matrix(::AbstractHMM)
+    obs_distribution(::AbstractHMM, ::Integer)
+end
+
 """
     length(hmm::AbstractHMM)
 
