@@ -71,9 +71,11 @@ To ascertain that your type indeed satisfies the interface, you can use [Require
 
 ```@repl tuto
 using RequiredInterfaces: check_interface_implemented
-using Test
 
-@test check_interface_implemented(AbstractHMM, HMM)
+struct EmptyHMM end
+
+check_interface_implemented(AbstractHMM, HMM)
+check_interface_implemented(AbstractHMM, EmptyHMM)
 ```
 
 Note that this test does not check the `fit!` method.
