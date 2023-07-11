@@ -1,5 +1,9 @@
 using HiddenMarkovModels
-using RequiredInterfaces
+using RequiredInterfaces: check_interface_implemented
 using Test
 
-@test RequiredInterfaces.check_interface_implemented(AbstractHMM, HMM)
+struct EmptyHMM end
+
+@test check_interface_implemented(AbstractHMM, HMM)
+
+@test check_interface_implemented(AbstractHMM, EmptyHMM) != true
