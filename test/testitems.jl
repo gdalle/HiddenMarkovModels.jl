@@ -1,23 +1,25 @@
-using TestItemRunner
+# Don't run this on Julia < 1.9, it will explode
 
-@testitem "Code quality" begin
-    include("quality.jl")
-end
+using TestItemRunner
 
 @testitem "Code formatting" begin
     include("formatting.jl")
+end
+
+@testitem "Code quality" begin
+    include("quality.jl")
 end
 
 @testitem "Code linting" begin
     include("linting.jl")
 end
 
-@testset "Doctests" begin
-    include("doctests.jl")
-end
-
 @testitem "Type stability" begin
     include("type_stability.jl")
+end
+
+@testitem "Interface" begin
+    include("interface.jl")
 end
 
 @testitem "Correctness" begin
@@ -34,4 +36,8 @@ end
 
 @testitem "ForwardDiff" begin
     include("forwarddiff.jl")
+end
+
+@testset "Doctests" begin
+    include("doctests.jl")
 end

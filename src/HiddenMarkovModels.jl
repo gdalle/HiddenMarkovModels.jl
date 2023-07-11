@@ -26,6 +26,7 @@ using Distributions:
 using LinearAlgebra: Diagonal, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: AbstractRNG, GLOBAL_RNG
+using RequiredInterfaces: @required
 using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!

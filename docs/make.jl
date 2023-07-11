@@ -25,7 +25,7 @@ if benchmarks_successful
     insert!(pages, length(pages) - 1, "Benchmarks" => "benchmarks.md")
 end
 
-format = Documenter.HTML(;
+fmt = Documenter.HTML(;
     prettyurls=get(ENV, "CI", "false") == "true",
     canonical="https://gdalle.github.io/HiddenMarkovModels.jl",
     edit_link="main",
@@ -37,7 +37,7 @@ makedocs(;
     authors="Guillaume Dalle, Maxime Mouchet and contributors",
     repo="https://github.com/gdalle/HiddenMarkovModels.jl/blob/{commit}{path}#{line}",
     sitename="HiddenMarkovModels.jl",
-    format=format,
+    format=fmt,
     pages=pages,
     linkcheck=true,
     strict=false,
