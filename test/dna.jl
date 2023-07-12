@@ -129,7 +129,7 @@ dchmm = DNACodingHMM(;
     cod_init=rand_prob_vec(2),
     nuc_init=rand_prob_vec(4),
     cod_trans=rand_trans_mat(2),
-    nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
+    nuc_trans=permutedims(cat(rand_trans_mat(4), rand_trans_mat(4); dims=3), (3, 1, 2)),
 );
 
 @unpack state_seq, obs_seq = rand(dchmm, 10_000);
@@ -144,10 +144,10 @@ dchmm_init = DNACodingHMM(;
     nuc_init=rand(4),
     cod_trans=rand_trans_mat(2),
     # using transition_matrix(mc) as initialization below seems to be worse
-    nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
+    nuc_trans=permutedims(cat(rand_trans_mat(4), rand_trans_mat(4); dims=3), (3, 1, 2)),
 );
 
-dchmm_est, logL_evolution = baum_welch(dchmm_init, obs_seq; rtol=1e-5, max_iterations=100);
+dchmm_est, logL_evolution = baum_welch(dchmm_init, obs_seq; rtol=1e-7, max_iterations=100);
 
 logL_evolution
 
