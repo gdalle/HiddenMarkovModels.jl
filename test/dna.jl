@@ -2,6 +2,7 @@ using DensityInterface
 using HiddenMarkovModels
 using Random: AbstractRNG
 using RequiredInterfaces: check_interface_implemented
+using SimpleUnPack
 using StatsAPI
 using Test
 
@@ -78,7 +79,7 @@ function HMMs.initial_distribution(dchmm::DNACodingHMM)
 end
 
 function HMMs.transition_matrix(dchmm::DNACodingHMM)
-    (; cod_trans, nuc_trans) = dchmm
+    @unpack cod_trans, nuc_trans = dchmm
     A = Matrix{Float64}(undef, 8, 8)
     for c1 in 1:2, n1 in 1:4, c2 in 1:2, n2 in 1:4
         s1, s2 = get_state(c1, n1), get_state(c2, n2)
@@ -131,7 +132,7 @@ dchmm = DNACodingHMM(;
     nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
 );
 
-(; state_seq, obs_seq) = rand(dchmm, 10_000);
+@unpack state_seq, obs_seq = rand(dchmm, 10_000);
 
 most_likely_coding_seq = get_coding.(viterbi(dchmm, obs_seq));
 
