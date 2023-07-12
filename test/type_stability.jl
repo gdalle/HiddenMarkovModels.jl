@@ -36,6 +36,8 @@ end
 
 N = 5
 D = 3
+T = 100
+K = 4
 
 p = rand_prob_vec(N)
 p_init = rand_prob_vec(N)
@@ -52,7 +54,7 @@ hmm_norm = HMM(p, A, dists_norm)
 hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
 
 @testset verbose = true "Normal" begin
-    test_type_stability(hmm_norm, hmm_norm_init; T=100, K=3)
+    test_type_stability(hmm_norm, hmm_norm_init; T, K)
 end
 
 # DiagNormal
@@ -64,7 +66,7 @@ hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
 @testset verbose = true "DiagNormal" begin
-    test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T=100, K=3)
+    test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T, K)
 end
 
 ## LightDiagNormal
@@ -76,5 +78,5 @@ hmm_lightdiagnorm = HMM(p, A, dists_lightdiagnorm)
 hmm_lightdiagnorm_init = HMM(p, A, dists_lightdiagnorm_init)
 
 @testset verbose = true "LightDiagNormal" begin
-    test_type_stability(hmm_lightdiagnorm, hmm_lightdiagnorm_init; T=100, K=3)
+    test_type_stability(hmm_lightdiagnorm, hmm_lightdiagnorm_init; T, K)
 end

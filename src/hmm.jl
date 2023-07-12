@@ -46,6 +46,11 @@ initial_distribution(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distribution(hmm::HMM, i::Integer) = hmm.dists[i]
 
+"""
+    StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
+
+Update `hmm` in-place based on information generated during forward-backward.
+"""
 function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
     hmm.init .= init_count
     sum_to_one!(hmm.init)
@@ -55,4 +60,8 @@ function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_margina
         fit_element_from_sequence!(hmm.dists, i, obs_seq, state_marginals[i, :])
     end
     return nothing
+end
+
+function MarkovChain(hmm::AbstractHMM)
+    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
 end

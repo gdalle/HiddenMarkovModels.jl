@@ -37,4 +37,4 @@ function rand_trans_mat(rng::AbstractRNG, N)
     return A
 end
 
-rand_trans_mat(N) = rand_trans_mat(GLOBAL_RNG, N)
+rand_trans_mat(N) = rand_trans_mat(default_rng(), N)

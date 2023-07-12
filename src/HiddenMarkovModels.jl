@@ -25,20 +25,26 @@ using Distributions:
     MatrixDistribution
 using LinearAlgebra: Diagonal, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
-using Random: AbstractRNG, GLOBAL_RNG
+using Random: AbstractRNG, default_rng
 using RequiredInterfaces: @required
 using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
 export HMMs
+export AbstractMarkovChain, AbstractMC
+export MarkovChain, MC
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
 export initial_distribution, transition_matrix, obs_distribution
 export logdensityof, viterbi, forward_backward, baum_welch
+export fit, fit!
 export LightDiagNormal
 
+include("interface.jl")
+include("abstract_mc.jl")
+include("mc.jl")
 include("abstract_hmm.jl")
 include("hmm.jl")
 

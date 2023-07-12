@@ -125,15 +125,8 @@ end
 @test check_interface_implemented(AbstractHMM, DNACodingHMM)
 
 dchmm = DNACodingHMM(;
-    cod_init=rand(2),
-    nuc_init=rand(4),
-    cod_trans=rand_trans_mat(2),
-    nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
-);
-
-dchmm_rand = DNACodingHMM(;
-    cod_init=rand(2),
-    nuc_init=rand(4),
+    cod_init=rand_prob_vec(2),
+    nuc_init=rand_prob_vec(4),
     cod_trans=rand_trans_mat(2),
     nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
 );
@@ -142,12 +135,23 @@ dchmm_rand = DNACodingHMM(;
 
 most_likely_coding_seq = get_coding.(viterbi(dchmm, obs_seq));
 
-dchmm_est, logL_evolution = baum_welch(dchmm_rand, obs_seq; rtol=1e-5, max_iterations=100);
+mc = MarkovChain(ones(4) ./ 4, rand_trans_mat(4))
+fit!(mc, obs_seq)
+
+dchmm_init = DNACodingHMM(;
+    cod_init=rand(2),
+    nuc_init=rand(4),
+    cod_trans=rand_trans_mat(2),
+    # using transition_matrix(mc) as initialization below seems to be worse
+    nuc_trans=stack([rand_trans_mat(4), rand_trans_mat(4)]; dims=1),
+);
+
+dchmm_est, logL_evolution = baum_welch(dchmm_init, obs_seq; rtol=1e-5, max_iterations=100);
 
 logL_evolution
 
-sum(abs, dchmm_rand.cod_trans - dchmm.cod_trans)
-sum(abs, dchmm_est.cod_trans - dchmm.cod_trans)
+sum(abs, dchmm_init.cod_trans - dchmm.cod_trans) / (2 * 2)
+sum(abs, dchmm_est.cod_trans - dchmm.cod_trans) / (2 * 2)
 
-sum(abs, dchmm_rand.nuc_trans - dchmm.nuc_trans)
-sum(abs, dchmm_est.nuc_trans - dchmm.nuc_trans)
+sum(abs, dchmm_init.nuc_trans - dchmm.nuc_trans) / (2 * 4 * 4)
+sum(abs, dchmm_est.nuc_trans - dchmm.nuc_trans) / (2 * 4 * 4)

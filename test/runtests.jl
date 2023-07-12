@@ -23,6 +23,10 @@ using Test
         include("interface.jl")
     end
 
+    @testset "Markov chain" begin
+        include("mc.jl")
+    end
+
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
     end
@@ -37,6 +41,10 @@ using Test
 
     @testset verbose = true "ForwardDiff" begin
         include("forwarddiff.jl")
+    end
+
+    @testset verbose = true "DNA" begin
+        include("dna.jl")
     end
 
     @testset "Doctests" begin
