@@ -1,0 +1,50 @@
+Julia Version 1.9.2
+Commit e4ee485e909 (2023-07-05 09:39 UTC)
+Platform Info:
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-14.0.6 (ORCJIT, skylake-avx512)
+  Threads: 1 on 2 virtual cores
+Environment:
+  JULIA_PKG_SERVER_REGISTRY_PREFERENCE = eager
+  JULIA_IMAGE_THREADS = 1
+  JULIA_PYTHONCALL_EXE = /home/runner/work/HiddenMarkovModels.jl/HiddenMarkovModels.jl/benchmark/.CondaPkg/env/bin/python
+
+# Multithreading
+
+JULIA_NUM_THREADS = 1
+OPENBLAS_NUM_THREADS = 1
+MKL_NUM_THREADS = ?
+
+# Julia packages
+
+Status `~/work/HiddenMarkovModels.jl/HiddenMarkovModels.jl/benchmark/Project.toml`
+  [6e4b80f9] BenchmarkTools v1.3.2
+  [336ed68f] CSV v0.10.11
+  [992eb4ea] CondaPkg v0.2.18
+⌃ [a93c6f00] DataFrames v1.5.0
+⌃ [31c24e10] Distributions v0.25.95
+  [b2b3ca75] HMMBase v1.0.7
+  [84ca31d5] HiddenMarkovModels v0.2.2 `..`
+  [91a5bcdd] Plots v1.38.16
+  [6099a3de] PythonCall v0.9.13
+  [295af30f] Revise v3.5.3
+  [ce78b400] SimpleUnPack v1.1.0
+  [b77e0a4c] InteractiveUtils
+  [37e2e46d] LinearAlgebra
+  [9a3f8284] Random
+Info Packages marked with ⌃ have new versions available and may be upgradable.
+
+# Python packages
+
+CondaPkg Status /home/runner/work/HiddenMarkovModels.jl/HiddenMarkovModels.jl/benchmark/CondaPkg.toml
+Environment
+  /home/runner/work/HiddenMarkovModels.jl/HiddenMarkovModels.jl/benchmark/.CondaPkg/env
+Pip packages
+  hmmlearn v0.3.0
+  ipykernel v6.24.0
+  numpy v1.24.4
+  pomegranate v1.0.0
+  torch v2.0.1
