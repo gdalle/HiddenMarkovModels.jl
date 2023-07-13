@@ -5,9 +5,13 @@ using CSV
 using DataFrames
 using Plots
 
-BENCHMARK_RESULTS_FOLDER = joinpath(@__DIR__, "..", "benchmark", "results")
-DOCS_BENCHMARK_RESULTS_FOLDER = joinpath(@__DIR__, "src", "assets", "benchmark", "results")
-DOCS_BENCHMARK_PLOTS_FOLDER = joinpath(@__DIR__, "src", "assets", "benchmark", "plots")
+BENCHMARK_RESULTS_FOLDER = joinpath(@__DIR__, "results")
+DOCS_BENCHMARK_RESULTS_FOLDER = joinpath(
+    @__DIR__, "..", "docs", "src", "assets", "benchmark", "results"
+)
+DOCS_BENCHMARK_PLOTS_FOLDER = joinpath(
+    @__DIR__, "..", "docs", "src", "assets", "benchmark", "plots"
+)
 
 IMPLEM_COLORS = Dict(
     "HMMs.jl" => :blue, "HMMBase.jl" => :orange, "hmmlearn" => :green, "pomegranate" => :red
@@ -27,19 +31,9 @@ IMPLEM_LINESTYLES = Dict(
     "pomegranate" => :dashdotdot,
 )
 
-for file in readdir(BENCHMARK_RESULTS_FOLDER)
-    if endswith(file, ".csv") || endswith(file, ".txt")
-        cp(
-            joinpath(BENCHMARK_RESULTS_FOLDER, file),
-            joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, file);
-            force=true,
-        )
-    end
-end
+## Functions
 
-function title_from_algo(algo)
-    return titlecase(replace(algo, "_" => "-"))
-end
+title_from_algo(algo) = titlecase(replace(algo, "_" => "-"))
 
 function plot_benchmarks(; name)
     path = joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, "results_$name.csv")
@@ -109,6 +103,18 @@ function plot_benchmarks(; name)
 
         filename = "benchmark_$(name)_$(algo).svg"
         savefig(megaplt, joinpath(DOCS_BENCHMARK_PLOTS_FOLDER, filename))
+    end
+end
+
+## Main
+
+for file in readdir(BENCHMARK_RESULTS_FOLDER)
+    if endswith(file, ".csv") || endswith(file, ".txt")
+        cp(
+            joinpath(BENCHMARK_RESULTS_FOLDER, file),
+            joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, file);
+            force=true,
+        )
     end
 end
 

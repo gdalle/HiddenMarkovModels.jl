@@ -17,10 +17,9 @@ We can list three fundamental problems, each of which has a solution that relies
 | Decoding   | Most likely state sequence $\arg\max_X p_\theta(X \vert Y)$ for a fixed $\theta$ | Viterbi algorithm         |
 | Learning   | Best parameter $\arg\max_\theta p_\theta(Y)$                                     | Baum-Welch (EM) algorithm |
 
-## Going further
+Our whole package is based on the tutorial by [Rabiner1989](@cite), you can refer to it for more details.
 
-Our whole package is based on the following paper by Rabiner (1989):
+## Bibliography
 
-> [A tutorial on hidden Markov models and selected applications in speech recognition](https://ieeexplore.ieee.org/document/18626)
-
-Please refer to it for more details.
+```@bibliography
+```

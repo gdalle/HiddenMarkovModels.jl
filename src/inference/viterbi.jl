@@ -49,6 +49,9 @@ end
     viterbi(hmm, obs_seqs, nb_seqs)
 
 Apply the Viterbi algorithm to compute the most likely state sequences of an HMM for multiple observation sequences.
+
+!!! warning "Multithreading"
+    This function is parallelized across sequences.
 """
 function viterbi(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)

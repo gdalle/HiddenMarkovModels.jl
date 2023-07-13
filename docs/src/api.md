@@ -8,6 +8,21 @@ HMMs
 ## Types
 
 ```@docs
+HMMs.AbstractModel
+```
+
+### Markov chains
+
+```@docs
+AbstractMarkovChain
+MarkovChain
+AbstractMC
+MC
+```
+
+### Hidden Markov Models
+
+```@docs
 AbstractHiddenMarkovModel
 HiddenMarkovModel
 AbstractHMM
@@ -17,8 +32,8 @@ HMM
 ## Basics
 
 ```@docs
-length
 rand
+length
 initial_distribution
 transition_matrix
 obs_distribution
@@ -30,26 +45,22 @@ obs_distribution
 logdensityof
 viterbi
 forward_backward
-HMMs.ForwardBackwardStorage
 ```
 
 ## Learning
 
 ```@docs
+fit!
+fit
 baum_welch
 ```
 
-## Reimplement if needed
+## Internals
 
 ```@docs
-HMMs.fit!
+HMMs.ForwardBackwardStorage
 HMMs.fit_element_from_sequence!
 HMMs.LightDiagNormal
-```
-
-## Index
-
-```@index
 ```
 
 ## Notations
@@ -79,3 +90,8 @@ HMMs.LightDiagNormal
 - `γ`: one-state marginals
 - `ξ`: two-state marginals
 - `logL`: loglikelihood of a sequence of observations
+
+## Index
+
+```@index
+```

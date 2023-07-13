@@ -42,11 +42,12 @@ export logdensityof, viterbi, forward_backward, baum_welch
 export fit, fit!
 export LightDiagNormal
 
-include("interface.jl")
-include("abstract_mc.jl")
-include("mc.jl")
-include("abstract_hmm.jl")
-include("hmm.jl")
+include("types/abstract_model.jl")
+include("types/interface.jl")
+include("types/abstract_mc.jl")
+include("types/mc.jl")
+include("types/abstract_hmm.jl")
+include("types/hmm.jl")
 
 include("utils/check.jl")
 include("utils/probvec.jl")
@@ -59,9 +60,8 @@ include("inference/forward_backward_storage.jl")
 include("inference/forward_backward.jl")
 include("inference/logdensity.jl")
 include("inference/viterbi.jl")
-
-include("learning/sufficient_stats.jl")
-include("learning/baum_welch.jl")
+include("inference/sufficient_stats.jl")
+include("inference/baum_welch.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()

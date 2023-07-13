@@ -1,3 +1,13 @@
+"""
+    MarkovChain <: AbstractMarkovChain
+
+Basic implementation of a discrete-state Markov chain.
+
+# Fields
+
+- `init::AbstractVector`: initial state probabilities
+- `trans::AbstractMatrix`: state transition matrix
+"""
 struct MarkovChain{U<:AbstractVector,M<:AbstractMatrix} <: AbstractMarkovChain
     init::U
     trans::M
@@ -9,6 +19,11 @@ struct MarkovChain{U<:AbstractVector,M<:AbstractMatrix} <: AbstractMarkovChain
     end
 end
 
+"""
+    MC
+
+Alias for the type `MarkovChain`.
+"""
 const MC = MarkovChain
 
 Base.length(mc::MC) = length(mc.init)
@@ -16,7 +31,7 @@ initial_distribution(mc::MC) = mc.init
 transition_matrix(mc::MC) = mc.trans
 
 """
-    StatsAPI.fit!(mc::MC, init_count, trans_count)
+    fit!(mc::MC, init_count, trans_count)
 
 Update `mc` in-place based on information generated from a state sequence.
 """

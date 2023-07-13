@@ -20,7 +20,7 @@ function forward_light!(αₜ, αₜ₊₁, logb, p, A, hmm::AbstractHMM, obs_se
 end
 
 """
-    DensityInterface.logdensityof(hmm, obs_seq)
+    logdensityof(hmm, obs_seq)
 
 Apply the forward algorithm to compute the loglikelihood of a single observation sequence for an HMM.
 """
@@ -38,9 +38,12 @@ function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq)
 end
 
 """
-    DensityInterface.logdensityof(hmm, obs_seqs, nb_seqs)
+    logdensityof(hmm, obs_seqs, nb_seqs)
 
-Apply the forward algorithm to compute the total loglikelihood of multiple observation sequences for an HMM
+Apply the forward algorithm to compute the total loglikelihood of multiple observation sequences for an HMM.
+
+!!! warning "Multithreading"
+    This function is parallelized across sequences.
 """
 function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)

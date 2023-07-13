@@ -1,5 +1,5 @@
 """
-    AbstractMarkovChain
+    AbstractMarkovChain <: AbstractModel
 
 Abstract supertype for a Markov chain amenable to simulation, inference and learning.
 
@@ -12,10 +12,10 @@ Abstract supertype for a Markov chain amenable to simulation, inference and lear
 # Applicable methods
 
 - `rand([rng,] mc, T)`
-- `logdensityof(mc, obs_seq)`
-- `fit(mc, obs_seq)` (if `fit!` is implemented)
+- `logdensityof(mc, state_seq)`
+- `fit(mc, state_seq_or_seqs)` (if `fit!` is implemented)
 """
-abstract type AbstractMarkovChain end
+abstract type AbstractMarkovChain <: AbstractModel end
 
 """
     AbstractMC
@@ -49,17 +49,19 @@ function StatsAPI.fit!(mc::AbstractMC, state_seqs::Vector{<:Vector{<:Integer}})
     return fit!(mc, init_count, trans_count)
 end
 
+"""
+    fit(mc, state_seq_or_seqs)
+
+Fit a Markov chain of the same type as `mc` to one or several state sequence(s).
+
+Beware that `mc` must be an actual object of type `MarkovChain`, and not the type itself as is usually done eg. in Distributions.jl.
+"""
 function StatsAPI.fit(mc::AbstractMC, state_seq_or_seqs)
     mc_est = deepcopy(mc)
     fit!(mc_est, state_seq_or_seqs)
     return mc_est
 end
 
-"""
-    rand(rng, mc, T)
-
-Simulate `mc` for `T` time steps with a specified `rng`.
-"""
 function Base.rand(rng::AbstractRNG, mc::AbstractMC, T::Integer)
     init = initial_distribution(mc)
     trans = transition_matrix(mc)
@@ -72,6 +74,11 @@ function Base.rand(rng::AbstractRNG, mc::AbstractMC, T::Integer)
     return state_seq
 end
 
+"""
+    logdensityof(mc, state_seq)
+
+Compute the loglikelihood of a single state sequence for a Markov chain.
+"""
 function DensityInterface.logdensityof(mc::AbstractMC, state_seq::Vector{<:Integer})
     init = initial_distribution(mc)
     trans = transition_matrix(mc)

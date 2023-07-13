@@ -78,6 +78,9 @@ end
     forward_backward(hmm, obs_seqs, nb_seqs)
 
 Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM for multiple observation sequences, and return a [`ForwardBackwardStorage`](@ref).
+
+!!! warning "Multithreading"
+    This function is parallelized across sequences.
 """
 function forward_backward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
