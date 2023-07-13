@@ -22,6 +22,10 @@ end
     include("interface.jl")
 end
 
+@testitem "Markov chain" begin
+    include("mc.jl")
+end
+
 @testitem "Correctness" begin
     include("correctness.jl")
 end
@@ -36,6 +40,10 @@ end
 
 @testitem "ForwardDiff" begin
     include("forwarddiff.jl")
+end
+
+@testitem "DNA" begin
+    include("dna.jl")
 end
 
 @testset "Doctests" begin

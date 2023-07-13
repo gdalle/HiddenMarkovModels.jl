@@ -48,6 +48,7 @@ end
 
 N = 5
 D = 3
+T = 100
 
 p = rand_prob_vec(N)
 p_init = rand_prob_vec(N)
@@ -64,7 +65,7 @@ hmm_norm = HMM(p, A, dists_norm)
 hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
 
 @testset verbose = true "Normal" begin
-    test_correctness(hmm_norm, hmm_norm_init; T=100)
+    test_correctness(hmm_norm, hmm_norm_init; T)
 end
 
 # DiagNormal
@@ -76,5 +77,5 @@ hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
 @testset verbose = true "DiagNormal" begin
-    test_correctness(hmm_diagnorm, hmm_diagnorm_init; T=100)
+    test_correctness(hmm_diagnorm, hmm_diagnorm_init; T)
 end

@@ -16,4 +16,4 @@ function rand_prob_vec(rng::AbstractRNG, N)
     return p
 end
 
-rand_prob_vec(N) = rand_prob_vec(GLOBAL_RNG, N)
+rand_prob_vec(N) = rand_prob_vec(default_rng(), N)

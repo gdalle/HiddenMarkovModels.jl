@@ -18,14 +18,24 @@ function check_dists(dists)
     end
 end
 
-function check_hmm(hmm::AbstractHMM)
-    init = initial_distribution(hmm)
-    trans = transition_matrix(hmm)
-    dists = [obs_distribution(hmm, i) for i in 1:length(hmm)]
-    if !(length(init) == size(trans, 1) == size(trans, 2) == length(dists))
+function check_mc(mc::MarkovChain)
+    init = initial_distribution(mc)
+    trans = transition_matrix(mc)
+    if !(length(init) == size(trans, 1) == size(trans, 2))
         throw(DimensionMismatch("Incoherent sizes"))
     end
     check_prob_vec(init)
     check_trans_mat(trans)
-    return check_dists(dists)
+    return nothing
+end
+
+function check_hmm(hmm::AbstractHMM)
+    mc = MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
+    dists = [obs_distribution(hmm, i) for i in 1:length(hmm)]
+    if length(mc) != length(dists)
+        throw(DimensionMismatch("Incoherent sizes"))
+    end
+    check_mc(mc)
+    check_dists(dists)
+    return nothing
 end

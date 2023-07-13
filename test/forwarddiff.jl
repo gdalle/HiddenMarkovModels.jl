@@ -6,6 +6,7 @@ using SimpleUnPack
 using Test
 
 N = 5
+T = 100
 
 p = rand_prob_vec(N)
 A = rand_trans_mat(N)
@@ -13,7 +14,7 @@ A = rand_trans_mat(N)
 dists = [Normal(μ[i], 1.0) for i in 1:N]
 hmm = HMM(p, A, dists)
 
-@unpack state_seq, obs_seq = rand(hmm, 100);
+@unpack state_seq, obs_seq = rand(hmm, T);
 
 function f(μ)
     new_dists = [Normal(μ[i], 1.0) for i in 1:N]
