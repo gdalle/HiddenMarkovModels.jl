@@ -1,29 +1,22 @@
 using Documenter
+using DocumenterCitations
 using HiddenMarkovModels
+
+bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style=:authoryear)
 
 DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
 )
 
-benchmarks_successful = try
-    include("process_benchmarks.jl")
-    true
-catch e
-    @warn "Benchmarks were not processed" e
-    false
-end
-
 pages = [
     "Home" => "index.md",
     "Background" => "background.md",
     "Tutorial" => "tutorial.md",
-    "API reference" => "api.md",
     "Alternatives" => "alternatives.md",
+    "Benchmarks" => "benchmarks.md",
     "Roadmap" => "roadmap.md",
+    "API reference" => "api.md",
 ]
-if benchmarks_successful
-    insert!(pages, length(pages) - 1, "Benchmarks" => "benchmarks.md")
-end
 
 fmt = Documenter.HTML(;
     prettyurls=get(ENV, "CI", "false") == "true",
@@ -32,14 +25,15 @@ fmt = Documenter.HTML(;
     assets=String[],
 )
 
-makedocs(;
+makedocs(
+    bib;
     modules=[HiddenMarkovModels],
     authors="Guillaume Dalle, Maxime Mouchet and contributors",
     repo="https://github.com/gdalle/HiddenMarkovModels.jl/blob/{commit}{path}#{line}",
     sitename="HiddenMarkovModels.jl",
     format=fmt,
     pages=pages,
-    linkcheck=true,
+    linkcheck=false,
     strict=false,
 )
 

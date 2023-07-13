@@ -10,32 +10,32 @@ We compare the following packages:
 
 ## Results
 
-!!! warning "Warning"
-   The benchmark suite is computationally expensive, and we only run it once for each new release. If this section is empty, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
+!!! danger "Why is this empty?"
+      The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
 
 ### Single sequence
 
 Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/results_single_sequence.csv).
 
-![Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_logdensity.svg)
+![Plot - Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_logdensity.svg)
 
-![Viterbi single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_viterbi.svg)
+![Plot - Viterbi single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_viterbi.svg)
 
-![Forward-backward single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_forward_backward.svg)
+![Plot - Forward-backward single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_forward_backward.svg)
 
-![Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_baum_welch.svg)
+![Plot - Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_single_sequence_baum_welch.svg)
 
-Here, pomegranate is not included because it is much slower on very small inputs.
+_Here, pomegranate is not included because it is much slower on very small inputs._
 
 ### Multiple sequences
 
 Full benchmark logs: [`results_multiple_sequences.csv`](./assets/benchmark/results/results_multiple_sequences.csv).
 
-![Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_logdensity.svg)
+![Plot - Logdensity single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_logdensity.svg)
 
-![Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_baum_welch.svg)
+![Plot - Baum-Welch single sequence benchmark](./assets/benchmark/plots/benchmark_multiple_sequences_baum_welch.svg)
 
-Here, HMMBase.jl is not included because it does not support multiple sequences.
+_Here, HMMBase.jl is not included because it does not support multiple sequences._
 
 ## Reproducibility
 
@@ -49,7 +49,7 @@ If you want to run them on your machine:
 
    ```julia
    include("benchmark/run_benchmarks.jl")
-   include("docs/process_benchmarks.jl")
+   include("benchmark/process_benchmarks.jl")
    ```
 
 ## Remarks

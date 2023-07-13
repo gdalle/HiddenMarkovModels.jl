@@ -1,5 +1,5 @@
 """
-    AbstractHiddenMarkovModel
+    AbstractHiddenMarkovModel <: AbstractModel 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
@@ -13,12 +13,12 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 # Applicable methods
 
 - `rand([rng,] hmm, T)`
-- `logdensityof(hmm, obs_seq)`
-- `viterbi(hmm, obs_seq)`
-- `forward_backward(hmm, obs_seq)`
-- `baum_welch(hmm, obs_seq)` (if `fit!` is implemented)
+- `logdensityof(hmm, obs_seq)` / `logdensityof(hmm, obs_seqs, nb_seqs)`
+- `viterbi(hmm, obs_seq)` / `viterbi(hmm, obs_seqs, nb_seqs)`
+- `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
+- `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
 """
-abstract type AbstractHiddenMarkovModel end
+abstract type AbstractHiddenMarkovModel <: AbstractModel end
 
 """
     AbstractHMM
@@ -47,11 +47,6 @@ The returned object `dist` must implement
 """
 function obs_distribution end
 
-"""
-    rand(rng, hmm, T)
-
-Simulate `hmm` for `T` time steps with a specified `rng`.
-"""
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     mc = MarkovChain(hmm)
     state_seq = rand(rng, mc, T)

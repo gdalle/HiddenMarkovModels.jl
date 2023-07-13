@@ -60,12 +60,16 @@ end
 Apply the Baum-Welch algorithm to estimate the parameters of an HMM and return a tuple `(hmm, logL_evolution)`.
 
 The procedure is based on a single observation sequence and initialized with `hmm_init`.
+
+!!! danger "Error"
+    Using a relative tolerance `rtol` to track convergence makes no sense because the loglikelihood can change signs.
+    Always set `rtol=-Inf` for now, this will be fixed in the next breaking release.
 """
 function baum_welch(
     hmm_init::AbstractHMM,
     obs_seq;
     max_iterations=100,
-    rtol=1e-3,
+    rtol=-Inf,
     check_loglikelihood_increasing=true,
 )
     hmm = deepcopy(hmm_init)
@@ -84,13 +88,20 @@ end
 Apply the Baum-Welch algorithm to estimate the parameters of an HMM and return a tuple `(hmm, logL_evolution)`.
 
 The procedure is based on multiple observation sequences and initialized with `hmm_init`.
+
+!!! warning "Multithreading"
+    This function is parallelized across sequences.
+
+!!! danger "Error"
+    Using a relative tolerance `rtol` to track convergence makes no sense because the loglikelihood can change signs.
+    Always set `rtol=-Inf` for now, this will be fixed in the next breaking release. 
 """
 function baum_welch(
     hmm_init::AbstractHMM,
     obs_seqs,
     nb_seqs::Integer;
     max_iterations=100,
-    rtol=1e-3,
+    rtol=-Inf,
     check_loglikelihood_increasing=true,
 )
     if nb_seqs != length(obs_seqs)
