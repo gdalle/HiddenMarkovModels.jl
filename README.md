@@ -1,4 +1,6 @@
-# HiddenMarkovModels.jl &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img alt="HiddenMarkovModels logo" src="docs/src/assets/logo.png" width="100" height="100" display="inline-block">
+# HiddenMarkovModels.jl
+
+<img alt="HiddenMarkovModels logo" src="docs/src/assets/logo.png" width="150" height="150" align="right" />
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gdalle.github.io/HiddenMarkovModels.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gdalle.github.io/HiddenMarkovModels.jl/dev/)
