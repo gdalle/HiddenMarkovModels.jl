@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: HiddenMarkovModels.jl
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Guillaume
+    family-names: Dalle
+    orcid: 'https://orcid.org/0000-0003-4866-1687'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.8128331
+repository-code: 'https://github.com/gdalle/HiddenMarkovModels.jl'
+url: 'https://gdalle.github.io/HiddenMarkovModels.jl/stable/'
+abstract: ' A Julia package for HMM modeling, simulation, inference and learning.'
+keywords:
+  - Julia
+  - Hidden Markov Model
+license: MIT
