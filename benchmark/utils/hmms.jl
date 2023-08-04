@@ -46,7 +46,7 @@ function benchmarkables_hmms(; algos, N, D, T, K)
     end
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable HMMs.baum_welch(
-            model, $obs_seqs, $K; max_iterations=BAUM_WELCH_ITER, rtol=-Inf
+            model, $obs_seqs, $K; max_iterations=BAUM_WELCH_ITER, atol=-Inf
         ) setup = (model = rand_model_hmms(; N=$N, D=$D))
     end
     return benchs

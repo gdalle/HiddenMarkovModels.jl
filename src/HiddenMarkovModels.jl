@@ -82,7 +82,7 @@ end
     logdensityof(hmm, obs_seq)
     viterbi(hmm, obs_seq)
     forward_backward(hmm, obs_seq)
-    baum_welch(hmm, obs_seq; max_iterations=2, rtol=-Inf)
+    baum_welch(hmm, obs_seq; max_iterations=2, atol=-Inf)
 end
 
 end

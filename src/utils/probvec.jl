@@ -1,5 +1,5 @@
-function is_prob_vec(p::AbstractVector; rtol=1e-2)
-    return (minimum(p) >= 0) && isapprox(sum(p), 1; rtol=rtol)
+function is_prob_vec(p::AbstractVector; atol=1e-2)
+    return (minimum(p) >= 0) && isapprox(sum(p), 1; atol=atol)
 end
 
 function check_prob_vec(p::AbstractVector)
