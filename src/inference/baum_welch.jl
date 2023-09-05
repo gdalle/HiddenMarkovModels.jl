@@ -9,7 +9,7 @@ function baum_welch!(
     fbs = Vector{typeof(fb)}(undef, length(obs_seqs))
     @threads for k in eachindex(obs_seqs)
         logBs[k] = loglikelihoods(hmm, obs_seqs[k])
-        fbs[k] = forward_backward_from_loglikelihoods(hmm, logBs[k])
+        fbs[k] = forward_backward(hmm, logBs[k])
     end
 
     init_count, trans_count = initialize_states_stats(fbs)
@@ -54,9 +54,15 @@ end
         atol, max_iterations, check_loglikelihood_increasing
     )
 
-Apply the Baum-Welch algorithm to estimate the parameters of an HMM and return a tuple `(hmm, logL_evolution)`.
+Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`.
 
-The procedure is based on a single observation sequence and initialized with `hmm_init`.
+Return a tuple `(hmm_est, logL_evolution)`.
+
+# Keyword arguments
+
+- `atol`: Minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
+- `max_iterations`: Maximum number of iterations of the algorithm
+- `check_loglikelihood_increasing`: Whether to throw an error if the loglikelihood decreases
 """
 function baum_welch(
     hmm_init::AbstractHMM,
@@ -78,12 +84,18 @@ end
         atol, max_iterations, check_loglikelihood_increasing
     )
 
-Apply the Baum-Welch algorithm to estimate the parameters of an HMM and return a tuple `(hmm, logL_evolution)`.
+Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`, based on `nb_seqs` observation sequences.
 
-The procedure is based on multiple observation sequences and initialized with `hmm_init`.
+Return a tuple `(hmm_est, logL_evolution)`.
 
 !!! warning "Multithreading"
     This function is parallelized across sequences.
+
+# Keyword arguments
+
+- `atol`: Minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
+- `max_iterations`: Maximum number of iterations of the algorithm
+- `check_loglikelihood_increasing`: Whether to throw an error if the loglikelihood decreases
 """
 function baum_welch(
     hmm_init::AbstractHMM,

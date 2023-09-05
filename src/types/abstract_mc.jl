@@ -1,5 +1,5 @@
 """
-    AbstractMarkovChain <: AbstractModel
+    AbstractMarkovChain
 
 Abstract supertype for a Markov chain amenable to simulation, inference and learning.
 
@@ -15,7 +15,7 @@ Abstract supertype for a Markov chain amenable to simulation, inference and lear
 - `logdensityof(mc, state_seq)`
 - `fit(mc, state_seq_or_seqs)` (if `fit!` is implemented)
 """
-abstract type AbstractMarkovChain <: AbstractModel end
+abstract type AbstractMarkovChain end
 
 """
     AbstractMC
@@ -31,6 +31,34 @@ const AbstractMC = AbstractMarkovChain
     initial_distribution(::AbstractMC)
     transition_matrix(::AbstractMC)
 end
+
+"""
+    length(mc::AbstractMarkovChain) 
+
+Return the number of states of `model`.
+"""
+Base.length
+
+"""
+    initial_distribution(mc::AbstractMarkovChain)
+
+Return the initial state probabilities of `mc`.
+"""
+function initial_distribution end
+
+"""
+    transition_matrix(mc::AbstractMarkovChain) 
+
+Return the state transition probabilities of `mc`.
+"""
+function transition_matrix end
+
+"""
+    rand([rng=default_rng(),] mc::AbstractMarkovChain, T) 
+
+Simulate `mc` for `T` time steps with a specified `rng`.
+"""
+Base.rand(mc::AbstractMarkovChain, T::Integer) = rand(default_rng(), mc, T)
 
 function StatsAPI.fit!(mc::AbstractMC, state_seq::Vector{<:Integer})
     return fit!(mc, [state_seq])

@@ -38,8 +38,8 @@ end
     include("static.jl")
 end
 
-@testitem "ForwardDiff" begin
-    include("forwarddiff.jl")
+@testitem "Autodiff" begin
+    include("autodiff.jl")
 end
 
 @testitem "DNA" begin

@@ -14,7 +14,14 @@ function test_correctness(hmm, hmm_init; T)
 
     @testset "Logdensity" begin
         _, logL_base = HMMBase.forward(hmm_base, obs_mat)
-        logL = logdensityof(hmm, obs_seq)
+        logL = @inferred logdensityof(hmm, obs_seq)
+        @test logL ≈ logL_base
+    end
+
+    @testset "Forward" begin
+        α_base, logL_base = HMMBase.forward(hmm_base, obs_mat)
+        α, logL = @inferred forward(hmm, obs_seq)
+        @test isapprox(α, α_base[end, :])
         @test logL ≈ logL_base
     end
 

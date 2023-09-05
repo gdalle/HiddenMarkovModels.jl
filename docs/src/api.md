@@ -7,10 +7,6 @@ HMMs
 
 ## Types
 
-```@docs
-HMMs.AbstractModel
-```
-
 ### Markov chains
 
 ```@docs
@@ -43,6 +39,7 @@ obs_distribution
 
 ```@docs
 logdensityof
+forward
 viterbi
 forward_backward
 ```
