@@ -4,7 +4,7 @@
 /Manifest.toml
 /docs/build/
 **/.CondaPkg
-**/scratchpad.jl
+scratchpad.jl
 **/__pycache__
 *.ipynb
 *.svg

@@ -15,6 +15,12 @@ function test_type_stability(hmm, hmm_init; T, K)
         @test_call target_modules = (HiddenMarkovModels,) logdensityof(hmm, obs_seqs, K)
     end
 
+    @testset "Forward" begin
+        @inferred forward(hmm, obs_seqs, K)
+        @test_opt target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, K)
+        @test_call target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, K)
+    end
+
     @testset "Viterbi" begin
         @inferred viterbi(hmm, obs_seqs, K)
         @test_opt target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seqs, K)

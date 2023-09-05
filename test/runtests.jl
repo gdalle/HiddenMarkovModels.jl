@@ -39,8 +39,8 @@ using Test
         include("static.jl")
     end
 
-    @testset verbose = true "ForwardDiff" begin
-        include("forwarddiff.jl")
+    @testset verbose = true "Autodiff" begin
+        include("autodiff.jl")
     end
 
     @testset verbose = true "DNA" begin

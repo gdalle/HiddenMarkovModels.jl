@@ -16,9 +16,11 @@ SimpleUnPack = "ce78b400-467f-4804-87d8-8f486da07d0a"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 
 [extensions]
+HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
 HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
 [compat]

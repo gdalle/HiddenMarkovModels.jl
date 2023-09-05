@@ -1,5 +1,5 @@
 """
-    AbstractHiddenMarkovModel <: AbstractModel 
+    AbstractHiddenMarkovModel <: AbstractMarkovChain 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
@@ -14,11 +14,12 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 - `rand([rng,] hmm, T)`
 - `logdensityof(hmm, obs_seq)` / `logdensityof(hmm, obs_seqs, nb_seqs)`
+- `forward(hmm, obs_seq)` / `forward(hmm, obs_seqs, nb_seqs)`
 - `viterbi(hmm, obs_seq)` / `viterbi(hmm, obs_seqs, nb_seqs)`
 - `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
 - `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
 """
-abstract type AbstractHiddenMarkovModel <: AbstractModel end
+abstract type AbstractHiddenMarkovModel <: AbstractMarkovChain end
 
 """
     AbstractHMM
