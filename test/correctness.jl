@@ -50,6 +50,10 @@ function test_correctness(hmm, hmm_init; T)
         )
         @test isapprox(initial_distribution(hmm_est), hmm_est_base.a)
         @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)
+
+        for (dist, dist_base) in zip(hmm.dists, hmm_base.B)
+            @test isapprox(dist.μ, dist_base.μ)
+        end
     end
 end
 

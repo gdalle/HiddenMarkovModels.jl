@@ -7,16 +7,17 @@ Store forward-backward quantities with element type `R`.
 
 Let `X` denote the vector of hidden states and `Y` denote the vector of observations. The following fields are part of the API:
 
-- `α::Matrix{R}`: forward variables `α[i,t] = ℙ(Y[1:t], X[t]=i)`
-- `β::Matrix{R}`: backward variables `β[i,t] = ℙ(Y[t+1:T] | X[t]=i)`
 - `γ::Matrix{R}`: posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`
 - `ξ::Array{R,3}`: posterior two-state marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`
-- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
 
 The following fields are internals and subject to change:
 
-- `maxlogB::Vector{R}`: maximum of the observation loglikelihoods `logB`
-- `stableBβ::Matrix{R}`: numerically stabilized product `Bβ`
+- `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
+- `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
+- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
+- `m::Vector{R}`: maximum of the observation loglikelihoods `logB`
+- `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `B`
+- `Bβscaled::Matrix{R}`: numerically stabilized product `Bβ`
 """
 struct ForwardBackwardStorage{R}
     α::Matrix{R}
@@ -24,8 +25,9 @@ struct ForwardBackwardStorage{R}
     γ::Matrix{R}
     ξ::Array{R,3}
     c::Vector{R}
-    maxlogB::Vector{R}
-    stableBβ::Matrix{R}
+    m::Vector{R}
+    Bscaled::Matrix{R}
+    Bβscaled::Matrix{R}
 end
 
 Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
@@ -34,7 +36,7 @@ duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
 function loglikelihood(fb::ForwardBackwardStorage{R}) where {R}
     logL = zero(R)
     for t in 1:duration(fb)
-        logL += -log(fb.c[t]) + fb.maxlogB[t]
+        logL += -log(fb.c[t]) + fb.m[t]
     end
     return logL
 end
@@ -55,9 +57,10 @@ function initialize_forward_backward(p, A, logB)
     γ = Matrix{R}(undef, N, T)
     ξ = Array{R,3}(undef, N, N, T - 1)
     c = Vector{R}(undef, T)
-    maxlogB = Vector{R}(undef, T)
-    stableBβ = Matrix{R}(undef, N, T)
-    return ForwardBackwardStorage(α, β, γ, ξ, c, maxlogB, stableBβ)
+    m = Vector{R}(undef, T)
+    Bscaled = Matrix{R}(undef, N, T)
+    Bβscaled = Matrix{R}(undef, N, T)
+    return ForwardBackwardStorage(α, β, γ, ξ, c, m, Bscaled, Bβscaled)
 end
 
 function initialize_forward_backward(hmm::AbstractHMM, logB)
@@ -67,18 +70,18 @@ function initialize_forward_backward(hmm::AbstractHMM, logB)
 end
 
 function forward!(fb::ForwardBackwardStorage, p, A, logB)
-    @unpack α, c, maxlogB = fb
+    @unpack α, c, m, Bscaled = fb
     T = size(α, 2)
+    maximum!(m', logB)
+    Bscaled .= exp.(logB .- m')
     @views begin
-        maxlogB[1] = maximum(logB[:, 1]) * 0
-        α[:, 1] .= p .* exp.(logB[:, 1] .- maxlogB[1])
+        α[:, 1] .= p .* Bscaled[:, 1]
         c[1] = inv(sum(α[:, 1]))
         α[:, 1] .*= c[1]
     end
     @views for t in 1:(T - 1)
-        maxlogB[t + 1] = maximum(logB[:, t + 1]) * 0
         mul!(α[:, t + 1], A', α[:, t])
-        α[:, t + 1] .*= exp.(logB[:, t + 1] .- maxlogB[t + 1])
+        α[:, t + 1] .*= Bscaled[:, t + 1]
         c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= c[t + 1]
     end
@@ -87,32 +90,29 @@ function forward!(fb::ForwardBackwardStorage, p, A, logB)
 end
 
 function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
-    @unpack β, c, maxlogB, stableBβ = fb
+    @unpack β, c, Bscaled, Bβscaled = fb
     T = size(β, 2)
-    β[:, T] .= one(R)
+    β[:, T] .= c[T]
     @views for t in (T - 1):-1:1
-        stableBβ[:, t + 1] .= exp.(logB[:, t + 1] .- maxlogB[t + 1]) .* β[:, t + 1]
-        mul!(β[:, t], A, stableBβ[:, t + 1])
+        Bβscaled[:, t + 1] .= Bscaled[:, t + 1] .* β[:, t + 1]
+        mul!(β[:, t], A, Bβscaled[:, t + 1])
         β[:, t] .*= c[t]
     end
+    @views Bβscaled[:, 1] .= Bscaled[:, 1] .* β[:, 1]
     check_no_nan(β)
     return nothing
 end
 
 function marginals!(fb::ForwardBackwardStorage, A)
-    @unpack α, β, stableBβ, γ, ξ = fb
-    T = size(γ, 2)
-    @views for t in 1:T
-        γ[:, t] .= α[:, t] .* β[:, t]
-        normalization = inv(sum(γ[:, t]))
-        γ[:, t] .*= normalization
-    end
+    @unpack α, β, c, Bβscaled, γ, ξ = fb
+    N, T = size(γ)
+    γ .= α .* β ./ c'
     check_no_nan(γ)
-    @views for t in 1:(T - 1)
-        ξ[:, :, t] .= α[:, t] .* A .* stableBβ[:, t + 1]'
-        normalization = inv(sum(ξ[:, :, t]))
-        ξ[:, :, t] .*= normalization
-    end
+    ξ .= (
+        reshape(α[:, 1:(T - 1)], N, 1, T - 1) .* #
+        reshape(A, N, N, 1) .* #
+        reshape(Bβscaled[:, 2:T], 1, N, T - 1)
+    )
     check_no_nan(ξ)
     return nothing
 end
