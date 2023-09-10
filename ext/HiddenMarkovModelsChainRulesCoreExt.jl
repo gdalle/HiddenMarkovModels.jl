@@ -24,13 +24,9 @@ function ChainRulesCore.rrule(
 
     function logdensityof_hmm_pullback(ΔlogL)
         Δp = ΔlogL .* Bβscaled[:, 1]
-        if T < 2
-            ΔA = ZeroTangent()
-        else
-            ΔA = ΔlogL .* α[:, 1] .* Bβscaled[:, 2]'
-            @views for t in 2:(T - 1)
-                ΔA .+= ΔlogL .* α[:, t] .* Bβscaled[:, t + 1]'
-            end
+        ΔA = ΔlogL .* α[:, 1] .* Bβscaled[:, 2]'
+        @views for t in 2:(T - 1)
+            ΔA .+= ΔlogL .* α[:, t] .* Bβscaled[:, t + 1]'
         end
         ΔlogB = ΔlogL .* γ
 
