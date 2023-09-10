@@ -14,6 +14,7 @@ pages = [
     "Tutorial" => "tutorial.md",
     "Alternatives" => "alternatives.md",
     "Benchmarks" => "benchmarks.md",
+    "Forward-backward" => "forward_backward.md",
     "Roadmap" => "roadmap.md",
     "API reference" => "api.md",
 ]

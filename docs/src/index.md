@@ -19,7 +19,7 @@ A Julia package for HMM modeling, simulation, inference and learning.
 
 !!! info "Automatic differentiation"
     - in forward mode with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
-    - (soon) in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)
+    - in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)
 
 !!! info "Reliability"
     - same outputs as an independent other package, up to numerical precision

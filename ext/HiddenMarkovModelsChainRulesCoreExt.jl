@@ -16,20 +16,23 @@ end
 function ChainRulesCore.rrule(
     rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq
 )
-    error("Chain rule not yet fully implemented")
     (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
-    y = exp.(logB)
     fb = forward_backward(p, A, logB)
     logL = HiddenMarkovModels.loglikelihood(fb)
-    @unpack α, β, γ, c, maxlogB = fb
+    @unpack α, β, γ, c, Bscaled, Bβscaled = fb
     T = length(obs_seq)
 
     function logdensityof_hmm_pullback(ΔlogL)
-        # Source: https://idiap.github.io/HMMGradients.jl/stable/1_intro/
-        # TODO: adapt formulas with our logsumexp trick
-        Δp = @not_implemented("todo")
-        ΔA = @not_implemented("todo")
-        ΔlogB = ΔlogL .* fb.γ
+        Δp = ΔlogL .* Bβscaled[:, 1]
+        if T < 2
+            ΔA = ZeroTangent()
+        else
+            ΔA = ΔlogL .* α[:, 1] .* Bβscaled[:, 2]'
+            @views for t in 2:(T - 1)
+                ΔA .+= ΔlogL .* α[:, t] .* Bβscaled[:, t + 1]'
+            end
+        end
+        ΔlogB = ΔlogL .* γ
 
         Δlogdensityof = NoTangent()
         _, Δhmm, Δobs_seq = pullback((Δp, ΔA, ΔlogB))

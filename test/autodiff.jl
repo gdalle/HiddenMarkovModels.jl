@@ -23,7 +23,8 @@ function f_init(_p)
 end
 
 g1 = ForwardDiff.gradient(f_init, p)
-@test_broken Zygote.gradient(f_init, p)[1]
+g2 = Zygote.gradient(f_init, p)[1]
+@test isapprox(g1, g2)
 
 function f_trans(_A)
     hmm = HMM(p, _A, dists)
@@ -31,7 +32,8 @@ function f_trans(_A)
 end
 
 g1 = ForwardDiff.gradient(f_trans, A)
-@test_broken Zygote.gradient(f_trans, A)[1]
+g2 = Zygote.gradient(f_trans, A)[1]
+@test isapprox(g1, g2)
 
 function f_dists(_μ)
     hmm = HMM(p, A, [Normal(_μ[i], 1.0) for i in 1:N])
@@ -40,5 +42,6 @@ end
 
 g0 = FiniteDifferences.grad(central_fdm(5, 1), f_dists, μ)[1]
 g1 = ForwardDiff.gradient(f_dists, μ)
-@test_broken Zygote.gradient(f_dists, μ)[1]
+g2 = Zygote.gradient(f_dists, μ)[1]
 @test isapprox(g0, g1)
+@test isapprox(g0, g2)
