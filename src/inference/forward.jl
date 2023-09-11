@@ -1,20 +1,20 @@
 function forward!(αₜ, αₜ₊₁, logb, p, A, hmm::AbstractHMM, obs_seq)
     T = length(obs_seq)
     loglikelihoods_vec!(logb, hmm, obs_seq[1])
-    m = maximum(logb)
-    αₜ .= p .* exp.(logb .- m)
+    logm = maximum(logb)
+    αₜ .= p .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
-    logL = -log(c) + m
+    logL = -log(c) + logm
     for t in 1:(T - 1)
         loglikelihoods_vec!(logb, hmm, obs_seq[t + 1])
-        m = maximum(logb)
+        logm = maximum(logb)
         mul!(αₜ₊₁, A', αₜ)
-        αₜ₊₁ .*= exp.(logb .- m)
+        αₜ₊₁ .*= exp.(logb .- logm)
         c = inv(sum(αₜ₊₁))
         αₜ₊₁ .*= c
         αₜ .= αₜ₊₁
-        logL += -log(c) + m
+        logL += -log(c) + logm
     end
     return logL
 end

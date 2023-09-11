@@ -15,7 +15,7 @@ The following fields are internals and subject to change:
 - `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
 - `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
 - `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
-- `m::Vector{R}`: maximum of the observation loglikelihoods `logB`
+- `logm::Vector{R}`: maximum of the observation loglikelihoods `logB`
 - `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `B`
 - `Bβscaled::Matrix{R}`: numerically stabilized product `Bβ`
 """
@@ -25,7 +25,7 @@ struct ForwardBackwardStorage{R}
     γ::Matrix{R}
     ξ::Array{R,3}
     c::Vector{R}
-    m::Vector{R}
+    logm::Vector{R}
     Bscaled::Matrix{R}
     Bβscaled::Matrix{R}
 end
@@ -34,10 +34,7 @@ Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
 duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
 
 function loglikelihood(fb::ForwardBackwardStorage{R}) where {R}
-    logL = zero(R)
-    for t in 1:duration(fb)
-        logL += -log(fb.c[t]) + fb.m[t]
-    end
+    logL = -sum(log, fb.c) + sum(fb.logm)
     return logL
 end
 
@@ -57,10 +54,10 @@ function initialize_forward_backward(p, A, logB)
     γ = Matrix{R}(undef, N, T)
     ξ = Array{R,3}(undef, N, N, T - 1)
     c = Vector{R}(undef, T)
-    m = Vector{R}(undef, T)
+    logm = Vector{R}(undef, T)
     Bscaled = Matrix{R}(undef, N, T)
     Bβscaled = Matrix{R}(undef, N, T)
-    return ForwardBackwardStorage(α, β, γ, ξ, c, m, Bscaled, Bβscaled)
+    return ForwardBackwardStorage(α, β, γ, ξ, c, logm, Bscaled, Bβscaled)
 end
 
 function initialize_forward_backward(hmm::AbstractHMM, logB)
@@ -70,10 +67,10 @@ function initialize_forward_backward(hmm::AbstractHMM, logB)
 end
 
 function forward!(fb::ForwardBackwardStorage, p, A, logB)
-    @unpack α, c, m, Bscaled = fb
+    @unpack α, c, logm, Bscaled = fb
     T = size(α, 2)
-    maximum!(m', logB)
-    Bscaled .= exp.(logB .- m')
+    maximum!(logm', logB)
+    Bscaled .= exp.(logB .- logm')
     @views begin
         α[:, 1] .= p .* Bscaled[:, 1]
         c[1] = inv(sum(α[:, 1]))
@@ -108,11 +105,9 @@ function marginals!(fb::ForwardBackwardStorage, A)
     N, T = size(γ)
     γ .= α .* β ./ c'
     check_no_nan(γ)
-    ξ .= (
-        reshape(α[:, 1:(T - 1)], N, 1, T - 1) .* #
-        reshape(A, N, N, 1) .* #
-        reshape(Bβscaled[:, 2:T], 1, N, T - 1)
-    )
+    @views for t in 1:(T - 1)
+        ξ[:, :, t] .= α[:, t] .* A .* Bβscaled[:, t + 1]'
+    end
     check_no_nan(ξ)
     return nothing
 end

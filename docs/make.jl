@@ -8,13 +8,27 @@ DocMeta.setdocmeta!(
     HiddenMarkovModels, :DocTestSetup, :(using HiddenMarkovModels); recursive=true
 )
 
+open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
+    println(
+        io,
+        """
+        ```@meta
+        EditURL = "https://github.com/gdalle/HiddenMarkovModels.jl/blob/main/README.md"
+        ```
+        """,
+    )
+    for line in eachline(joinpath(dirname(@__DIR__), "README.md"))
+        println(io, line)
+    end
+end
+
 pages = [
     "Home" => "index.md",
     "Background" => "background.md",
     "Tutorial" => "tutorial.md",
     "Alternatives" => "alternatives.md",
     "Benchmarks" => "benchmarks.md",
-    "Forward-backward" => "forward_backward.md",
+    "Formulas" => "formulas.md",
     "Roadmap" => "roadmap.md",
     "API reference" => "api.md",
 ]

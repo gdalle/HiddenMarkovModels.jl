@@ -11,3 +11,4 @@ scratchpad.jl
 *.csv
 *.txt
 *.json
+/docs/src/index.md

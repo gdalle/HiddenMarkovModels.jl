@@ -18,6 +18,10 @@ end
     include("type_stability.jl")
 end
 
+@testitem "Allocations" begin
+    include("allocations.jl")
+end
+
 @testitem "Interface" begin
     include("interface.jl")
 end

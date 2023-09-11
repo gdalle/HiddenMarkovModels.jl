@@ -14,6 +14,82 @@
 
 A Julia package for HMM modeling, simulation, inference and learning.
 
-> This is an experimental package and the interface is not yet stable. If you find something wrong or missing, please open an issue!
+## Getting started
 
-Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) to know more!
+This package can be installed using Julia's package manager:
+
+```julia
+pkg> add HiddenMarkovModels
+```
+
+Then, you can create your first HMM as follows:
+
+```julia
+using Distributions, HiddenMarkovModels
+init = [0.2, 0.8]
+trans = [0.1 0.9; 0.7 0.3]
+dists = [Normal(-1), Normal(1)]
+hmm = HMM(init, trans, dists)
+```
+
+Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) to know what to do next!
+
+## Main features
+
+### Genericity
+
+- observations can be arbitrary Julia objects, not just scalars or arrays
+- emission distributions only need to implement `rand(rng, dist)` and `logdensityof(dist, x)` from [DensityInterface.jl]
+- number types are not restricted
+
+### Performance
+
+- allocation-free versions of core functions
+- leveraging linear algebra subroutines and multithreading
+- compatibility with [SparseArrays.jl] and [StaticArrays.jl]
+
+### Reliability
+
+- same outputs as [HMMBase.jl]
+- quality checks with [Aqua.jl]
+- type stability checks with [JET.jl]
+- benchmarks with [PkgBenchmark.jl]
+
+### Automatic differentiation
+
+- in forward mode with [ForwardDiff.jl]
+- in reverse mode with [ChainRules.jl]
+
+## Alternatives
+
+| Julia                                                      | Python                        |
+| ---------------------------------------------------------- | ----------------------------- |
+| [HMMBase.jl] <br> [MarkovModels.jl] <br> [HMMGradients.jl] | [hmmlearn] <br> [pomegranate] |
+
+## Contributing
+
+If you spot a bug or want to ask about a new feature, please [open an issue](https://github.com/gdalle/HiddenMarkovModels.jl/issues) on the GitHub repository.
+Once the issue receives positive feedback, feel free to try and fix it with a pull request!
+
+## Acknowledgements
+
+A big thank you to [Maxime Mouchet](https://www.maxmouchet.com/) and [Jacob Schreiber](https://jmschrei.github.io/), the respective lead devs of [HMMBase.jl] and [pomegranate], for their help and advice.
+
+Logo by [Clément Mantoux](https://cmantoux.github.io/) based on a portrait of [Andrey Markov](https://en.wikipedia.org/wiki/Andrey_Markov).
+
+<!-- Links -->
+
+[hmmlearn]: https://github.com/hmmlearn/hmmlearn
+[pomegranate]: https://github.com/jmschrei/pomegranate
+
+[Aqua.jl]: https://github.com/JuliaTesting/Aqua.jl
+[DensityInterface.jl]: https://github.com/JuliaMath/DensityInterface.jl
+[ChainRules.jl]: https://github.com/JuliaDiff/ChainRules.jl
+[ForwardDiff.jl]: https://github.com/JuliaDiff/ForwardDiff.jl
+[HMMBase.jl]: https://github.com/maxmouchet/HMMBase.jl
+[JET.jl]: https://github.com/aviatesk/JET.jl
+[HMMGradients.jl]: https://github.com/idiap/HMMGradients.jl
+[MarkovModels.jl]: https://github.com/FAST-ASR/MarkovModels.jlv
+[PkgBenchmark.jl]: https://github.com/JuliaCI/PkgBenchmark.jl
+[SparseArrays.jl]: https://github.com/JuliaSparse/SparseArrays.jl
+[StaticArrays.jl]: https://github.com/JuliaArrays/StaticArrays.jl

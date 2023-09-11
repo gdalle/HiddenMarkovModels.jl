@@ -17,6 +17,10 @@ using Test
         @testset verbose = true "Type stability" begin
             include("type_stability.jl")
         end
+
+        @testset verbose = true "Allocations" begin
+            include("allocations.jl")
+        end
     end
 
     @testset "Interface" begin

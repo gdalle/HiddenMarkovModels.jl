@@ -1,18 +1,18 @@
 function viterbi!(q, δₜ, δₜ₋₁, δA_tmp, ψ, logb, p, A, hmm::AbstractHMM, obs_seq)
     N, T = length(hmm), length(obs_seq)
     loglikelihoods_vec!(logb, hmm, obs_seq[1])
-    m = maximum(logb)
-    δₜ .= p .* exp.(logb .- m)
+    logm = maximum(logb)
+    δₜ .= p .* exp.(logb .- logm)
     δₜ₋₁ .= δₜ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
         loglikelihoods_vec!(logb, hmm, obs_seq[t])
-        m = maximum(logb)
+        logm = maximum(logb)
         for j in 1:N
             @views δA_tmp .= δₜ₋₁ .* A[:, j]
             i_max = argmax(δA_tmp)
             ψ[j, t] = i_max
-            δₜ[j] = δA_tmp[i_max] * exp(logb[j] - m)
+            δₜ[j] = δA_tmp[i_max] * exp(logb[j] - logm)
         end
         δₜ₋₁ .= δₜ
     end
