@@ -17,6 +17,10 @@ using Test
         @testset verbose = true "Type stability" begin
             include("type_stability.jl")
         end
+
+        @testset verbose = true "Allocations" begin
+            include("allocations.jl")
+        end
     end
 
     @testset "Interface" begin
@@ -29,10 +33,6 @@ using Test
 
     @testset verbose = true "Correctness" begin
         include("correctness.jl")
-    end
-
-    @testset verbose = true "Allocations" begin
-        include("allocations.jl")
     end
 
     @testset verbose = true "Sparse" begin

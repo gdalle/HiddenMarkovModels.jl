@@ -18,6 +18,10 @@ end
     include("type_stability.jl")
 end
 
+@testitem "Allocations" begin
+    include("allocations.jl")
+end
+
 @testitem "Interface" begin
     include("interface.jl")
 end
@@ -28,10 +32,6 @@ end
 
 @testitem "Correctness" begin
     include("correctness.jl")
-end
-
-@testitem "Allocations" begin
-    include("allocations.jl")
 end
 
 @testitem "Sparse" begin

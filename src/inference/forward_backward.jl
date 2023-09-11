@@ -34,12 +34,7 @@ Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
 duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
 
 function loglikelihood(fb::ForwardBackwardStorage{R}) where {R}
-    logL = zero(R)
-    logL -= sum(log, fb.c)
-    logL += sum(fb.logm)
-    # for t in 1:duration(fb)
-    #     logL += -log(fb.c[t]) + fb.logm[t]
-    # end
+    logL = -sum(log, fb.c) + sum(fb.logm)
     return logL
 end
 
