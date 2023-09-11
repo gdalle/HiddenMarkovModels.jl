@@ -13,6 +13,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RequiredInterfaces = "97f35ef4-7bc5-4ec1-a41a-dcc69c7308c6"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SimpleUnPack = "ce78b400-467f-4804-87d8-8f486da07d0a"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]

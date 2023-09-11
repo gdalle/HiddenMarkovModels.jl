@@ -22,12 +22,14 @@ using Distributions:
     UnivariateDistribution,
     MultivariateDistribution,
     MatrixDistribution
-using LinearAlgebra: Diagonal, dot, mul!
+using LinearAlgebra: Diagonal, axpy!, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: AbstractRNG, default_rng
 using RequiredInterfaces: @required
 using Requires: @require
 using SimpleUnPack: @unpack
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC
+using SparseArrays: nnz, nzrange, nonzeros, rowvals
 using StatsAPI: StatsAPI, fit, fit!
 
 export HMMs
@@ -51,6 +53,7 @@ include("utils/probvec.jl")
 include("utils/transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
+include("utils/mul.jl")
 
 include("inference/loglikelihoods.jl")
 include("inference/forward.jl")
@@ -70,20 +73,20 @@ if !isdefined(Base, :get_extension)
     end
 end
 
-@compile_workload begin
-    N, D, T = 5, 3, 100
-    p = rand_prob_vec(N)
-    A = rand_trans_mat(N)
-    dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
-    hmm = HMM(p, A, dists)
+# @compile_workload begin
+#     N, D, T = 5, 3, 100
+#     p = rand_prob_vec(N)
+#     A = rand_trans_mat(N)
+#     dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
+#     hmm = HMM(p, A, dists)
 
-    obs_seqs = [last(rand(hmm, T)) for _ in 1:3]
-    nb_seqs = 3
-    logdensityof(hmm, obs_seqs, nb_seqs)
-    forward(hmm, obs_seqs, nb_seqs)
-    viterbi(hmm, obs_seqs, nb_seqs)
-    forward_backward(hmm, obs_seqs, nb_seqs)
-    baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2, atol=-Inf)
-end
+#     obs_seqs = [last(rand(hmm, T)) for _ in 1:3]
+#     nb_seqs = 3
+#     logdensityof(hmm, obs_seqs, nb_seqs)
+#     forward(hmm, obs_seqs, nb_seqs)
+#     viterbi(hmm, obs_seqs, nb_seqs)
+#     forward_backward(hmm, obs_seqs, nb_seqs)
+#     baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2, atol=-Inf)
+# end
 
 end

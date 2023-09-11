@@ -1,8 +1,11 @@
-function check_no_nan(a)
-    if any(isnan, a)
+function check_no_nan(a::Number)
+    if isnan(a)
         throw(OverflowError("Some values are NaN"))
     end
+    return true
 end
+
+check_no_nan(a::AbstractArray) = all(check_no_nan, a)
 
 function check_positive(a)
     if any(!>(zero(eltype(a))), a)

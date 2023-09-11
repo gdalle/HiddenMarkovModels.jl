@@ -1,5 +1,5 @@
 """
-    ForwardBackwardStorage{R}
+    ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
 
 Store forward-backward quantities with element type `R`.
 
@@ -7,38 +7,39 @@ Store forward-backward quantities with element type `R`.
 
 Let `X` denote the vector of hidden states and `Y` denote the vector of observations. The following fields are part of the API:
 
-- `γ::Matrix{R}`: posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`
-- `ξ::Array{R,3}`: posterior two-state marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`
+- `γ::Vector{Vector{R}}`: posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`
+- `ξ::Vector{M}`: posterior two-state marginals `ξ[t][i,j] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`
 
 The following fields are internals and subject to change:
 
-- `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
-- `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
-- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
-- `logm::Vector{R}`: maximum of the observation loglikelihoods `logB`
-- `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `B`
-- `Bβscaled::Matrix{R}`: numerically stabilized product `Bβ`
+- `α`: scaled forward variables `α[t][i]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
+- `β`: scaled backward variables `β[t][i]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
+- `c`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
+- `logm`: maximum of the observation loglikelihoods `logB`
+- `Bscaled`: numerically stabilized observation likelihoods `B`
+- `Bβscaled`: numerically stabilized product `Bβ`
 """
-struct ForwardBackwardStorage{R}
-    α::Matrix{R}
-    β::Matrix{R}
-    γ::Matrix{R}
-    ξ::Array{R,3}
+struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
+    α::Vector{Vector{R}}
+    β::Vector{Vector{R}}
+    γ::Vector{Vector{R}}
+    ξ::Vector{M}
     c::Vector{R}
     logm::Vector{R}
-    Bscaled::Matrix{R}
-    Bβscaled::Matrix{R}
+    Bscaled::Vector{Vector{R}}
+    Bβscaled::Vector{Vector{R}}
 end
 
-Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
-duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
+Base.eltype(fb::ForwardBackwardStorage{R}) where {R} = R
+Base.length(fb::ForwardBackwardStorage) = length(first(fb.α))
+duration(fb::ForwardBackwardStorage) = length(fb.α)
 
 function loglikelihood(fb::ForwardBackwardStorage{R}) where {R}
     logL = -sum(log, fb.c) + sum(fb.logm)
     return logL
 end
 
-function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
+function loglikelihood(fbs::Vector{ForwardBackwardStorage{R,M}}) where {R,M}
     logL = zero(R)
     for fb in fbs
         logL += loglikelihood(fb)
@@ -49,14 +50,16 @@ end
 function initialize_forward_backward(p, A, logB)
     N, T = size(logB)
     R = promote_type(eltype(p), eltype(A), eltype(logB))
-    α = Matrix{R}(undef, N, T)
-    β = Matrix{R}(undef, N, T)
-    γ = Matrix{R}(undef, N, T)
-    ξ = Array{R,3}(undef, N, N, T - 1)
+    V = Vector{R}
+    M = typeof(similar(A, R))
+    α = V[Vector{R}(undef, N) for t in 1:T]
+    β = V[Vector{R}(undef, N) for t in 1:T]
+    γ = V[Vector{R}(undef, N) for t in 1:T]
+    ξ = M[similar(A, R) for t in 1:(T - 1)]
     c = Vector{R}(undef, T)
     logm = Vector{R}(undef, T)
-    Bscaled = Matrix{R}(undef, N, T)
-    Bβscaled = Matrix{R}(undef, N, T)
+    Bscaled = V[Vector{R}(undef, N) for t in 1:T]
+    Bβscaled = V[Vector{R}(undef, N) for t in 1:T]
     return ForwardBackwardStorage(α, β, γ, ξ, c, logm, Bscaled, Bβscaled)
 end
 
@@ -68,47 +71,46 @@ end
 
 function forward!(fb::ForwardBackwardStorage, p, A, logB)
     @unpack α, c, logm, Bscaled = fb
-    T = size(α, 2)
+    T = length(α)
     maximum!(logm', logB)
-    Bscaled .= exp.(logB .- logm')
-    @views begin
-        α[:, 1] .= p .* Bscaled[:, 1]
-        c[1] = inv(sum(α[:, 1]))
-        α[:, 1] .*= c[1]
+    Bscaled[1] .= exp.(view(logB, :, 1) .- logm[1])
+    α[1] .= p .* Bscaled[1]
+    c[1] = inv(sum(α[1]))
+    α[1] .*= c[1]
+    for t in 1:(T - 1)
+        Bscaled[t + 1] .= exp.(view(logB, :, t + 1) .- logm[t + 1])
+        mul!(α[t + 1], A', α[t])
+        α[t + 1] .*= Bscaled[t + 1]
+        c[t + 1] = inv(sum(α[t + 1]))
+        α[t + 1] .*= c[t + 1]
     end
-    @views for t in 1:(T - 1)
-        mul!(α[:, t + 1], A', α[:, t])
-        α[:, t + 1] .*= Bscaled[:, t + 1]
-        c[t + 1] = inv(sum(α[:, t + 1]))
-        α[:, t + 1] .*= c[t + 1]
-    end
-    check_no_nan(α)
     return nothing
 end
 
 function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
     @unpack β, c, Bscaled, Bβscaled = fb
-    T = size(β, 2)
-    β[:, T] .= c[T]
-    @views for t in (T - 1):-1:1
-        Bβscaled[:, t + 1] .= Bscaled[:, t + 1] .* β[:, t + 1]
-        mul!(β[:, t], A, Bβscaled[:, t + 1])
-        β[:, t] .*= c[t]
+    T = length(β)
+    β[T] .= c[T]
+    for t in (T - 1):-1:1
+        Bβscaled[t + 1] .= Bscaled[t + 1] .* β[t + 1]
+        mul!(β[t], A, Bβscaled[t + 1])
+        β[t] .*= c[t]
     end
-    @views Bβscaled[:, 1] .= Bscaled[:, 1] .* β[:, 1]
-    check_no_nan(β)
+    Bβscaled[1] .= Bscaled[1] .* β[1]
     return nothing
 end
 
 function marginals!(fb::ForwardBackwardStorage, A)
     @unpack α, β, c, Bβscaled, γ, ξ = fb
-    N, T = size(γ)
-    γ .= α .* β ./ c'
-    check_no_nan(γ)
-    @views for t in 1:(T - 1)
-        ξ[:, :, t] .= α[:, t] .* A .* Bβscaled[:, t + 1]'
+    T = length(γ)
+    for t in 1:T
+        γ[t] .= α[t] .* β[t] ./ c[t]
     end
-    check_no_nan(ξ)
+    for t in 1:(T - 1)
+        ξ[t] .= A
+        mul_rows!(ξ[t], α[t])
+        mul_cols!(ξ[t], Bβscaled[t + 1])
+    end
     return nothing
 end
 

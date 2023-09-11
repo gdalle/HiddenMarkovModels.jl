@@ -19,16 +19,16 @@ function ChainRulesCore.rrule(
     (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
     fb = forward_backward(p, A, logB)
     logL = HiddenMarkovModels.loglikelihood(fb)
-    @unpack α, β, γ, c, Bscaled, Bβscaled = fb
+    @unpack α, β, γ, c, Bβscaled = fb
     T = length(obs_seq)
 
     function logdensityof_hmm_pullback(ΔlogL)
-        Δp = ΔlogL .* Bβscaled[:, 1]
-        ΔA = ΔlogL .* α[:, 1] .* Bβscaled[:, 2]'
-        @views for t in 2:(T - 1)
-            ΔA .+= ΔlogL .* α[:, t] .* Bβscaled[:, t + 1]'
+        Δp = ΔlogL .* Bβscaled[1]
+        ΔA = ΔlogL .* α[1] .* Bβscaled[2]'
+        for t in 2:(T - 1)
+            ΔA .+= ΔlogL .* α[t] .* Bβscaled[t + 1]'
         end
-        ΔlogB = ΔlogL .* γ
+        ΔlogB = ΔlogL .* reduce(hcat, γ)
 
         Δlogdensityof = NoTangent()
         _, Δhmm, Δobs_seq = pullback((Δp, ΔA, ΔlogB))

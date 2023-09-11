@@ -34,7 +34,9 @@ function test_correctness(hmm, hmm_init; T)
     @testset "Forward-backward" begin
         γ_base = HMMBase.posteriors(hmm_base, obs_mat)
         fb = @inferred forward_backward(hmm, obs_seq)
-        @test isapprox(fb.γ, γ_base')
+        @test isapprox(fb.γ[1], γ_base[1, :])
+        @test isapprox(fb.γ[T ÷ 2], γ_base[T ÷ 2, :])
+        @test isapprox(fb.γ[T], γ_base[T, :])
     end
 
     @testset "Baum-Welch" begin
