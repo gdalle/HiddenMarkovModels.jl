@@ -1,15 +1,15 @@
-# Benchmarks
+# Alternatives - performance
 
-We compare the performance of the following packages:
+We compare performance among the following packages:
 
 - HiddenMarkovModels.jl (abbreviated to HMMs.jl)
 - [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl)
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 - [pomegranate](https://github.com/jmschrei/pomegranate)
 
-The test case is an HMM with diagonal multivariate normal observations.
-
 ## Numerical results
+
+The test case is an HMM with diagonal multivariate normal observations.
 
 !!! danger "Why is this empty?"
       The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.

@@ -25,12 +25,11 @@ end
 pages = [
     "Home" => "index.md",
     "Background" => "background.md",
-    "Tutorial" => "tutorial.md",
-    "Alternatives" => "alternatives.md",
-    "Benchmarks" => "benchmarks.md",
-    "Formulas" => "formulas.md",
-    "Roadmap" => "roadmap.md",
+    "Tutorials" => ["Built-in HMM" => "tuto_builtin.md", "Custom HMM" => "tuto_custom.md"],
     "API reference" => "api.md",
+    "Alternatives" =>
+        ["Features" => "alt_features.md", "Performance" => "alt_performance.md"],
+    "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
 ]
 
 fmt = Documenter.HTML(;
@@ -43,7 +42,7 @@ fmt = Documenter.HTML(;
 makedocs(
     bib;
     modules=[HiddenMarkovModels],
-    authors="Guillaume Dalle, Maxime Mouchet and contributors",
+    authors="Guillaume Dalle",
     repo="https://github.com/gdalle/HiddenMarkovModels.jl/blob/{commit}{path}#{line}",
     sitename="HiddenMarkovModels.jl",
     format=fmt,

@@ -12,12 +12,12 @@
 Imagine we are given an observation sequence $(Y_t)$ and a parametric family of HMMs $\{\mathbb{P}_\theta : \theta \in \Theta\}$.
 We can list several fundamental problems, each of which has a solution that relies on dynamic programming:
 
-| Problem    | Goal                                                                                                      | Algorithm  |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ---------- |
-| Evaluation | Likelihood of the observation sequence $\mathbb{P}_\theta(Y_{1:T})$                                       | Forward    |
-| Inference  | Posterior marginals $\mathbb{P}_\theta(X_t                                                                | Y_{1:T})$  | Forward-backward |
-| Decoding   | Most likely state sequence $\underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}_\theta(X_{1:T} \vert Y_{1:T})$ | Viterbi    |
-| Learning   | Best parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch |
+| Problem    | Goal                                                                                                      | Algorithm        |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
+| Evaluation | Likelihood of the observation sequence $\mathbb{P}_\theta(Y_{1:T})$                                       | Forward          |
+| Inference  | State marginals $\mathbb{P}_\theta(X_t \vert Y_{1:T})$                                                    | Forward-backward |
+| Decoding   | Most likely state sequence $\underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}_\theta(X_{1:T} \vert Y_{1:T})$ | Viterbi          |
+| Learning   | Best parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch       |
 
 Our whole package is based on the tutorial by [Rabiner1989](@cite), you can refer to it for more details.
 
