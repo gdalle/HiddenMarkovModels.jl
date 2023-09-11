@@ -55,6 +55,12 @@ If you want to run them on your machine:
 
 ## Remarks
 
+### Julia-to-Python overhead
+
+Since the Python packages are called from Julia with [PythonCall.jl](https://github.com/cjdoris/PythonCall.jl), we pay a small overhead that is hard to quantify.
+On the plots, we compensate it by subtracting the runtime of the same algorithm for a single state `N=1` from all Python-generated curves.
+This is probably an extreme overestimate, but even so, HMMs.jl mostly comes out on top.
+
 ### Allocations
 
 A major bottleneck of performance in Julia is memory allocations.
