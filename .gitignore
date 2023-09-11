@@ -10,5 +10,5 @@ scratchpad.jl
 *.svg
 *.csv
 *.txt
-*.json
 /docs/src/index.md
+.vscode/
