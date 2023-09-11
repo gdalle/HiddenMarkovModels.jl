@@ -13,7 +13,7 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
         io,
         """
         ```@meta
-        EditURL = "$(base_url)README.md"
+        EditURL = "https://github.com/gdalle/HiddenMarkovModels.jl/blob/main/README.md"
         ```
         """,
     )
@@ -26,6 +26,7 @@ pages = [
     "Home" => "index.md",
     "Background" => "background.md",
     "Tutorial" => "tutorial.md",
+    "Alternatives" => "alternatives.md",
     "Benchmarks" => "benchmarks.md",
     "Formulas" => "formulas.md",
     "Roadmap" => "roadmap.md",

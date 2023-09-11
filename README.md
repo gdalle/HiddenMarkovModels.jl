@@ -36,41 +36,60 @@ Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.j
 
 ## Main features
 
-#### Genericity
+### Genericity
 
 - observations can be arbitrary Julia objects, not just scalars or arrays
+- emission distributions only need to implement `rand(rng, dist)` and `logdensityof(dist, x)` from [DensityInterface.jl]
 - number types are not restricted
-- emission distributions only need to implement [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl): `rand(rng, dist)` and `logdensityof(dist, x)`
 
-#### Performance
+### Performance
 
 - allocation-free versions of core functions
 - leveraging linear algebra subroutines and multithreading
-- compatibility with [SparseArrays.jl](https://github.com/JuliaSparse/SparseArrays.jl) and [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
+- compatibility with [SparseArrays.jl] and [StaticArrays.jl]
 
-#### Reliability
+### Reliability
 
-- same outputs as [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl), up to numerical precision
-- quality checks with [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl) and type stability checks with [JET.jl](https://github.com/aviatesk/JET.jl)
-- documentation with [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and benchmarks with [PkgBenchmark.jl](https://github.com/JuliaCI/PkgBenchmark.jl)
+- same outputs as [HMMBase.jl]
+- quality checks with [Aqua.jl]
+- type stability checks with [JET.jl]
+- benchmarks with [PkgBenchmark.jl]
 
-#### Automatic differentiation
+### Automatic differentiation
 
-- in forward mode with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
-- in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)
+- in forward mode with [ForwardDiff.jl]
+- in reverse mode with [ChainRules.jl]
 
 ## Alternatives
 
-| Julia                                                                                                                                                                               | Python                                                                                                   |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl) <br> [MarkovModels.jl](https://github.com/FAST-ASR/MarkovModels.jl) <br> [HMMGradients.jl](https://github.com/idiap/HMMGradients.jl) | [hmmlearn](https://github.com/hmmlearn/hmmlearn) <br> [pomegranate](https://github.com/jmschrei/pomegranate) |
+| Julia                                                      | Python                        |
+| ---------------------------------------------------------- | ----------------------------- |
+| [HMMBase.jl] <br> [MarkovModels.jl] <br> [HMMGradients.jl] | [hmmlearn] <br> [pomegranate] |
 
 ## Contributing
 
 If you spot a bug or want to ask about a new feature, please [open an issue](https://github.com/gdalle/HiddenMarkovModels.jl/issues) on the GitHub repository.
+Once the issue receives positive feedback, feel free to try and fix it with a pull request!
 
 ## Acknowledgements
 
-A big thank you to [Maxime Mouchet](https://www.maxmouchet.com/) and [Jacob Schreiber](https://jmschrei.github.io/), the respective lead devs of [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl) and [pomegranate](https://github.com/jmschrei/pomegranate), for their help and advice.
+A big thank you to [Maxime Mouchet](https://www.maxmouchet.com/) and [Jacob Schreiber](https://jmschrei.github.io/), the respective lead devs of [HMMBase.jl] and [pomegranate], for their help and advice.
 
 Logo by [Clément Mantoux](https://cmantoux.github.io/) based on a portrait of [Andrey Markov](https://en.wikipedia.org/wiki/Andrey_Markov).
+
+<!-- Links -->
+
+[hmmlearn]: https://github.com/hmmlearn/hmmlearn
+[pomegranate]: https://github.com/jmschrei/pomegranate
+
+[Aqua.jl]: https://github.com/JuliaTesting/Aqua.jl
+[DensityInterface.jl]: https://github.com/JuliaMath/DensityInterface.jl
+[ChainRules.jl]: https://github.com/JuliaDiff/ChainRules.jl
+[ForwardDiff.jl]: https://github.com/JuliaDiff/ForwardDiff.jl
+[HMMBase.jl]: https://github.com/maxmouchet/HMMBase.jl
+[JET.jl]: https://github.com/aviatesk/JET.jl
+[HMMGradients.jl]: https://github.com/idiap/HMMGradients.jl
+[MarkovModels.jl]: https://github.com/FAST-ASR/MarkovModels.jlv
+[PkgBenchmark.jl]: https://github.com/JuliaCI/PkgBenchmark.jl
+[SparseArrays.jl]: https://github.com/JuliaSparse/SparseArrays.jl
+[StaticArrays.jl]: https://github.com/JuliaArrays/StaticArrays.jl

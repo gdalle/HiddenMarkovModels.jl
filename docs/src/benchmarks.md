@@ -1,26 +1,15 @@
 # Benchmarks
 
-We compare the following packages:
+We compare the performance of the following packages:
 
 - HiddenMarkovModels.jl (abbreviated to HMMs.jl)
 - [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl)
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 - [pomegranate](https://github.com/jmschrei/pomegranate)
 
-## Features
-
-|                           | HMMBase.jl                                                              | HiddenMarkovModels.jl                                                              |
-| ------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Number types              | `Float64`                                                               | anything                                                                           |
-| Observation types         | `Number` or `Vector`                                                    | anything                                                                           |
-| Observation distributions | from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) | satisfying [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl) |
-| Priors / structures       | no                                                                      | customizable                                                                       |
-| Autodiff                  | no                                                                      | yes                                                                                |
-| Multiple sequences        | no                                                                      | yes                                                                                |
-
-## Performance
-
 The test case is an HMM with diagonal multivariate normal observations.
+
+## Numerical results
 
 !!! danger "Why is this empty?"
       The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
