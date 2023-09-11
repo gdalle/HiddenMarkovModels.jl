@@ -1,9 +1,12 @@
+using Pkg
+Pkg.activate(@__DIR__)
+
 using BenchmarkTools
 using PkgBenchmark
 
 pkg = dirname(@__DIR__) # this git repo
-baseline = "12fa976"  # commit id
-target = "1b9a7f1"  # commit id
+baseline = "04ee332"  # commit id
+target = "859c7b0"  # commit id
 
 results_baseline = benchmarkpkg(pkg, baseline; verbose=true, retune=false)
 results_target = benchmarkpkg(pkg, target; verbose=true, retune=false)
