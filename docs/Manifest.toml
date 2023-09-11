@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.2"
+julia_version = "1.9.3"
 manifest_format = "2.0"
 project_hash = "0aad8fb5fcdd69b412ac2aa4229e675d67b03ae9"
 
@@ -169,15 +169,17 @@ uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 version = "1.9.8"
 
 [[deps.HiddenMarkovModels]]
-deps = ["ChainRulesCore", "DensityInterface", "Distributions", "LinearAlgebra", "PrecompileTools", "Random", "RequiredInterfaces", "Requires", "SimpleUnPack", "StatsAPI"]
+deps = ["DensityInterface", "Distributions", "LinearAlgebra", "PrecompileTools", "Random", "RequiredInterfaces", "Requires", "SimpleUnPack", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
-version = "0.2.2"
+version = "0.3.0"
 
     [deps.HiddenMarkovModels.extensions]
+    HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
     HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
     [deps.HiddenMarkovModels.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 
 [[deps.HypergeometricFunctions]]

@@ -3,9 +3,9 @@
 Suppose we are given observations $Y_1, ..., Y_T$, with hidden states $X_1, ..., X_T$.
 Following [Rabiner1989](@cite), we use the following notations:
 
-* $\pi \in \mathbb{R}^N$ for the initial state distribution $\pi_i = \mathbb{P}(X_1 = i)$
-* $A \in \mathbb{R}^{N \times N}$ for the transition matrix $a_{i,j} = \mathbb{P}(X_{t+1}=j | X_t = i)$
-* $B \in \mathbb{R}^{N \times T}$ for the matrix of statewise observation likelihoods $b_{i,t} = \mathbb{P}(Y_t | X_t = i)$
+* let $\pi \in \mathbb{R}^N$ be the initial state distribution $\pi_i = \mathbb{P}(X_1 = i)$
+* let $A \in \mathbb{R}^{N \times N}$ be the transition matrix $a_{i,j} = \mathbb{P}(X_{t+1}=j | X_t = i)$
+* let $B \in \mathbb{R}^{N \times T}$ be the matrix of statewise observation likelihoods $b_{i,t} = \mathbb{P}(Y_t | X_t = i)$
 
 ## Vanilla forward-backward
 
