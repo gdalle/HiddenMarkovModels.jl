@@ -30,6 +30,10 @@ end
     include("correctness.jl")
 end
 
+@testitem "Allocations" begin
+    include("allocations.jl")
+end
+
 @testitem "Sparse" begin
     include("sparse.jl")
 end

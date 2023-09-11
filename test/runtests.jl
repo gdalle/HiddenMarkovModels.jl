@@ -31,6 +31,10 @@ using Test
         include("correctness.jl")
     end
 
+    @testset verbose = true "Allocations" begin
+        include("allocations.jl")
+    end
+
     @testset verbose = true "Sparse" begin
         include("sparse.jl")
     end
