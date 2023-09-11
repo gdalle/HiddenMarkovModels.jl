@@ -82,8 +82,8 @@ HMMs.LightDiagNormal
 
 - `(log)b`: vector of observation (log)likelihoods by state for an individual observation
 - `(log)B`: matrix of observation (log)likelihoods by state for a sequence of observations
-- `α`: forward variables
-- `β`: backward variables
+- `α`: scaled forward variables
+- `β`: scaled backward variables
 - `γ`: one-state marginals
 - `ξ`: two-state marginals
 - `logL`: loglikelihood of a sequence of observations

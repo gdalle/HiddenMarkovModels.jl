@@ -8,7 +8,7 @@ A Julia package for HMM modeling, simulation, inference and learning.
     - allocation-free versions of core functions
     - linear algebra subroutines
     - multithreading
-    - compatibility with [SparseArrays](https://github.com/JuliaSparse/SparseArrays.jl) and [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
+    - compatibility with [SparseArrays.jl](https://github.com/JuliaSparse/SparseArrays.jl) and [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)
 
 !!! info "Genericity"
     - number types are not restricted
@@ -22,11 +22,11 @@ A Julia package for HMM modeling, simulation, inference and learning.
     - in reverse mode with [ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)
 
 !!! info "Reliability"
-    - same outputs as an independent other package, up to numerical precision
+    - same outputs as [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl), up to numerical precision
     - quality checks with [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl)
-    - correctness _and_ type stability checks with [JET.jl](https://github.com/aviatesk/JET.jl)
+    - type stability checks with [JET.jl](https://github.com/aviatesk/JET.jl)
     - documentation with [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl)
-    - benchmarks compatible with [PkgBenchmark.jl](https://github.com/JuliaCI/PkgBenchmark.jl)
+    - benchmarks with [PkgBenchmark.jl](https://github.com/JuliaCI/PkgBenchmark.jl)
 
 ## Acknowledgements
 
