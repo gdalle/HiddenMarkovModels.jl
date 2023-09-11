@@ -75,7 +75,7 @@ dists_norm_init = [Normal(randn(), 1) for i in 1:N]
 hmm_norm = HMM(p, A, dists_norm)
 hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
 
-@testset verbose = true "Normal" begin
+@testset "Normal" begin
     test_correctness(hmm_norm, hmm_norm_init; T)
 end
 
@@ -87,6 +87,6 @@ dists_diagnorm_init = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N
 hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
-@testset verbose = true "DiagNormal" begin
+@testset "DiagNormal" begin
     test_correctness(hmm_diagnorm, hmm_diagnorm_init; T)
 end
