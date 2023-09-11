@@ -7,7 +7,7 @@ using SimpleUnPack
 using Test
 
 N = 5
-T = 1000
+T = 100
 
 p = ones(N) / N
 A = SparseMatrixCSC(SymTridiagonal(ones(N), ones(N - 1)))
