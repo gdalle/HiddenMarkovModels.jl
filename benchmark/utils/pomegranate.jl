@@ -15,7 +15,7 @@ function rand_params_pomegranate(; N, D)
     return (; p, A, μ, σ)
 end
 
-function rand_model_pomegranate(; N, D)
+function rand_model_pomegranate(; N, D, I)
     @unpack p, A, μ, σ = rand_params_pomegranate(; N, D)
     distributions = pylist([
         pomegranate.distributions.Normal(;
@@ -23,35 +23,31 @@ function rand_model_pomegranate(; N, D)
         ) for n in 0:(N - 1)
     ])
     model = pomegranate.hmm.DenseHMM(;
-        distributions=distributions,
-        edges=A,
-        starts=p,
-        max_iter=BAUM_WELCH_ITER,
-        tol=1e-10,
-        verbose=false,
+        distributions=distributions, edges=A, starts=p, max_iter=I, tol=1e-10, verbose=false
     )
     return model
 end
 
-function benchmarkables_pomegranate(; algos, N, D, T, K)
-    rand_model_pomegranate(; N, D)
+function benchmarkables_pomegranate(; algos, N, D, T, K, I)
+    rand_model_pomegranate(; N, D, I)
     obs_tens_py = torch.randn(K, T, D)
     bench = Dict()
     if "logdensity" in algos
         bench["logdensity"] = @benchmarkable pycall(model_forward, $obs_tens_py) setup = (
-            model_forward = rand_model_pomegranate(; N=$N, D=$D).forward
+            model_forward = rand_model_pomegranate(; N=$N, D=$D, I=$I).forward
         )
     end
     if "forward_backward" in algos
         bench["forward_backward"] = @benchmarkable pycall(
             model_forward_backward, $obs_tens_py
         ) setup = (
-            model_forward_backward = rand_model_pomegranate(; N=$N, D=$D).forward_backward
+            model_forward_backward =
+                rand_model_pomegranate(; N=$N, D=$D, I=$I).forward_backward
         )
     end
     if "baum_welch" in algos
         bench["baum_welch"] = @benchmarkable pycall(model_fit, $obs_tens_py) setup = (
-            model_fit = rand_model_pomegranate(; N=$N, D=$D).fit
+            model_fit = rand_model_pomegranate(; N=$N, D=$D, I=$I).fit
         )
     end
     return bench
