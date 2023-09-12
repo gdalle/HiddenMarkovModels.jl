@@ -51,6 +51,10 @@ using Test
         include("dna.jl")
     end
 
+    @testset verbose = true "Permuted" begin
+        include("permuted.jl")
+    end
+
     @testset "Doctests" begin
         include("doctests.jl")
     end

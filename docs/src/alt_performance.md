@@ -86,6 +86,5 @@ The packages we include have different approaches to parallelism, which can bias
 [^3]: possibly affected by `MKL_NUM_THREADS`
 
 For a fairer comparison, we set `JULIA_NUM_THREADS=1`, even though it robs HMMs.jl of its parallel speedup on multiple sequences.
-
-In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/issues/44201#issuecomment-1585656581) with Julia threads.
+In addition, OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/pull/50124) with Julia threads.
 To overcome this obstacle, we run the Julia benchmarks (and only those) with `OPENBLAS_NUM_THREADS=1`.

@@ -49,6 +49,10 @@ It gives the same results as the previous reference package [HMMBase.jl](https:/
 The test suite incorporates quality checks with [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl), as well as linting and type stability checks with [JET.jl](https://github.com/aviatesk/JET.jl).
 A detailed documentation will help you find the functions you need.
 
+But this package is **limited in scope**.
+It is designed for HMMs with a small number of states, because memory and runtime scale quadratically (even if the transitions are sparse).
+It is also meant to perform best on a CPU, and not tested at all on GPUs.
+
 ## Contributing
 
 If you spot a bug or want to ask about a new feature, please [open an issue](https://github.com/gdalle/HiddenMarkovModels.jl/issues) on the GitHub repository.

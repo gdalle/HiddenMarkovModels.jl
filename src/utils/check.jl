@@ -4,6 +4,12 @@ function check_no_nan(a)
     end
 end
 
+function check_no_inf(a)
+    if any(isequal(typemax(eltype(a))), a)
+        throw(OverflowError("Some values are infinite"))
+    end
+end
+
 function check_positive(a)
     if any(!>(zero(eltype(a))), a)
         throw(OverflowError("Some values are not positive"))
@@ -30,7 +36,7 @@ function check_mc(mc::MarkovChain)
 end
 
 function check_hmm(hmm::AbstractHMM)
-    mc = MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
+    mc = MarkovChain(hmm)
     dists = [obs_distribution(hmm, i) for i in 1:length(hmm)]
     if length(mc) != length(dists)
         throw(DimensionMismatch("Incoherent sizes"))

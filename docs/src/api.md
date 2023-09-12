@@ -22,6 +22,7 @@ MC
 AbstractHiddenMarkovModel
 HiddenMarkovModel
 AbstractHMM
+PermutedHMM
 HMM
 ```
 

@@ -53,9 +53,6 @@ function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_margina
     @views for i in eachindex(hmm.dists)
         fit_element_from_sequence!(hmm.dists, i, obs_seq, state_marginals[i, :])
     end
+    check_hmm(hmm)
     return nothing
-end
-
-function MarkovChain(hmm::AbstractHMM)
-    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
 end

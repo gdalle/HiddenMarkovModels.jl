@@ -35,12 +35,14 @@ function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals)
     end
     for implem in implems
         SUITE[implem] = BenchmarkGroup()
+        bench_tup = benchmarkables_by_implem(; implem, algos, N=1, D=1, T=2, K=1)
+        for (algo, bench) in pairs(bench_tup)
+            SUITE[implem][algo] = BenchmarkGroup()
+            SUITE[implem][algo][(1, 1, 2, 1)] = bench
+        end
         for N in N_vals, D in D_vals, T in T_vals, K in K_vals
             bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K)
             for (algo, bench) in pairs(bench_tup)
-                if !haskey(SUITE[implem], algo)
-                    SUITE[implem][algo] = BenchmarkGroup()
-                end
                 SUITE[implem][algo][(N, D, T, K)] = bench
             end
         end

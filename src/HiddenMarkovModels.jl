@@ -33,7 +33,7 @@ using StatsAPI: StatsAPI, fit, fit!
 export HMMs
 export AbstractMarkovChain, AbstractMC
 export MarkovChain, MC
-export AbstractHiddenMarkovModel, AbstractHMM
+export AbstractHiddenMarkovModel, AbstractHMM, PermutedHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
 export initial_distribution, transition_matrix, obs_distribution

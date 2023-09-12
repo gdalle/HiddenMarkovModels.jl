@@ -24,9 +24,8 @@ end
 
 pages = [
     "Home" => "index.md",
-    "Background" => "background.md",
+    "Essentials" => ["Background" => "background.md", "API reference" => "api.md"],
     "Tutorials" => ["Built-in HMM" => "tuto_builtin.md", "Custom HMM" => "tuto_custom.md"],
-    "API reference" => "api.md",
     "Alternatives" =>
         ["Features" => "alt_features.md", "Performance" => "alt_performance.md"],
     "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],

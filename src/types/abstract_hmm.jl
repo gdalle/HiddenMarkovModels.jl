@@ -59,3 +59,36 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
+
+function MarkovChain(hmm::AbstractHMM)
+    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
+end
+
+"""
+    PermutedHMM{H<:AbstractHMM}
+
+Wrapper around an `AbstractHMM` that permutes its states.
+
+This is computationally inefficient and mostly useful for evaluation.
+
+# Fields
+
+- `hmm:H`: the old HMM
+- `perm::Vector{Int}`: a permutation such that state `i` in the new HMM corresponds to state `perm[i]` in the old.
+"""
+struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
+    hmm::H
+    perm::Vector{Int}
+end
+
+Base.length(p::PermutedHMM) = length(p.hmm)
+
+HMMs.initial_distribution(p::PermutedHMM) = initial_distribution(p.hmm)[p.perm]
+
+function HMMs.transition_matrix(p::PermutedHMM)
+    return transition_matrix(p.hmm)[p.perm, :][:, p.perm]
+end
+
+function HMMs.obs_distribution(p::PermutedHMM, i::Integer)
+    return obs_distribution(p.hmm, p.perm[i])
+end
