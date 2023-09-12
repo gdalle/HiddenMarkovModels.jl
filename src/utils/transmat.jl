@@ -15,22 +15,6 @@ function is_trans_mat(A::AbstractMatrix; atol=1e-2)
     end
 end
 
-function check_trans_mat(A::AbstractMatrix)
-    if !is_trans_mat(A)
-        throw(ArgumentError("Invalid transition matrix."))
-    end
-end
-
-function check_coherent_sizes(p::AbstractVector, A::AbstractMatrix)
-    if size(A) != (length(p), length(p))
-        throw(
-            DimensionMismatch(
-                "Probability distribution and transition matrix are incompatible."
-            ),
-        )
-    end
-end
-
 function rand_trans_mat(rng::AbstractRNG, N)
     A = rand(rng, N, N)
     foreach(sum_to_one!, eachrow(A))

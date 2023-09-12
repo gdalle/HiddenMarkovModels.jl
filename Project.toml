@@ -45,6 +45,7 @@ HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LogarithmicNumbers = "aa2f6b4e-9042-5d33-9679-40d3a6b85899"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RequiredInterfaces = "97f35ef4-7bc5-4ec1-a41a-dcc69c7308c6"
@@ -57,4 +58,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "BenchmarkTools", "Distributions", "Documenter", "FiniteDifferences", "ForwardDiff", "HMMBase", "JET", "JuliaFormatter", "LinearAlgebra", "Pkg", "Random", "SimpleUnPack", "SparseArrays", "StaticArrays", "Statistics", "Suppressor", "Test", "Zygote"]
+test = ["Aqua", "BenchmarkTools", "Distributions", "Documenter", "FiniteDifferences", "ForwardDiff", "HMMBase", "JET", "JuliaFormatter", "LinearAlgebra", "LogarithmicNumbers", "Pkg", "Random", "SimpleUnPack", "SparseArrays", "StaticArrays", "Statistics", "Suppressor", "Test", "Zygote"]

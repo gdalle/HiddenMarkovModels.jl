@@ -37,7 +37,7 @@ function baum_welch!(
         #  Stopping criterion
         if iteration > 1
             progress = logL_evolution[end] - logL_evolution[end - 1]
-            if check_loglikelihood_increasing && progress < -eps(progress)
+            if check_loglikelihood_increasing && progress < 0
                 error("Loglikelihood decreased in Baum-Welch")
             elseif progress < atol
                 break

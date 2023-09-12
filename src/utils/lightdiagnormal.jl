@@ -5,10 +5,12 @@ An HMMs-compatible implementation of a multivariate normal distribution with dia
 
 This is not part of the public API and is expected to change.
 """
-struct LightDiagNormal{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
+struct LightDiagNormal{
+    T1,T2,T3,V1<:AbstractVector{T1},V2<:AbstractVector{T2},V3<:AbstractVector{T3}
+}
     μ::V1
     σ::V2
-    logσ::V2
+    logσ::V3
 end
 
 function LightDiagNormal(μ, σ)

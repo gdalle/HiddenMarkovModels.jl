@@ -19,5 +19,6 @@ There are also more generic packages for probabilistic programming, which are ab
 | Automatic differentiation | yes                 | no                  | yes             |
 | Multiple sequences        | yes                 | no                  | yes             |
 | Linear algebra            | yes                 | yes                 | no              |
+| Logarithmic probabilities | halfway             | halfway             | yes             |
 
 Sim = Simulation, FB = Forward-Backward, Vit = Viterbi, BW = Baum-Welch
