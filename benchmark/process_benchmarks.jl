@@ -74,14 +74,10 @@ function plot_benchmarks(; name)
                     :I => x -> x .== I,
                 )
                 sort!(local_results, :N)
-                @assert minimum(N_vals) == 1
-                if !endswith(implem, ".jl")
-                    local_results[!, :time] .-= first(local_results[!, :time])
-                end
                 plot!(
                     plt,
-                    local_results[2:end, :N],
-                    local_results[2:end, :time] ./ 1e9;
+                    local_results[!, :N],
+                    local_results[!, :time] ./ 1e9;
                     label=implem == "HMMs.jl" ? "$implem (ours)" : implem,
                     markershape=IMPLEM_MARKERSHAPES[implem],
                     color=IMPLEM_COLORS[implem],

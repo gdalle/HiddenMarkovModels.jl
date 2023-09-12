@@ -1,36 +1,46 @@
 # Tutorial - built-in HMM
 
-```@repl tuto
-using HiddenMarkovModels
+```@example tuto
 using Distributions
+using HiddenMarkovModels
+
+using Random; Random.seed!(63)
 ```
 
 ## Construction
 
-Constructing a model:
+Creating a model:
 
-```@repl tuto
-function random_gaussian_hmm(N)
+```@example tuto
+function gaussian_hmm(N; noise=0)
     p = ones(N) / N  # initial distribution
     A = rand_trans_mat(N)  # transition matrix
-    dists = [Normal(randn(), 1.0) for n in 1:N]  # observation distributions
+    dists = [Normal(i + noise * randn(), 0.5) for i in 1:N]  # observation distributions
     return HMM(p, A, dists)
-end;
+end
 ```
 
 Checking its contents:
 
-```@repl tuto
-hmm = random_gaussian_hmm(3)
+```@example tuto
+N = 3
+hmm = gaussian_hmm(N)
 transition_matrix(hmm)
-[obs_distribution(hmm, i) for i in 1:length(hmm)]
+```
+
+```@example tuto
+[obs_distribution(hmm, i) for i in 1:N]
 ```
 
 Simulating a sequence:
 
-```@repl tuto
-state_seq, obs_seq = rand(hmm, 1000);
+```@example tuto
+T = 1000
+state_seq, obs_seq = rand(hmm, T);
 first(state_seq, 10)'
+```
+
+```@example tuto
 first(obs_seq, 10)'
 ```
 
@@ -38,23 +48,41 @@ first(obs_seq, 10)'
 
 Computing the loglikelihood of an observation sequence:
 
-```@repl tuto
+```@example tuto
 logdensityof(hmm, obs_seq)
 ```
 
 Inferring the most likely state sequence:
 
-```@repl tuto
+```@example tuto
 most_likely_state_seq = viterbi(hmm, obs_seq);
 first(most_likely_state_seq, 10)'
 ```
 
 Learning the parameters based on an observation sequence:
 
-```@repl tuto
-hmm_init = random_gaussian_hmm(3)
+```@example tuto
+hmm_init = gaussian_hmm(N, noise=1)
 hmm_est, logL_evolution = baum_welch(hmm_init, obs_seq);
 first(logL_evolution), last(logL_evolution)
-transition_matrix(hmm_est)
-[obs_distribution(hmm_est, i) for i in 1:length(hmm)]
+```
+
+Correcting state order because we know observation means are increasing in the true model:
+
+```@example tuto
+[obs_distribution(hmm_est, i) for i in 1:N]
+```
+
+```@example tuto
+perm = sortperm(1:3, by=i->obs_distribution(hmm_est, i).μ)
+```
+
+```@example tuto
+hmm_est = PermutedHMM(hmm_est, perm)
+```
+
+Evaluating errors:
+
+```@example tuto
+cat(transition_matrix(hmm_est), transition_matrix(hmm), dims=3)
 ```
