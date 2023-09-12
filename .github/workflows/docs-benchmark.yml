@@ -1,8 +1,7 @@
 name: docs-benchmark
 on:
   push:
-    branches:
-      - main
+    tags: '*'
   workflow_dispatch:
 concurrency:
   # Skip intermediate builds: always.
