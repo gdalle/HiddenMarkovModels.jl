@@ -79,8 +79,8 @@ For multiple sequences we exclude `HMMBase.jl` because it does not support this 
 The following plots demonstrate that `HiddenMarkovModels.jl` scales favorably compared to both Python alternatives, even though the latter make use of highly optimized C++ backends (NumPy and PyTorch respectively).
 This can be partially explained by the absence of logarithmic computations.
 
-![Logdensity benchmark for multiple sequences.\label{fig:logdensity_multiple}](images/benchmark_multiple_sequences_logdensity.svg){ width=40% }
-![Baum-Welch benchmark for multiple sequences.\label{fig:baum_welch_multiple}](images/benchmark_multiple_sequences_baum_welch.svg){ width=40% }
+![Logdensity benchmark for multiple sequences.\label{fig:logdensity_multiple}](images/benchmark_multiple_sequences_logdensity.svg){ width=50% }
+![Baum-Welch benchmark for multiple sequences.\label{fig:baum_welch_multiple}](images/benchmark_multiple_sequences_baum_welch.svg){ width=50% }
 
 See the package documentation for more details on the benchmarks (which are possibly biased against Julia), as well as a mathematical description of the algorithms involved.
 
