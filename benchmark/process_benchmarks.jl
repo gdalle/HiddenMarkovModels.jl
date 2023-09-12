@@ -48,61 +48,67 @@ function plot_benchmarks(; name)
     K_vals = sort(unique(results[!, :K]))
     I_vals = sort(unique(results[!, :I]))
 
+    D = maximum(D_vals)
     T = maximum(T_vals)
     K = maximum(K_vals)
-    I = only(I_vals)
+    I = maximum(I_vals)
 
     for algo in algos
-        plts = []
-        for D in D_vals
-            plt = plot(;
-                xlabel="number of states N",
-                title="dimension D=$D\n(T=$T, K=$K)",
-                xlim=(0, maximum(N_vals) + 2),
-                ylim=(0, Inf),
-                legend=false,
-                ylabel=D == minimum(D_vals) ? "min CPU time (s)" : "",
+        title_params =
+            algo == "baum_welch" ? "(T=$T, D=$D, K=$K, I=$I)" : "(T=$T, D=$D, K=$K)"
+        plt = plot(;
+            title=title_from_algo(algo) * "\n$title_params",
+            xlim=(1, maximum(N_vals) + 1),
+            ylim=(0, Inf),
+            legend=:topleft,
+            margin=15Plots.mm,
+            xlabel="number of states N",
+            ylabel="CPU time (ms)",
+        )
+        for implem in implems
+            local_results = subset(
+                results,
+                :algo => x -> x .== algo,
+                :implem => x -> x .== implem,
+                :D => x -> x .== D,
+                :T => x -> x .== T,
+                :K => x -> x .== K,
+                :I => x -> x .== I,
             )
-            for implem in implems
-                local_results = subset(
-                    results,
-                    :algo => x -> x .== algo,
-                    :implem => x -> x .== implem,
-                    :D => x -> x .== D,
-                    :T => x -> x .== T,
-                    :K => x -> x .== K,
-                    :I => x -> x .== I,
-                )
-                sort!(local_results, :N)
-                plot!(
-                    plt,
-                    local_results[!, :N],
-                    local_results[!, :time] ./ 1e9;
-                    label=implem == "HMMs.jl" ? "$implem (ours)" : implem,
-                    markershape=IMPLEM_MARKERSHAPES[implem],
-                    color=IMPLEM_COLORS[implem],
-                    linestyle=IMPLEM_LINESTYLES[implem],
-                    linewidth=1.5,
-                )
-            end
-            push!(plts, plt)
+            sort!(local_results, :N)
+            overhead_results = subset(
+                results,
+                :algo => x -> x .== algo,
+                :implem => x -> x .== implem,
+                :N => x -> x .== 1,
+                :D => x -> x .== 1,
+                :T => x -> x .== 2,
+                :K => x -> x .== 1,
+                :I => x -> x .== 1,
+            )
+            overhead = endswith(implem, ".jl") ? 0 : first(overhead_results[!, :time])
+            overhead_ms_rounded = round(overhead / 1e6; sigdigits=3)
+            plot!(
+                plt,
+                local_results[!, :N],
+                (local_results[!, :time] .- overhead) ./ 1e6;
+                label=if endswith(implem, ".jl")
+                    "$implem"
+                else
+                    "$implem [-$(overhead_ms_rounded)ms]"
+                end,
+                markershape=IMPLEM_MARKERSHAPES[implem],
+                color=IMPLEM_COLORS[implem],
+                linewidth=1.5,
+            )
         end
 
-        megaplt = plot(
-            plts...;
-            size=(length(D_vals) * 500, 500),
-            layout=(1, length(plts)),
-            plot_title=title_from_algo(algo),
-            legend=:topleft,
-            link=:all,
-            margin=15Plots.mm,
-        )
         if get(ENV, "CI", "false") == "false"
-            display(megaplt)
+            display(plt)
         end
 
         filename = "benchmark_$(name)_$(algo).svg"
-        savefig(megaplt, joinpath(DOCS_BENCHMARK_PLOTS_FOLDER, filename))
+        savefig(plt, joinpath(DOCS_BENCHMARK_PLOTS_FOLDER, filename))
     end
 end
 

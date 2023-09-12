@@ -11,6 +11,12 @@ We compare performance among the following packages:
 
 The test case is an HMM with diagonal multivariate normal observations.
 
+- `N`: number of states
+- `D`: dimension of the observations
+- `T`: trajectory length
+- `K`: number of trajectories
+- `I`: number of Baum-Welch iterations
+
 !!! danger "Why is this empty?"
       The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
 
@@ -58,8 +64,9 @@ If you want to run them on your machine:
 ### Julia-to-Python overhead
 
 Since the Python packages are called from Julia with [PythonCall.jl](https://github.com/cjdoris/PythonCall.jl), we pay a small overhead that is hard to quantify.
-On the plots, we compensate it by subtracting the runtime of the same algorithm for a single state `N=1` from all Python-generated curves.
-This is probably an extreme overestimate, but even so, HMMs.jl mostly comes out on top.
+On the plots, we compensate it by subtracting the runtime of the same algorithm for the smallest instance (`N=1`, `D=1`, `T=2`, `K=1`, `I=1`) from all Python-generated curves.
+This estimate for the overhead is put in parentheses in the legend.
+It is probably over-pessimistic, which is fair because it means that the comparison is now biased against Julia.
 
 ### Allocations
 

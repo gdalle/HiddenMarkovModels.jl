@@ -23,7 +23,7 @@ function rand_model_hmmbase(; N, D)
     return model
 end
 
-function benchmarkables_hmmbase(; algos, N, D, T, K)
+function benchmarkables_hmmbase(; algos, N, D, T, K, I)
     rand_model_hmmbase(; N, D)
     if D == 1
         obs_mat = randn(K * T)
@@ -48,7 +48,7 @@ function benchmarkables_hmmbase(; algos, N, D, T, K)
     end
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable HMMBase.fit_mle(
-            model, $obs_mat; maxiter=BAUM_WELCH_ITER, tol=-Inf
+            model, $obs_mat; maxiter=$I, tol=-Inf
         ) setup = (model = rand_model_hmmbase(; N=$N, D=$D))
     end
     return benchs
