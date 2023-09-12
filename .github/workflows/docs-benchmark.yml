@@ -1,7 +1,8 @@
 name: docs-benchmark
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
   workflow_dispatch:
 concurrency:
   # Skip intermediate builds: always.

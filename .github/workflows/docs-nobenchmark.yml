@@ -1,8 +1,5 @@
 name: docs-nobenchmark
 on:
-  push:
-    branches:
-      - main
   pull_request:
 concurrency:
   # Skip intermediate builds: always.
