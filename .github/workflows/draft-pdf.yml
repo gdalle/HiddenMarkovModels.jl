@@ -1,3 +1,4 @@
+name: JOSS paper compilation
 on:
   push:
     branches:
