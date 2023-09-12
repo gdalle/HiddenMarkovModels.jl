@@ -17,6 +17,9 @@ The test case is an HMM with diagonal multivariate normal observations.
 - `K`: number of trajectories
 - `I`: number of Baum-Welch iterations
 
+!!! danger "Why is this empty?"
+   The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
+
 ### Single sequence
 
 Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/results_single_sequence.csv).
