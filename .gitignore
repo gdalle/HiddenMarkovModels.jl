@@ -7,7 +7,7 @@
 scratchpad.jl
 **/__pycache__
 *.ipynb
-*.svg
+docs/**/*.svg
 *.csv
 *.txt
 /docs/src/index.md
