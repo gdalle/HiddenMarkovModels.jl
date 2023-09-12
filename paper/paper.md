@@ -66,13 +66,14 @@ The relevant parameters are the number of states `N`, the sequence duration `T`,
 This benchmarking code is run automatically by GitHub Actions upon each package release, we based our plots on [this specific reproducible run](https://github.com/gdalle/HiddenMarkovModels.jl/actions/runs/6160848637/job/16718719552).
 
 For a single observation sequence, we exclude `pomegranate` because it is too slow.
-Figures \autoref{fig:logdensity_single}, \autoref{fig:viterbi_single}, \autoref{fig:forward_backward_single} and \autoref{fig:baum_welch_single} show that `HiddenMarkovModels.jl` runs substantially faster than its predecessor `HMMBase.jl`, even though their algorithms are mathematically identical.
+The following plots show that `HiddenMarkovModels.jl` runs substantially faster than its predecessor `HMMBase.jl`, even though their algorithms are mathematically identical.
 We note that performance is less convincing for the Viterbi algorithm, in which linear algebra operations are replaced by max-plus operations (and thus less easy to optimize). 
 
-![Logdensity benchmark for a single sequence.\label{fig:logdensity_single}](images/benchmark_single_sequence_logdensity.svg){ width=40% }
-![Viterbi benchmark for a single sequence.\label{fig:viterbi_single}](images/benchmark_single_sequence_viterbi.svg){ width=40% }
-![Forward-backward benchmark for a single sequence.\label{fig:forward_backward_single}](images/benchmark_single_sequence_forward_backward.svg){ width=40% }
-![Baum-Welch benchmark for a single sequence.\label{fig:baum_welch_single}](images/benchmark_single_sequence_baum_welch.svg){ width=40% }
+![Logdensity benchmark for a single sequence.\label{fig:logdensity_single}](images/benchmark_single_sequence_logdensity.svg){ width=45% }
+![Viterbi benchmark for a single sequence.\label{fig:viterbi_single}](images/benchmark_single_sequence_viterbi.svg){ width=45% }
+
+![Forward-backward benchmark for a single sequence.\label{fig:forward_backward_single}](images/benchmark_single_sequence_forward_backward.svg){ width=45% }
+![Baum-Welch benchmark for a single sequence.\label{fig:baum_welch_single}](images/benchmark_single_sequence_baum_welch.svg){ width=45% }
 
 For multiple sequences we exclude `HMMBase.jl` because it does not support this setting.
 Figures \autoref{fig:logdensity_multiple} and \autoref{fig:baum_welch_multiple} demonstrate that `HiddenMarkovModels.jl` scales favorably compared to both Python alternatives, even though the latter make use of highly optimized C++ backends (NumPy and PyTorch respectively).
