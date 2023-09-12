@@ -17,9 +17,6 @@ The test case is an HMM with diagonal multivariate normal observations.
 - `K`: number of trajectories
 - `I`: number of Baum-Welch iterations
 
-!!! danger "Why is this empty?"
-      The benchmark suite is computationally expensive, and we only run it once for each new release. If the following section contains no plots and the links are broken, you're probably reading the development documentation or a local build of the website. Check out the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
-
 ### Single sequence
 
 Full benchmark logs: [`results_single_sequence.csv`](./assets/benchmark/results/results_single_sequence.csv).
@@ -67,15 +64,6 @@ Since the Python packages are called from Julia with [PythonCall.jl](https://git
 On the plots, we compensate it by subtracting the runtime of the same algorithm for the smallest instance (`N=1`, `D=1`, `T=2`, `K=1`, `I=1`) from all Python-generated curves.
 This estimate for the overhead is put in parentheses in the legend.
 It is probably over-pessimistic, which is fair because it means that the comparison is now biased against Julia.
-
-### Allocations
-
-A major bottleneck of performance in Julia is memory allocations.
-The benchmarks for HMMs.jl thus employ a custom implementation of diagonal multivariate normals, which is entirely allocation-free.
-
-This partly explains the performance gap with HMMBase.jl as the dimension `D` grows beyond 1.
-Such a trick is also possible with HMMBase.jl, but slightly more demanding since it requires subtyping `Distribution` from Distributions.jl, instead of just implementing DensityInterface.jl.
-We might do it in future benchmarks.
 
 ### Parallelism
 
