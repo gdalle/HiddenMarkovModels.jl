@@ -16,6 +16,30 @@ function check_positive(a)
     end
 end
 
+function check_prob_vec(p::AbstractVector)
+    check_no_nan(p)
+    if !is_prob_vec(p)
+        throw(ArgumentError("Invalid probability distribution."))
+    end
+end
+
+function check_trans_mat(A::AbstractMatrix)
+    check_no_nan(A)
+    if !is_trans_mat(A)
+        throw(ArgumentError("Invalid transition matrix."))
+    end
+end
+
+function check_coherent_sizes(p::AbstractVector, A::AbstractMatrix)
+    if size(A) != (length(p), length(p))
+        throw(
+            DimensionMismatch(
+                "Probability distribution and transition matrix are incompatible."
+            ),
+        )
+    end
+end
+
 function check_dists(dists)
     for i in eachindex(dists)
         if DensityKind(dists[i]) == NoDensity()

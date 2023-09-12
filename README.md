@@ -41,7 +41,7 @@ Number types are not restricted to floating point, and automatic differentiation
 
 This package is **fast**.
 All the inference functions have allocation-free versions, which leverage efficient linear algebra subroutines.
-Multithreading is used to parallelize computations across sequences, and compatibility with various array types ([SparseArrays.jl](https://github.com/JuliaSparse/SparseArrays.jl) and [StaticArrays.jl](https://github.com/JuliaArrays/StaticArrays.jl)) is ensured.
+Multithreading is used to parallelize computations across sequences, and compatibility with various array types is ensured.
 We include extensive benchmarks against Julia and Python competitors thanks to [BenchmarkTools.jl](https://github.com/JuliaCI/BenchmarkTools.jl) and [PythonCall.jl](https://github.com/cjdoris/PythonCall.jl).
 
 This package is **reliable**.

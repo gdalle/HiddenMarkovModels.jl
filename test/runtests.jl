@@ -43,6 +43,10 @@ using Test
         include("static.jl")
     end
 
+    @testset verbose = true "Logarithmic" begin
+        include("logarithmic.jl")
+    end
+
     @testset verbose = true "Autodiff" begin
         include("autodiff.jl")
     end

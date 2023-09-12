@@ -14,10 +14,10 @@ The following fields are internals and subject to change:
 
 - `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
 - `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
-- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:, t])`
-- `logm::Vector{R}`: maximum of the observation loglikelihoods `logB`
-- `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `B`
-- `Bβscaled::Matrix{R}`: numerically stabilized product `Bβ`
+- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`
+- `logm::Vector{R}`: maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`
+- `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `Bscaled[i,t] = exp.(logB[i,t] - logm[t])`
+- `Bβscaled::Matrix{R}`: numerically stabilized product `Bβscaled[i,t] = Bscaled[i,t] * β[i,t]`
 """
 struct ForwardBackwardStorage{R}
     α::Matrix{R}
