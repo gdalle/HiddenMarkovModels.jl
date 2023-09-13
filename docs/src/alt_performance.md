@@ -45,7 +45,7 @@ On the plots, we compensate it by subtracting the runtime of the same algorithm 
 A major bottleneck of performance in Julia is memory allocations. The benchmarks for HMMs.jl thus employ a custom implementation of diagonal multivariate normals, which is entirely allocation-free.
 
 This partly explains the performance gap with HMMBase.jl as the dimension `D` grows beyond 1.
-Such a trick is also possible with HMMBase.jl, but more demanding since it requires subtyping `Distribution` from Distributions.jl, instead of just implementing DensityInterface.jl.
+Such a trick is also possible with HMMBase.jl, but more demanding since it requires subtyping `Distribution` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), instead of just implementing [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl).
 
 ### Parallelism
 
@@ -63,7 +63,7 @@ The packages we include have different approaches to parallelism, which can bias
 [^3]: affected by number of Pytorch threads
 
 We report each number of threads in [`setup.txt`](./assets/benchmark/results/setup.txt).
-Since OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/pull/50124) with Julia threads, we run the Julia benchmarks (and only those) with only 1 OpenBLAS thread.
+Since OpenBLAS threads have [negative interactions](https://github.com/JuliaLang/julia/pull/50124) with Julia threads, we run the Julia benchmarks with a single OpenBLAS thread.
 
 ## Numerical results
 
