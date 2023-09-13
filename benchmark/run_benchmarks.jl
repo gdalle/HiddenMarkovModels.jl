@@ -6,34 +6,33 @@ includet("utils/suite.jl")
 
 print_setup(; path=joinpath(@__DIR__, "results", "setup.txt"))
 
-IMPLEMS_SINGLE_SEQUENCE = ("HMMs.jl", "HMMBase.jl", "hmmlearn")
-IMPLEMS_MULTIPLE_SEQUENCES = ("HMMs.jl", "hmmlearn", "pomegranate")
+IMPLEMS_LOW_DIM = ("HMMs.jl", "HMMBase.jl", "hmmlearn")
+IMPLEMS_HIGH_DIM = ("HMMs.jl", "hmmlearn", "pomegranate")
 
-ALGOS_SINGLE_SEQUENCE = ("logdensity", "viterbi", "forward_backward", "baum_welch")
-ALGOS_MULTIPLE_SEQUENCES = ("logdensity", "baum_welch")
+ALGOS = ("logdensity", "viterbi", "forward_backward", "baum_welch")
 
 run_suite(;
-    implems=IMPLEMS_SINGLE_SEQUENCE,
-    algos=ALGOS_SINGLE_SEQUENCE,
-    N_vals=2:4:25,
+    implems=IMPLEMS_LOW_DIM,
+    algos=ALGOS,
+    N_vals=2:3:20,
     D_vals=1,
     T_vals=1000,
     K_vals=1,
-    I_vals=10,
+    I=10,
     seconds=10,
-    samples=100,
-    path=joinpath(@__DIR__, "results", "results_single_sequence.csv"),
+    samples=20,
+    path=joinpath(@__DIR__, "results", "low_dim.csv"),
 );
 
 run_suite(;
-    implems=IMPLEMS_MULTIPLE_SEQUENCES,
-    algos=ALGOS_MULTIPLE_SEQUENCES,
-    N_vals=2:4:25,
+    implems=IMPLEMS_HIGH_DIM,
+    algos=ALGOS,
+    N_vals=2:3:20,
     D_vals=10,
-    T_vals=100,
-    K_vals=100,
-    I_vals=10,
+    T_vals=200,
+    K_vals=50,
+    I=10,
     seconds=10,
-    samples=100,
-    path=joinpath(@__DIR__, "results", "results_multiple_sequences.csv"),
+    samples=20,
+    path=joinpath(@__DIR__, "results", "high_dim.csv"),
 );
