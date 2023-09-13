@@ -26,7 +26,7 @@ function benchmarkables_by_implem(; implem, algos, kwargs...)
     end
 end
 
-function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals)
+function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I)
     SUITE = BenchmarkGroup()
     if ("HMMBase.jl" in implems) && any(>(1), K_vals)
         @warn "HMMBase.jl doesn't support multiple observation sequences, concatenating instead."
@@ -38,7 +38,7 @@ function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals)
             SUITE[implem][algo] = BenchmarkGroup()
             SUITE[implem][algo][(1, 1, 2, 1, 1)] = bench
         end
-        for N in N_vals, D in D_vals, T in T_vals, K in K_vals, I in I_vals
+        for N in N_vals, D in D_vals, T in T_vals, K in K_vals
             bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K, I)
             for (algo, bench) in pairs(bench_tup)
                 SUITE[implem][algo][(N, D, T, K, I)] = bench
@@ -52,13 +52,13 @@ julia_implems(implems) = filter(i -> contains(i, ".jl"), implems)
 python_implems(implems) = filter(i -> !contains(i, ".jl"), implems)
 
 function run_suite(;
-    implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals, path=nothing, kwargs...
+    implems, algos, N_vals, D_vals, T_vals, K_vals, I, path=nothing, kwargs...
 )
     julia_suite = define_suite(;
-        implems=julia_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I_vals
+        implems=julia_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I
     )
     python_suite = define_suite(;
-        implems=python_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I_vals
+        implems=python_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I
     )
 
     default_openblas_threads = BLAS.get_num_threads()
@@ -103,14 +103,13 @@ function run_suite(;
 end
 
 function print_setup(; path)
-    mkl_num_threads = get(ENV, "MKL_NUM_THREADS", "?")
     open(path, "w") do file
         redirect_stdout(file) do
             versioninfo()
             println("\n# Multithreading\n")
-            println("JULIA_NUM_THREADS = $(Threads.nthreads())")
-            println("OPENBLAS_NUM_THREADS = $(BLAS.get_num_threads())")
-            println("MKL_NUM_THREADS = $mkl_num_threads")
+            println("Julia threads = $(Threads.nthreads())")
+            println("OpenBLAS threads = $(BLAS.get_num_threads())")
+            println("Pytorch threads = $(torch.get_num_threads())")
             println("\n# Julia packages\n")
             Pkg.status()
             println("\n# Python packages\n")

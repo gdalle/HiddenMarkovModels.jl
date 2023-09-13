@@ -10,8 +10,8 @@ SUITE = define_suite(;
     N_vals=2:2:20,
     D_vals=10,
     T_vals=1000,
-    K_vals=10,
-    I_vals=10,
+    K_vals=100,
+    I=10,
 )
 
 BenchmarkTools.save(joinpath(@__DIR__, "tune.json"), BenchmarkTools.params(SUITE));

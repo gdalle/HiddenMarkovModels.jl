@@ -33,14 +33,23 @@ IMPLEM_LINESTYLES = Dict(
 
 ## Functions
 
-title_from_algo(algo) = titlecase(replace(algo, "_" => "-"))
-
 function plot_benchmarks(; name)
-    path = joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, "results_$name.csv")
+    path = joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, "$(name).csv")
     results = DataFrame(CSV.File(path))
 
     algos = sort(unique(results[!, :algo]); rev=true)
     implems = sort(unique(results[!, :implem]))
+
+    is_ref = (
+        (results[!, :N] .== 1) .&
+        (results[!, :D] .== 1) .&
+        (results[!, :T] .== 2) .&
+        (results[!, :K] .== 1) .&
+        (results[!, :I] .== 1)
+    )
+
+    ref_results = results[is_ref, :]
+    results = results[Bool.(true .- is_ref), :]
 
     N_vals = sort(unique(results[!, :N]))
     D_vals = sort(unique(results[!, :D]))
@@ -48,16 +57,17 @@ function plot_benchmarks(; name)
     K_vals = sort(unique(results[!, :K]))
     I_vals = sort(unique(results[!, :I]))
 
-    D = maximum(D_vals)
-    T = maximum(T_vals)
-    K = maximum(K_vals)
-    I = maximum(I_vals)
+    I = only(I_vals)
 
-    for algo in algos
-        title_params =
-            algo == "baum_welch" ? "(T=$T, D=$D, K=$K, I=$I)" : "(T=$T, D=$D, K=$K)"
+    for algo in algos, D in D_vals, T in T_vals, K in K_vals
+        title_algo = titlecase(replace(algo, "_" => "-"))
+        title_params = if algo == "baum_welch"
+            "(D=$D,T=$T,K=$K,I=$I)"
+        else
+            "(D=$D,T=$T,K=$K)"
+        end
         plt = plot(;
-            title=title_from_algo(algo) * "\n$title_params",
+            title="$title_algo\n$title_params",
             xlim=(1, maximum(N_vals) + 1),
             ylim=(0, Inf),
             legend=:topleft,
@@ -75,30 +85,22 @@ function plot_benchmarks(; name)
                 :K => x -> x .== K,
                 :I => x -> x .== I,
             )
-            sort!(local_results, :N)
-            overhead_results = subset(
-                results,
-                :algo => x -> x .== algo,
-                :implem => x -> x .== implem,
-                :N => x -> x .== 1,
-                :D => x -> x .== 1,
-                :T => x -> x .== 2,
-                :K => x -> x .== 1,
-                :I => x -> x .== 1,
+            local_ref_results = subset(
+                ref_results, :algo => x -> x .== algo, :implem => x -> x .== implem
             )
-            overhead = endswith(implem, ".jl") ? 0 : first(overhead_results[!, :time])
-            overhead_ms_rounded = round(overhead / 1e6; sigdigits=3)
+            if size(local_results, 1) == 0
+                continue
+            end
+            sort!(local_results, :N)
+            overhead = endswith(implem, ".jl") ? 0 : first(local_ref_results[!, :time])
             plot!(
                 plt,
                 local_results[!, :N],
                 (local_results[!, :time] .- overhead) ./ 1e6;
-                label=if endswith(implem, ".jl")
-                    "$implem"
-                else
-                    "$implem [-$(overhead_ms_rounded)ms]"
-                end,
-                markershape=IMPLEM_MARKERSHAPES[implem],
+                label="$implem",
                 color=IMPLEM_COLORS[implem],
+                markershape=IMPLEM_MARKERSHAPES[implem],
+                linestyle=IMPLEM_LINESTYLES[implem],
                 linewidth=1.5,
             )
         end
@@ -107,8 +109,8 @@ function plot_benchmarks(; name)
             display(plt)
         end
 
-        filename = "benchmark_$(name)_$(algo).svg"
-        savefig(plt, joinpath(DOCS_BENCHMARK_PLOTS_FOLDER, filename))
+        plot_filename = "$(name)_$(algo)_$(title_params).svg"
+        savefig(plt, joinpath(DOCS_BENCHMARK_PLOTS_FOLDER, plot_filename))
     end
 end
 
@@ -124,5 +126,5 @@ for file in readdir(BENCHMARK_RESULTS_FOLDER)
     end
 end
 
-plot_benchmarks(; name="single_sequence")
-plot_benchmarks(; name="multiple_sequences")
+plot_benchmarks(; name="low_dim")
+plot_benchmarks(; name="high_dim")

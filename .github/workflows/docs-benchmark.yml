@@ -22,7 +22,7 @@ jobs:
           version: '1'
       - uses: julia-actions/julia-buildpkg@v1
       - run: |
-          julia --threads=1 --project=benchmark -e '
+          julia --threads=auto --project=benchmark -e '
           using Pkg
           Pkg.instantiate()
           include("benchmark/run_benchmarks.jl")
