@@ -37,21 +37,18 @@ pages = [
 
 fmt = Documenter.HTML(;
     prettyurls=get(ENV, "CI", "false") == "true",
+    repolink="https://github.com/gdalle/HiddenMarkovModels.jl",
     canonical="https://gdalle.github.io/HiddenMarkovModels.jl",
-    edit_link="main",
     assets=String[],
 )
 
-makedocs(
-    bib;
+makedocs(;
     modules=[HiddenMarkovModels],
     authors="Guillaume Dalle",
-    repo="https://github.com/gdalle/HiddenMarkovModels.jl/blob/{commit}{path}#{line}",
     sitename="HiddenMarkovModels.jl",
     format=fmt,
     pages=pages,
-    linkcheck=false,
-    strict=false,
+    plugins=[bib],
 )
 
 deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")
