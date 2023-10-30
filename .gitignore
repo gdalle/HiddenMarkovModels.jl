@@ -3,6 +3,7 @@
 *.jl.mem
 /Manifest.toml
 /docs/build/
+/docs/Manifest.toml
 **/.CondaPkg
 scratchpad.jl
 **/__pycache__
