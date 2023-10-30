@@ -2,14 +2,11 @@
     HiddenMarkovModels
 
 A Julia package for HMM modeling, simulation, inference and learning.
+
+The alias `HMMs` is exported for the package name.
 """
 module HiddenMarkovModels
 
-"""
-    HMMs
-
-Alias for the module HiddenMarkovModels.
-"""
 const HMMs = HiddenMarkovModels
 
 using Base.Threads: @threads

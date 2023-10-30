@@ -2,7 +2,6 @@
 
 ```@docs
 HiddenMarkovModels
-HMMs
 ```
 
 ## Types
@@ -22,7 +21,7 @@ MC
 AbstractHiddenMarkovModel
 HiddenMarkovModel
 AbstractHMM
-PermutedHMM
+HiddenMarkovModels.PermutedHMM
 HMM
 ```
 

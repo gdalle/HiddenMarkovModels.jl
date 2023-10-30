@@ -26,7 +26,8 @@ jobs:
           using Pkg
           Pkg.instantiate()
           include("benchmark/run_benchmarks.jl")
-          include("benchmark/process_benchmarks.jl")'
+          include("benchmark/process_benchmarks.jl")
+          ENV["HMM_BENCHMARKS_DONE"] = true'
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
