@@ -41,6 +41,7 @@ export LightDiagNormal
 include("types/abstract_mc.jl")
 include("types/mc.jl")
 include("types/abstract_hmm.jl")
+include("types/permuted_hmm.jl")
 include("types/hmm.jl")
 
 include("utils/check.jl")
@@ -53,7 +54,6 @@ include("inference/loglikelihoods.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
-include("inference/sufficient_stats.jl")
 include("inference/baum_welch.jl")
 
 if !isdefined(Base, :get_extension)
@@ -74,8 +74,8 @@ end
     dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
     hmm = HMM(p, A, dists)
 
-    obs_seqs = [last(rand(hmm, T)) for _ in 1:3]
     nb_seqs = 3
+    obs_seqs = [last(rand(hmm, T)) for _ in 1:nb_seqs]
     logdensityof(hmm, obs_seqs, nb_seqs)
     forward(hmm, obs_seqs, nb_seqs)
     viterbi(hmm, obs_seqs, nb_seqs)

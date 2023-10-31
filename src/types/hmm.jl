@@ -45,13 +45,27 @@ obs_distribution(hmm::HMM, i::Integer) = hmm.dists[i]
 
 Update `hmm` in-place based on information generated during forward-backward.
 """
-function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
-    hmm.init .= init_count
+function StatsAPI.fit!(hmm::HMM, obs_seqs, fbs)
+    # Initial distribution
+    hmm.init .= zero(eltype(hmm.init))
+    for k in eachindex(fbs)
+        @views hmm.init .+= fbs[k].γ[:, 1]
+    end
     sum_to_one!(hmm.init)
-    hmm.trans .= trans_count
+    # Transition matrix
+    hmm.trans .= zero(eltype(hmm.trans))
+    for k in eachindex(fbs)
+        sum!(hmm.trans, fbs[k].ξ; init=false)
+    end
     foreach(sum_to_one!, eachrow(hmm.trans))
+    # Observation distributions
+    obs_seqs_concat = reduce(vcat, obs_seqs)  # TODO: allocation-free
+    state_marginals_concat = reduce(hcat, fb.γ for fb in fbs)  # TODO: allocation-free
+    @show size(obs_seqs_concat) size(state_marginals_concat)
     @views for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seq, state_marginals[i, :])
+        fit_element_from_sequence!(
+            hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :]
+        )
     end
     check_hmm(hmm)
     return nothing

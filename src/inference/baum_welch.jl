@@ -3,18 +3,18 @@ function baum_welch!(
 )
     # Pre-allocate nearly all necessary memory
     logB = loglikelihoods(hmm, obs_seqs[1])
-    fb = initialize_forward_backward(hmm, logB)
+    fb = forward_backward(hmm, logB)
 
     logBs = Vector{typeof(logB)}(undef, length(obs_seqs))
     fbs = Vector{typeof(fb)}(undef, length(obs_seqs))
+    logBs[1], fbs[1] = logB, fb
     @threads for k in eachindex(obs_seqs)
-        logBs[k] = loglikelihoods(hmm, obs_seqs[k])
-        fbs[k] = forward_backward(hmm, logBs[k])
+        if k > 1
+            logBs[k] = loglikelihoods(hmm, obs_seqs[k])
+            fbs[k] = forward_backward(hmm, logBs[k])
+        end
     end
 
-    init_count, trans_count = initialize_states_stats(fbs)
-    state_marginals_concat = initialize_observations_stats(fbs)
-    obs_seqs_concat = reduce(vcat, obs_seqs)
     logL = loglikelihood(fbs)
     logL_evolution = [logL]
 
@@ -30,9 +30,7 @@ function baum_welch!(
         end
 
         # M step
-        update_states_stats!(init_count, trans_count, fbs)
-        update_observations_stats!(state_marginals_concat, fbs)
-        fit!(hmm, init_count, trans_count, obs_seqs_concat, state_marginals_concat)
+        fit!(hmm, obs_seqs, fbs)
 
         #  Stopping criterion
         if iteration > 1

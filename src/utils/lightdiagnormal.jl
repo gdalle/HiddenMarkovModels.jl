@@ -13,6 +13,10 @@ struct LightDiagNormal{
     logσ::V3
 end
 
+function Base.show(io::IO, dist::LightDiagNormal)
+    return print(io, "LightDiagNormal(μ=$(dist.μ), σ=$(dist.σ))")
+end
+
 function LightDiagNormal(μ, σ)
     check_no_nan(μ)
     check_positive(σ)

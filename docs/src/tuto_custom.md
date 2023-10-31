@@ -70,11 +70,13 @@ As for fitting, we simply ignore the initialization count and copy the rest of t
 
 ```@example tuto
 function StatsAPI.fit!(
-    hmm::EquilibriumHMM{R,D}, init_count, trans_count, obs_seq, state_marginals
+    hmm::EquilibriumHMM{R,D}, obs_seqs, fbs
 ) where {R,D}
     hmm.trans .= trans_count ./ sum(trans_count, dims=2)
+    obs_seqs_concat = reduce(vcat, obs_seqs)
+    state_marginals_concat = reduce(hcat, fb.γ for fb in fbs)
     for i in 1:N
-        hmm.dists[i] = fit(D, obs_seq, state_marginals[i, :])
+        hmm.dists[i] = fit(D, obs_seqs_concat, state_marginals_concat[i, :])
     end
 end
 ```

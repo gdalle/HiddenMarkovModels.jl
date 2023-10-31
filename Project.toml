@@ -1,7 +1,7 @@
 name = "HiddenMarkovModels"
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 authors = ["Guillaume Dalle"]
-version = "0.3.1"
+version = "0.4.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
