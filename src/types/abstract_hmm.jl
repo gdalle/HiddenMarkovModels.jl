@@ -1,14 +1,19 @@
 """
-    AbstractHiddenMarkovModel <: AbstractMarkovChain 
+    AbstractHiddenMarkovModel 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Required interface
 
-- `initial_distribution(hmm)`
+- `initialization(hmm)`
 - `transition_matrix(hmm)`
-- `obs_distribution(hmm, i)`
-- `fit!(hmm, obs_seqs, fbs)` (optional)
+- `obs_distributions(hmm)`
+
+# Optional interface
+
+- `transition_matrix!(trans, hmm, t)`
+- `obs_distributions!(dists, hmm, t)`
+- `fit!(hmm, obs_seqs, fbs)`
 
 # Applicable methods
 
@@ -19,7 +24,7 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 - `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
 - `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
 """
-abstract type AbstractHiddenMarkovModel <: AbstractMarkovChain end
+abstract type AbstractHiddenMarkovModel end
 
 """
     AbstractHMM
@@ -30,41 +35,78 @@ const AbstractHMM = AbstractHiddenMarkovModel
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
+## Interface
+
 @required AbstractHMM begin
     Base.length(::AbstractHMM)
-    initial_distribution(::AbstractHMM)
+    initialization(::AbstractHMM)
     transition_matrix(::AbstractHMM)
-    obs_distribution(::AbstractHMM, ::Integer)
+    obs_distributions(::AbstractHMM)
 end
 
 """
-    obs_distribution(hmm::AbstractHMM, i)
+    length(hmm::AbstractHMM) 
 
-Return the observation distribution of `hmm` associated with state `i`.
+Return the number of states of `hmm`.
+"""
+Base.length
 
-The returned object `dist` must implement
+"""
+    initialization(hmm::AbstractHMM)
+
+Return the initial state probabilities of `hmm`.
+"""
+function initialization end
+
+"""
+    transition_matrix(hmm::AbstractHMM) 
+
+Return the state transition probabilities of `hmm`.
+"""
+function transition_matrix end
+transition_matrix!(trans::AbstractMatrix, hmm::AbstractHMM, t::Integer) = nothing
+
+"""
+    obs_distribution(hmm::AbstractHMM)
+
+Return a vector of observation distributions of `hmm`, one associated with each state.
+
+These distributions must implement
 - `rand(rng, dist)`
 - `DensityInterface.logdensityof(dist, x)`
 """
-function obs_distribution end
+function obs_distributions end
+obs_distributions!(dists::AbstractVector, hmm::AbstractHMM, t::Integer) = nothing
 
 """
     StatsAPI.fit!(hmm::AbstractHMM, obs_seqs, fbs)
+
+Modify `hmm` by estimating new parameters based on observation sequences `obs_seqs` and a vector `fbs` of `ForwardBackwardStorage` objects.
 """
 StatsAPI.fit!  # TODO: docstring
 
+## Simulation
+
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    mc = MarkovChain(hmm)
-    state_seq = rand(rng, mc, T)
-    first_obs = rand(rng, obs_distribution(hmm, first(state_seq)))
-    obs_seq = Vector{typeof(first_obs)}(undef, T)
-    obs_seq[1] = first_obs
-    for t in 2:T
-        obs_seq[t] = rand(rng, obs_distribution(hmm, state_seq[t]))
+    # Parameters
+    init = initialization(hmm)
+    trans = transition_matrix(hmm)
+    dists = obs_distributions(hmm)
+    # Storage
+    state_seq = Vector{Int}(undef, T)
+    obs_seq = Vector{typeof(rand(rng, dists[1]))}(undef, T)
+    # States
+    first_state = rand(rng, Categorical(init; check_args=false))
+    state_seq[1] = first_state
+    for t in 1:T
+        transition_matrix!(trans, hmm, t)
+        next_state_dist = Categorical(view(trans, state_seq[t], :); check_args=false)
+        state_seq[t + 1] = rand(rng, next_state_dist)
+    end
+    # Observations
+    for t in 1:T
+        obs_distributions!(dists, hmm, t)
+        obs_seq[t] = rand(rng, dists[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
-end
-
-function MarkovChain(hmm::AbstractHMM)
-    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
 end

@@ -49,7 +49,7 @@ function check_dists(dists)
 end
 
 function check_mc(mc::MarkovChain)
-    init = initial_distribution(mc)
+    init = initialization(mc)
     trans = transition_matrix(mc)
     if !(length(init) == size(trans, 1) == size(trans, 2))
         throw(DimensionMismatch("Incoherent sizes"))

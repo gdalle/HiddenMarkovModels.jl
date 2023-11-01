@@ -2,12 +2,8 @@
     HiddenMarkovModels
 
 A Julia package for HMM modeling, simulation, inference and learning.
-
-The alias `HMMs` is exported for the package name.
 """
 module HiddenMarkovModels
-
-const HMMs = HiddenMarkovModels
 
 using Base.Threads: @threads
 using DensityInterface:
@@ -27,19 +23,14 @@ using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
-export HMMs
-export AbstractMarkovChain, AbstractMC
-export MarkovChain, MC
 export AbstractHiddenMarkovModel, AbstractHMM, PermutedHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
-export initial_distribution, transition_matrix, obs_distribution
+export initialization, transition_matrix, obs_distribution
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit, fit!
 export LightDiagNormal
 
-include("types/abstract_mc.jl")
-include("types/mc.jl")
 include("types/abstract_hmm.jl")
 include("types/permuted_hmm.jl")
 include("types/hmm.jl")
@@ -50,7 +41,6 @@ include("utils/transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 
-include("inference/loglikelihoods.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
@@ -67,6 +57,7 @@ if !isdefined(Base, :get_extension)
     end
 end
 
+#=
 @compile_workload begin
     N, D, T = 5, 3, 100
     p = rand_prob_vec(N)
@@ -82,5 +73,6 @@ end
     forward_backward(hmm, obs_seqs, nb_seqs)
     baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2, atol=-Inf)
 end
+=#
 
 end

@@ -2,15 +2,11 @@ function baum_welch!(
     hmm::AbstractHMM, obs_seqs; atol, max_iterations, check_loglikelihood_increasing
 )
     # Pre-allocate nearly all necessary memory
-    logB = loglikelihoods(hmm, obs_seqs[1])
-    fb = forward_backward(hmm, logB)
-
-    logBs = Vector{typeof(logB)}(undef, length(obs_seqs))
+    fb = forward_backward(hmm, obs_seqs[1])
     fbs = Vector{typeof(fb)}(undef, length(obs_seqs))
-    logBs[1], fbs[1] = logB, fb
-    @threads for k in eachindex(obs_seqs)
+    fbs[1] = fb
+    @threads for k in eachindex(obs_seqs, fbs)
         if k > 1
-            logBs[k] = loglikelihoods(hmm, obs_seqs[k])
             fbs[k] = forward_backward(hmm, logBs[k])
         end
     end
@@ -21,9 +17,8 @@ function baum_welch!(
     for iteration in 1:max_iterations
         # E step
         if iteration > 1
-            @threads for k in eachindex(obs_seqs, logBs, fbs)
-                loglikelihoods!(logBs[k], hmm, obs_seqs[k])
-                forward_backward!(fbs[k], hmm, logBs[k])
+            @threads for k in eachindex(obs_seqs, fbs)
+                forward_backward!(fbs[k], hmm, obs_seqs[k])
             end
             logL = loglikelihood(fbs)
             push!(logL_evolution, logL)

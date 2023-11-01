@@ -36,14 +36,14 @@ function Base.copy(hmm::HMM)
 end
 
 Base.length(hmm::HMM) = length(hmm.init)
-initial_distribution(hmm::HMM) = hmm.init
+initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
-obs_distribution(hmm::HMM, i::Integer) = hmm.dists[i]
+obs_distributions(hmm::HMM) = hmm.dists
 
 """
-    fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
+    fit!(hmm::HMM, obs_seqs, fbs)
 
-Update `hmm` in-place based on information generated during forward-backward.
+Update `hmm` in-place using information generated during forward-backward.
 """
 function StatsAPI.fit!(hmm::HMM, obs_seqs, fbs)
     # Initial distribution
@@ -61,7 +61,6 @@ function StatsAPI.fit!(hmm::HMM, obs_seqs, fbs)
     # Observation distributions
     obs_seqs_concat = reduce(vcat, obs_seqs)  # TODO: allocation-free
     state_marginals_concat = reduce(hcat, fb.γ for fb in fbs)  # TODO: allocation-free
-    @show size(obs_seqs_concat) size(state_marginals_concat)
     @views for i in eachindex(hmm.dists)
         fit_element_from_sequence!(
             hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :]

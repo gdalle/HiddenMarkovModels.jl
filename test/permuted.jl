@@ -10,7 +10,7 @@ hmm = HMM(p, A, dists)
 perm = [3, 1, 2]
 
 hmm_perm = PermutedHMM(hmm, perm)
-p_perm = initial_distribution(hmm_perm)
+p_perm = initialization(hmm_perm)
 A_perm = transition_matrix(hmm_perm)
 dists_perm = [obs_distribution(hmm_perm, i) for i in 1:3]
 

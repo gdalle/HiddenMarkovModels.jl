@@ -30,7 +30,7 @@ HMM
 ```@docs
 rand
 length
-initial_distribution
+initialization
 transition_matrix
 obs_distribution
 ```
@@ -71,7 +71,7 @@ HMMs.LightDiagNormal
 
 ### Models and simulations
 
-- `p` or `init`: initial_distribution (vector of state probabilities)
+- `p` or `init`: initialization (vector of state probabilities)
 - `A` or `trans`: transition_matrix (matrix of transition probabilities)
 - `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
 - `state_seq`: a sequence of states (vector of integers)

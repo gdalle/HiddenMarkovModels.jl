@@ -17,12 +17,12 @@ end
 
 Base.length(p::PermutedHMM) = length(p.hmm)
 
-HMMs.initial_distribution(p::PermutedHMM) = initial_distribution(p.hmm)[p.perm]
+initialization(p::PermutedHMM) = initialization(p.hmm)[p.perm]
 
-function HMMs.transition_matrix(p::PermutedHMM)
+function transition_matrix(p::PermutedHMM)
     return transition_matrix(p.hmm)[p.perm, :][:, p.perm]
 end
 
-function HMMs.obs_distribution(p::PermutedHMM, i::Integer)
-    return obs_distribution(p.hmm, p.perm[i])
+function obs_distributions(p::PermutedHMM)
+    return obs_distributions(p.hmm)[p.perm]
 end

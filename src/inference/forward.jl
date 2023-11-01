@@ -1,15 +1,18 @@
-function forward!(αₜ, αₜ₊₁, logb, p, A, hmm::AbstractHMM, obs_seq)
+function forward!(αₜ, αₜ₊₁, logb, init, trans, dists, hmm::AbstractHMM, obs_seq)
     T = length(obs_seq)
-    loglikelihoods_vec!(logb, hmm, obs_seq[1])
+    obs_distributions!(dists, hmm, 1)
+    logb .= logdensityof.(dists, Ref(obs_seq[1]))
     logm = maximum(logb)
-    αₜ .= p .* exp.(logb .- logm)
+    αₜ .= init .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
     logL = -log(c) + logm
     for t in 1:(T - 1)
-        loglikelihoods_vec!(logb, hmm, obs_seq[t + 1])
+        transition_matrix!(trans, hmm, t)
+        obs_distributions!(dists, hmm, t + 1)
+        logb .= logdensityof.(dists, Ref(obs_seq[t + 1]))
         logm = maximum(logb)
-        mul!(αₜ₊₁, A', αₜ)
+        mul!(αₜ₊₁, trans', αₜ)
         αₜ₊₁ .*= exp.(logb .- logm)
         c = inv(sum(αₜ₊₁))
         αₜ₊₁ .*= c
@@ -31,14 +34,15 @@ Return a tuple `(α, logL)` where
 """
 function forward(hmm::AbstractHMM, obs_seq)
     N = length(hmm)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
+    init = initialization(hmm)
+    trans = transition_matrix(hmm)
+    dists = obs_distributions(hmm)
     logb = loglikelihoods_vec(hmm, obs_seq[1])
 
-    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    R = promote_type(eltype(init), eltype(trans), eltype(logb))
     αₜ = Vector{R}(undef, N)
     αₜ₊₁ = Vector{R}(undef, N)
-    logL = forward!(αₜ, αₜ₊₁, logb, p, A, hmm, obs_seq)
+    logL = forward!(αₜ, αₜ₊₁, logb, init, trans, dists, hmm, obs_seq)
     return αₜ, logL
 end
 

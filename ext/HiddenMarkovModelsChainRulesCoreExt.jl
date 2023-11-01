@@ -7,7 +7,7 @@ using HiddenMarkovModels
 using SimpleUnPack
 
 function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq)
-    p = initial_distribution(hmm)
+    p = initialization(hmm)
     A = transition_matrix(hmm)
     logB = HiddenMarkovModels.loglikelihoods(hmm, obs_seq)
     return p, A, logB
