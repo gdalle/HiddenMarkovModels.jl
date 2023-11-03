@@ -7,8 +7,6 @@ The alias `HMMs` is exported for the package name.
 """
 module HiddenMarkovModels
 
-const HMMs = HiddenMarkovModels
-
 using Base.Threads: @threads
 using DensityInterface:
     DensityInterface, DensityKind, HasDensity, NoDensity, densityof, logdensityof
@@ -21,26 +19,20 @@ using Distributions:
     MatrixDistribution
 using LinearAlgebra: Diagonal, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
-using Random: AbstractRNG, default_rng
-using RequiredInterfaces: @required
+using Random: Random, AbstractRNG, default_rng
 using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
-export HMMs
-export AbstractMarkovChain, AbstractMC
-export MarkovChain, MC
 export AbstractHiddenMarkovModel, AbstractHMM, PermutedHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
 export initial_distribution, transition_matrix, obs_distribution
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit, fit!
-export LightDiagNormal
 
-include("types/abstract_mc.jl")
-include("types/mc.jl")
 include("types/abstract_hmm.jl")
+include("types/permuted_hmm.jl")
 include("types/hmm.jl")
 
 include("utils/check.jl")
@@ -67,6 +59,7 @@ if !isdefined(Base, :get_extension)
     end
 end
 
+#=
 @compile_workload begin
     N, D, T = 5, 3, 100
     p = rand_prob_vec(N)
@@ -82,5 +75,6 @@ end
     forward_backward(hmm, obs_seqs, nb_seqs)
     baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2, atol=-Inf)
 end
+=#
 
 end

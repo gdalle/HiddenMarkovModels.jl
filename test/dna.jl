@@ -1,7 +1,6 @@
 using DensityInterface
 using HiddenMarkovModels
 using Random: AbstractRNG
-using RequiredInterfaces: check_interface_implemented
 using SimpleUnPack
 using StatsAPI
 using Test
@@ -74,11 +73,11 @@ get_state(coding, nucleotide) = 4(coding - 1) + nucleotide
 
 Base.length(dchmm::DNACodingHMM) = 8
 
-function HMMs.initial_distribution(dchmm::DNACodingHMM)
+function HiddenMarkovModels.initial_distribution(dchmm::DNACodingHMM)
     return repeat(dchmm.cod_init; inner=4) .* repeat(dchmm.nuc_init; outer=2)
 end
 
-function HMMs.transition_matrix(dchmm::DNACodingHMM)
+function HiddenMarkovModels.transition_matrix(dchmm::DNACodingHMM)
     @unpack cod_trans, nuc_trans = dchmm
     A = Matrix{Float64}(undef, 8, 8)
     for c1 in 1:2, n1 in 1:4, c2 in 1:2, n2 in 1:4
@@ -88,7 +87,7 @@ function HMMs.transition_matrix(dchmm::DNACodingHMM)
     return A
 end
 
-function HMMs.obs_distribution(::DNACodingHMM, s::Integer)
+function HiddenMarkovModels.obs_distribution(::DNACodingHMM, s::Integer)
     return Dirac(get_nucleotide(s))
 end
 
@@ -102,8 +101,8 @@ function StatsAPI.fit!(
     for n in 1:4
         dchmm.nuc_init[n] = sum(init_count[get_state(c, n)] for c in 1:2)
     end
-    HMMs.sum_to_one!(dchmm.cod_init)
-    HMMs.sum_to_one!(dchmm.nuc_init)
+    HiddenMarkovModels.sum_to_one!(dchmm.cod_init)
+    HiddenMarkovModels.sum_to_one!(dchmm.nuc_init)
 
     # Transitions
     for c1 in 1:2, c2 in 1:2
@@ -116,14 +115,12 @@ function StatsAPI.fit!(
             trans_count[get_state(c1, n1), get_state(c2, n2)] for c2 in 1:2
         )
     end
-    foreach(HMMs.sum_to_one!, eachrow(dchmm.cod_trans))
-    foreach(HMMs.sum_to_one!, eachrow(@view dchmm.nuc_trans[1, :, :]))
-    foreach(HMMs.sum_to_one!, eachrow(@view dchmm.nuc_trans[2, :, :]))
+    foreach(HiddenMarkovModels.sum_to_one!, eachrow(dchmm.cod_trans))
+    foreach(HiddenMarkovModels.sum_to_one!, eachrow(@view dchmm.nuc_trans[1, :, :]))
+    foreach(HiddenMarkovModels.sum_to_one!, eachrow(@view dchmm.nuc_trans[2, :, :]))
 
     return nothing
 end
-
-@test check_interface_implemented(AbstractHMM, DNACodingHMM)
 
 dchmm = DNACodingHMM(;
     cod_init=rand_prob_vec(2),
@@ -136,14 +133,10 @@ dchmm = DNACodingHMM(;
 
 most_likely_coding_seq = get_coding.(viterbi(dchmm, obs_seq));
 
-mc = MarkovChain(ones(4) ./ 4, rand_trans_mat(4))
-fit!(mc, obs_seq)
-
 dchmm_init = DNACodingHMM(;
     cod_init=rand(2),
     nuc_init=rand(4),
     cod_trans=rand_trans_mat(2),
-    # using transition_matrix(mc) as initialization below seems to be worse
     nuc_trans=permutedims(cat(rand_trans_mat(4), rand_trans_mat(4); dims=3), (3, 1, 2)),
 );
 

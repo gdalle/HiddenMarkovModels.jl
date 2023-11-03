@@ -15,9 +15,10 @@ The following fields are internals and subject to change:
 - `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
 - `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
 - `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`
+- `logB::Matrix{R}`: observation loglikelihoods `logB[i, t]`
 - `logm::Vector{R}`: maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`
-- `Bscaled::Matrix{R}`: numerically stabilized observation likelihoods `Bscaled[i,t] = exp.(logB[i,t] - logm[t])`
-- `Bβscaled::Matrix{R}`: numerically stabilized product `Bβscaled[i,t] = Bscaled[i,t] * β[i,t]`
+- `B̃::Matrix{R}`: numerically stabilized observation likelihoods `B̃[i,t] = exp.(logB[i,t] - logm[t])`
+- `B̃β::Matrix{R}`: numerically stabilized product `B̃β[i,t] = B̃[i,t] * β[i,t]`
 """
 struct ForwardBackwardStorage{R}
     α::Matrix{R}
@@ -25,11 +26,13 @@ struct ForwardBackwardStorage{R}
     γ::Matrix{R}
     ξ::Array{R,3}
     c::Vector{R}
+    logB::Matrix{R}
     logm::Vector{R}
-    Bscaled::Matrix{R}
-    Bβscaled::Matrix{R}
+    B̃::Matrix{R}
+    B̃β::Matrix{R}
 end
 
+Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
 Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
 duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
 
@@ -46,39 +49,45 @@ function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
     return logL
 end
 
-function initialize_forward_backward(p, A, logB)
-    N, T = size(logB)
-    R = promote_type(eltype(p), eltype(A), eltype(logB))
+function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
+    p = initial_distribution(hmm)
+    A = transition_matrix(hmm)
+    testval = logdensityof(obs_distribution(hmm, 1), obs_seq[1])
+    R = promote_type(eltype(p), eltype(A), typeof(testval))
+
+    N, T = length(hmm), length(obs_seq)
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
     ξ = Array{R,3}(undef, N, N, T - 1)
     c = Vector{R}(undef, T)
+    logB = Matrix{R}(undef, N, T)
     logm = Vector{R}(undef, T)
-    Bscaled = Matrix{R}(undef, N, T)
-    Bβscaled = Matrix{R}(undef, N, T)
-    return ForwardBackwardStorage(α, β, γ, ξ, c, logm, Bscaled, Bβscaled)
+    B̃ = Matrix{R}(undef, N, T)
+    B̃β = Matrix{R}(undef, N, T)
+    return ForwardBackwardStorage(α, β, γ, ξ, c, logB, logm, B̃, B̃β)
 end
 
-function initialize_forward_backward(hmm::AbstractHMM, logB)
+function scale_likelihoods!(fb::ForwardBackwardStorage)
+    @unpack logB, logm, B̃ = fb
+    maximum!(logm', logB)
+    B̃ .= exp.(logB .- logm')
+    return nothing
+end
+
+function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     p = initial_distribution(hmm)
     A = transition_matrix(hmm)
-    return initialize_forward_backward(p, A, logB)
-end
-
-function forward!(fb::ForwardBackwardStorage, p, A, logB)
-    @unpack α, c, logm, Bscaled = fb
+    @unpack α, c, B̃ = fb
     T = size(α, 2)
-    maximum!(logm', logB)
-    Bscaled .= exp.(logB .- logm')
     @views begin
-        α[:, 1] .= p .* Bscaled[:, 1]
+        α[:, 1] .= p .* B̃[:, 1]
         c[1] = inv(sum(α[:, 1]))
         α[:, 1] .*= c[1]
     end
     @views for t in 1:(T - 1)
         mul!(α[:, t + 1], A', α[:, t])
-        α[:, t + 1] .*= Bscaled[:, t + 1]
+        α[:, t + 1] .*= B̃[:, t + 1]
         c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= c[t + 1]
     end
@@ -86,55 +95,41 @@ function forward!(fb::ForwardBackwardStorage, p, A, logB)
     return nothing
 end
 
-function backward!(fb::ForwardBackwardStorage{R}, A, logB) where {R}
-    @unpack β, c, Bscaled, Bβscaled = fb
+function backward!(fb::ForwardBackwardStorage{R}, hmm::AbstractHMM) where {R}
+    A = transition_matrix(hmm)
+    @unpack β, c, B̃, B̃β = fb
     T = size(β, 2)
     β[:, T] .= c[T]
     @views for t in (T - 1):-1:1
-        Bβscaled[:, t + 1] .= Bscaled[:, t + 1] .* β[:, t + 1]
-        mul!(β[:, t], A, Bβscaled[:, t + 1])
+        B̃β[:, t + 1] .= B̃[:, t + 1] .* β[:, t + 1]
+        mul!(β[:, t], A, B̃β[:, t + 1])
         β[:, t] .*= c[t]
     end
-    @views Bβscaled[:, 1] .= Bscaled[:, 1] .* β[:, 1]
+    @views B̃β[:, 1] .= B̃[:, 1] .* β[:, 1]
     check_no_nan(β)
     return nothing
 end
 
-function marginals!(fb::ForwardBackwardStorage, A)
-    @unpack α, β, c, Bβscaled, γ, ξ = fb
+function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
+    A = transition_matrix(hmm)
+    @unpack α, β, c, B̃β, γ, ξ = fb
     N, T = size(γ)
     γ .= α .* β ./ c'
     check_no_nan(γ)
     @views for t in 1:(T - 1)
-        ξ[:, :, t] .= α[:, t] .* A .* Bβscaled[:, t + 1]'
+        ξ[:, :, t] .= α[:, t] .* A .* B̃β[:, t + 1]'
     end
     check_no_nan(ξ)
     return nothing
 end
 
-function forward_backward!(fb::ForwardBackwardStorage, p, A, logB)
-    forward!(fb, p, A, logB)
-    backward!(fb, A, logB)
-    marginals!(fb, A)
+function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
+    loglikelihoods!(fb.logB, hmm, obs_seq)
+    scale_likelihoods!(fb)
+    forward!(fb, hmm)
+    backward!(fb, hmm)
+    marginals!(fb, hmm)
     return nothing
-end
-
-function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, logB)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    return forward_backward!(fb, p, A, logB)
-end
-
-function forward_backward(p, A, logB)
-    fb = initialize_forward_backward(p, A, logB)
-    forward_backward!(fb, p, A, logB)
-    return fb
-end
-
-function forward_backward(hmm::AbstractHMM, logB::Matrix)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    return forward_backward(p, A, logB)
 end
 
 """
@@ -145,8 +140,9 @@ Apply the forward-backward algorithm to estimate the posterior state marginals o
 Return a [`ForwardBackwardStorage`](@ref).
 """
 function forward_backward(hmm::AbstractHMM, obs_seq)
-    logB = loglikelihoods(hmm, obs_seq)
-    return forward_backward(hmm, logB)
+    fb = initialize_forward_backward(hmm, obs_seq)
+    forward_backward!(fb, hmm, obs_seq)
+    return fb
 end
 
 """
@@ -163,9 +159,9 @@ function forward_backward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    fb1 = forward_backward(hmm, first(obs_seqs))
-    fbs = Vector{typeof(fb1)}(undef, nb_seqs)
-    fbs[1] = fb1
+    fb = forward_backward(hmm, first(obs_seqs))
+    fbs = Vector{typeof(fb)}(undef, nb_seqs)
+    fbs[1] = fb
     @threads for k in 2:nb_seqs
         fbs[k] = forward_backward(hmm, obs_seqs[k])
     end

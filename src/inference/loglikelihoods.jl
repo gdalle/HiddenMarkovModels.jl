@@ -10,9 +10,9 @@ function loglikelihoods_vec!(logb, hmm::AbstractHMM, obs)
 end
 
 function loglikelihoods_vec(hmm::AbstractHMM, obs)
-    logb = [logdensityof(obs_distribution(hmm, i), obs) for i in 1:length(hmm)]
-    check_no_nan(logb)
-    check_no_inf(logb)
+    testval = logdensityof(obs_distribution(hmm, 1), obs)
+    logb = Vector{typeof(testval)}(undef, length(hmm))
+    loglikelihoods_vec!(logb, hmm, obs)
     return logb
 end
 
@@ -29,10 +29,9 @@ function loglikelihoods!(logB, hmm::AbstractHMM, obs_seq)
 end
 
 function loglikelihoods(hmm::AbstractHMM, obs_seq)
+    testval = logdensityof(obs_distribution(hmm, 1), obs_seq[1])
     T, N = length(obs_seq), length(hmm)
-    dists = obs_distribution.(Ref(hmm), 1:N)
-    logB = [logdensityof(dists[i], obs_seq[t]) for i in 1:N, t in 1:T]
-    check_no_nan(logB)
-    check_no_inf(logB)
+    logB = Matrix{typeof(testval)}(undef, N, T)
+    loglikelihoods!(logB, hmm, obs_seq)
     return logB
 end

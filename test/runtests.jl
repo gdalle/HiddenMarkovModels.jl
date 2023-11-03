@@ -1,17 +1,22 @@
+using Aqua: Aqua
+using Documenter: Documenter
+using HiddenMarkovModels
+using JuliaFormatter: JuliaFormatter
+using JET: JET
 using Test
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     @testset "Code formatting" begin
-        include("formatting.jl")
+        @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
     end
 
     if VERSION >= v"1.9"
         @testset "Code quality" begin
-            include("quality.jl")
+            Aqua.test_all(HiddenMarkovModels; ambiguities=false)
         end
 
         @testset "Code linting" begin
-            include("linting.jl")
+            JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 
         @testset verbose = true "Type stability" begin
@@ -24,11 +29,7 @@ using Test
     end
 
     @testset "Interface" begin
-        include("interface.jl")
-    end
-
-    @testset "Markov chain" begin
-        include("mc.jl")
+        nothing
     end
 
     @testset verbose = true "Correctness" begin
@@ -60,6 +61,6 @@ using Test
     end
 
     @testset "Doctests" begin
-        include("doctests.jl")
+        Documenter.doctest(HiddenMarkovModels)
     end
 end

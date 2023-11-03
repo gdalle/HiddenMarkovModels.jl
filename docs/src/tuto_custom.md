@@ -61,9 +61,9 @@ The interface is only different as far as the initialization is concerned.
 
 ```@example tuto
 Base.length(hmm::EquilibriumHMM) = length(hmm.dists)
-HMMs.initial_distribution(hmm::EquilibriumHMM) = markov_equilibrium(hmm.trans)  # this is new
-HMMs.transition_matrix(hmm::EquilibriumHMM) = hmm.trans
-HMMs.obs_distribution(hmm::EquilibriumHMM, i::Integer) = hmm.dists[i]
+HiddenMarkovModels.initial_distribution(hmm::EquilibriumHMM) = markov_equilibrium(hmm.trans)  # this is new
+HiddenMarkovModels.transition_matrix(hmm::EquilibriumHMM) = hmm.trans
+HiddenMarkovModels.obs_distribution(hmm::EquilibriumHMM, i::Integer) = hmm.dists[i]
 ```
 
 As for fitting, we simply ignore the initialization count and copy the rest of the original code (with a few simplifications):

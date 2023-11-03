@@ -1,5 +1,5 @@
 """
-    AbstractHiddenMarkovModel <: AbstractMarkovChain 
+    AbstractHiddenMarkovModel 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
@@ -19,7 +19,7 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 - `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
 - `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
 """
-abstract type AbstractHiddenMarkovModel <: AbstractMarkovChain end
+abstract type AbstractHiddenMarkovModel end
 
 """
     AbstractHMM
@@ -30,12 +30,28 @@ const AbstractHMM = AbstractHiddenMarkovModel
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
-@required AbstractHMM begin
-    Base.length(::AbstractHMM)
-    initial_distribution(::AbstractHMM)
-    transition_matrix(::AbstractHMM)
-    obs_distribution(::AbstractHMM, ::Integer)
-end
+## Interface
+
+"""
+    length(hmm::AbstractHMM) 
+
+Return the number of states of `hmm`.
+"""
+Base.length
+
+"""
+    initial_distribution(hmm::AbstractHMM)
+
+Return the initial state probabilities of `hmm`.
+"""
+function initial_distribution end
+
+"""
+    transition_matrix(hmm::AbstractHMM) 
+
+Return the state transition probabilities of `hmm`.
+"""
+function transition_matrix end
 
 """
     obs_distribution(hmm::AbstractHMM, i)
@@ -48,9 +64,17 @@ The returned object `dist` must implement
 """
 function obs_distribution end
 
+## Sampling
+
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    mc = MarkovChain(hmm)
-    state_seq = rand(rng, mc, T)
+    init = initial_distribution(hmm)
+    trans = transition_matrix(hmm)
+    first_state = rand(rng, Categorical(init; check_args=false))
+    state_seq = Vector{Int}(undef, T)
+    state_seq[1] = first_state
+    @views for t in 2:T
+        state_seq[t] = rand(rng, Categorical(trans[state_seq[t - 1], :]; check_args=false))
+    end
     first_obs = rand(rng, obs_distribution(hmm, first(state_seq)))
     obs_seq = Vector{typeof(first_obs)}(undef, T)
     obs_seq[1] = first_obs
@@ -60,35 +84,4 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-function MarkovChain(hmm::AbstractHMM)
-    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
-end
-
-"""
-    PermutedHMM{H<:AbstractHMM}
-
-Wrapper around an `AbstractHMM` that permutes its states.
-
-This is computationally inefficient and mostly useful for evaluation.
-
-# Fields
-
-- `hmm:H`: the old HMM
-- `perm::Vector{Int}`: a permutation such that state `i` in the new HMM corresponds to state `perm[i]` in the old.
-"""
-struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
-    hmm::H
-    perm::Vector{Int}
-end
-
-Base.length(p::PermutedHMM) = length(p.hmm)
-
-HMMs.initial_distribution(p::PermutedHMM) = initial_distribution(p.hmm)[p.perm]
-
-function HMMs.transition_matrix(p::PermutedHMM)
-    return transition_matrix(p.hmm)[p.perm, :][:, p.perm]
-end
-
-function HMMs.obs_distribution(p::PermutedHMM, i::Integer)
-    return obs_distribution(p.hmm, p.perm[i])
-end
+Base.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)

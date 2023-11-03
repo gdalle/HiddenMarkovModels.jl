@@ -6,22 +6,11 @@ HiddenMarkovModels
 
 ## Types
 
-### Markov chains
-
-```@docs
-AbstractMarkovChain
-MarkovChain
-AbstractMC
-MC
-```
-
-### Hidden Markov Models
-
 ```@docs
 AbstractHiddenMarkovModel
 HiddenMarkovModel
 AbstractHMM
-HiddenMarkovModels.PermutedHMM
+PermutedHMM
 HMM
 ```
 
@@ -55,9 +44,9 @@ baum_welch
 ## Internals
 
 ```@docs
-HMMs.ForwardBackwardStorage
-HMMs.fit_element_from_sequence!
-HMMs.LightDiagNormal
+HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.fit_element_from_sequence!
+HiddenMarkovModels.LightDiagNormal
 ```
 
 ## Notations
