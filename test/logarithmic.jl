@@ -1,5 +1,6 @@
 using Distributions
 using HiddenMarkovModels
+using HiddenMarkovModels: LightDiagNormal
 using LinearAlgebra
 using LogarithmicNumbers
 using SimpleUnPack

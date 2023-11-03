@@ -58,7 +58,9 @@ function StatsAPI.fit!(hmm::HMM, fbs, obs_seqs_concat, state_marginals_concat)
     end
     foreach(sum_to_one!, eachrow(hmm.trans))
     @views for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :])
+        fit_element_from_sequence!(
+            hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :]
+        )
     end
     check_hmm(hmm)
     return nothing

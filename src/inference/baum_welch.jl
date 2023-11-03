@@ -1,10 +1,3 @@
-function initialize_state_marginals(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
-    N = length(first(fbs))
-    T_total = sum(duration, fbs)
-    state_marginals_concat = Matrix{R}(undef, N, T_total)
-    return state_marginals_concat
-end
-
 function update_state_marginals!(
     state_marginals_concat, fbs::Vector{ForwardBackwardStorage{R}}
 ) where {R}
@@ -21,27 +14,28 @@ function baum_welch!(
     hmm::AbstractHMM, obs_seqs; atol, max_iterations, check_loglikelihood_increasing
 )
     # Pre-allocate nearly all necessary memory
-    fb1 = initialize_forward_backward(hmm, obs_seqs[1])
+    fb1 = forward_backward(hmm, obs_seqs[1])
     fbs = Vector{typeof(fb1)}(undef, length(obs_seqs))
     fbs[1] = fb1
     @threads for k in eachindex(obs_seqs, fbs)
-        if k > 2
-            fbs[k] = initialize_forward_backward(hmm, obs_seqs[k])
+        if k > 1
+            fbs[k] = forward_backward(hmm, obs_seqs[k])
         end
     end
 
     obs_seqs_concat = reduce(vcat, obs_seqs)
-    state_marginals_concat = initialize_state_marginals(fbs)
-    logL_evolution = eltype(fbs[1])[]
+    state_marginals_concat = reduce(hcat, fb.γ for fb in fbs)
+    logL_evolution = [loglikelihood(fbs)]
 
     for iteration in 1:max_iterations
         # E step
-        @threads for k in eachindex(obs_seqs, fbs)
-            forward_backward!(fbs[k], hmm, obs_seqs[k])
+        if iteration > 1
+            @threads for k in eachindex(obs_seqs, fbs)
+                forward_backward!(fbs[k], hmm, obs_seqs[k])
+            end
+            update_state_marginals!(state_marginals_concat, fbs)
+            push!(logL_evolution, loglikelihood(fbs))
         end
-        update_state_marginals!(state_marginals_concat, fbs)
-        logL = loglikelihood(fbs)
-        push!(logL_evolution, logL)
 
         # M step
         fit!(hmm, fbs, obs_seqs_concat, state_marginals_concat)

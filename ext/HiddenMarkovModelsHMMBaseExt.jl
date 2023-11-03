@@ -13,7 +13,7 @@ end
 function HMMBase.HMM(hmm::HiddenMarkovModels.HMM)
     a = deepcopy(initialization(hmm))
     A = deepcopy(transition_matrix(hmm))
-    B = deepcopy(obs_distribution.(Ref(hmm), 1:length(hmm)))
+    B = deepcopy(obs_distributions(hmm))
     return HMMBase.HMM(a, A, B)
 end
 

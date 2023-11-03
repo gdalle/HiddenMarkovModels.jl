@@ -23,9 +23,10 @@ function initialize_forward(hmm::AbstractHMM, obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    logb = logdensityof.(d, Ref(obs_seq[1]))
+    testval = logdensityof(d[1], obs_seq[1])
+    R = promote_type(eltype(p), eltype(A), typeof(testval))
 
-    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    logb = Vector{R}(undef, N)
     αₜ = Vector{R}(undef, N)
     αₜ₊₁ = Vector{R}(undef, N)
     f = ForwardStorage(logb, αₜ, αₜ₊₁)
@@ -33,18 +34,20 @@ function initialize_forward(hmm::AbstractHMM, obs_seq)
 end
 
 function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
-    @unpack logb, αₜ, αₜ₊₁ = f
+    T = length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    T = length(obs_seq)
-    update_loglikelihoods!(logb, hmm, obs_seq[1])
+    d = obs_distributions(hmm)
+    @unpack logb, αₜ, αₜ₊₁ = f
+
+    logb .= logdensityof.(d, Ref(obs_seq[1]))
     logm = maximum(logb)
     αₜ .= p .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
     logL = -log(c) + logm
     for t in 1:(T - 1)
-        update_loglikelihoods!(logb, hmm, obs_seq[t + 1])
+        logb .= logdensityof.(d, Ref(obs_seq[t + 1]))
         logm = maximum(logb)
         mul!(αₜ₊₁, A', αₜ)
         αₜ₊₁ .*= exp.(logb .- logm)
@@ -92,8 +95,10 @@ function forward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     f1 = forward(hmm, first(obs_seqs))
     fs = Vector{typeof(f1)}(undef, nb_seqs)
     fs[1] = f1
-    @threads for k in 2:nb_seqs
-        fs[k] = forward(hmm, obs_seqs[k])
+    @threads for k in eachindex(fs, obs_seqs)
+        if k > 1
+            fs[k] = forward(hmm, obs_seqs[k])
+        end
     end
     return fs
 end
@@ -126,8 +131,10 @@ function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seqs, nb_seqs::Inte
     logL1 = logdensityof(hmm, first(obs_seqs))
     logLs = Vector{typeof(logL1)}(undef, nb_seqs)
     logLs[1] = logL1
-    @threads for k in 2:nb_seqs
-        logLs[k] = logdensityof(hmm, obs_seqs[k])
+    @threads for k in eachindex(logLs, obs_seqs)
+        if k > 1
+            logLs[k] = logdensityof(hmm, obs_seqs[k])
+        end
     end
     return sum(logLs)
 end

@@ -30,7 +30,7 @@ using StatsAPI: StatsAPI, fit, fit!
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
-export initialization, transition_matrix, obs_distribution
+export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit, fit!
 
@@ -44,7 +44,6 @@ include("utils/transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 
-include("inference/loglikelihoods.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")

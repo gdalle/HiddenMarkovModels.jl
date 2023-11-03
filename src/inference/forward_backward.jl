@@ -52,7 +52,8 @@ end
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    testval = logdensityof(obs_distribution(hmm, 1), obs_seq[1])
+    d = obs_distributions(hmm)
+    testval = logdensityof(d[1], obs_seq[1])
     R = promote_type(eltype(p), eltype(A), typeof(testval))
 
     N, T = length(hmm), length(obs_seq)
@@ -70,10 +71,11 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
 end
 
 function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
-    @unpack logB, logm, B̃ = fb
     d = obs_distributions(hmm)
+    @unpack logB, logm, B̃ = fb
+
     for (logb, obs) in zip(eachcol(logB), obs_seq)
-        logb .= logdensityof(d, Ref(obs))
+        logb .= logdensityof.(d, Ref(obs))
     end
     maximum!(logm', logB)
     B̃ .= exp.(logB .- logm')
@@ -85,6 +87,7 @@ function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     A = transition_matrix(hmm)
     @unpack α, c, B̃ = fb
     T = size(α, 2)
+
     @views begin
         α[:, 1] .= p .* B̃[:, 1]
         c[1] = inv(sum(α[:, 1]))
@@ -104,6 +107,7 @@ function backward!(fb::ForwardBackwardStorage{R}, hmm::AbstractHMM) where {R}
     A = transition_matrix(hmm)
     @unpack β, c, B̃, B̃β = fb
     T = size(β, 2)
+
     β[:, T] .= c[T]
     @views for t in (T - 1):-1:1
         B̃β[:, t + 1] .= B̃[:, t + 1] .* β[:, t + 1]
@@ -119,6 +123,7 @@ function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     A = transition_matrix(hmm)
     @unpack α, β, c, B̃β, γ, ξ = fb
     N, T = size(γ)
+
     γ .= α .* β ./ c'
     check_no_nan(γ)
     @views for t in 1:(T - 1)

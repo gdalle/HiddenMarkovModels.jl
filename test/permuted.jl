@@ -12,7 +12,7 @@ perm = [3, 1, 2]
 hmm_perm = PermutedHMM(hmm, perm)
 p_perm = initialization(hmm_perm)
 A_perm = transition_matrix(hmm_perm)
-dists_perm = [obs_distribution(hmm_perm, i) for i in 1:3]
+dists_perm = obs_distributions(hmm_perm)
 
 for i in 1:3
     @test p_perm[i] ≈ p[perm[i]]

@@ -56,7 +56,7 @@ Verify that `hmm` satisfies basic assumptions.
 function check_hmm(hmm::AbstractHMM)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = [obs_distribution(hmm, i) for i in 1:length(hmm)]
+    d = obs_distributions(hmm)
     if !all(==(length(hmm)), [length(p), size(A, 1), size(A, 2), length(d)])
         throw(DimensionMismatch("Incoherent sizes"))
     end

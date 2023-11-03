@@ -23,9 +23,10 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    logb = logdensityof.(d, Ref(obs_seq[1]))
+    testval = logdensityof(d[1], obs_seq[1])
+    R = promote_type(eltype(p), eltype(A), typeof(testval))
 
-    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    logb = Vector{R}(undef, N)
     δₜ = Vector{R}(undef, N)
     δₜ₋₁ = Vector{R}(undef, N)
     δₜ₋₁Aⱼ = Vector{R}(undef, N)
@@ -35,19 +36,19 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq)
 end
 
 function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq)
-    @unpack logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q = v
+    N, T = length(hmm), length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    N, T = length(hmm), length(obs_seq)
+    @unpack logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q = v
 
-    logb .= logdensityof(d, Ref(obs_seq[1]))
+    logb .= logdensityof.(d, Ref(obs_seq[1]))
     logm = maximum(logb)
     δₜ .= p .* exp.(logb .- logm)
     δₜ₋₁ .= δₜ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
-        logb .= logdensityof(d, Ref(obs_seq[t]))
+        logb .= logdensityof.(d, Ref(obs_seq[t]))
         logm = maximum(logb)
         for j in 1:N
             @views δₜ₋₁Aⱼ .= δₜ₋₁ .* A[:, j]

@@ -82,7 +82,7 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     @views for t in 2:T
         state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
     end
-    first_obs = rand(rng, obs_distribution(hmm, first(state_seq)))
+    first_obs = rand(rng, d[state_seq[1]])
     obs_seq = Vector{typeof(first_obs)}(undef, T)
     obs_seq[1] = first_obs
     for t in 2:T
