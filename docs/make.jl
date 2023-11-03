@@ -22,11 +22,10 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
-alt_pages = if get(ENV, "HMM_BENCHMARKS_DONE", false)
-    ["Features" => "alt_features.md", "Performance" => "alt_performance.md"]
-else
-    ["Features" => "alt_features.md"]
-end
+benchmarks_done = (
+    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "plots"))) > 1) &&  # plots present
+    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "results"))) > 1)  # results present
+)
 
 pages = [
     "Home" => "index.md",
@@ -36,7 +35,8 @@ pages = [
         "Custom HMM" => "tuto_custom.md",
         "Debugging" => "debugging.md",
     ],
-    "Alternatives" => alt_pages,
+    "Alternatives" =>
+        ["Features" => "alt_features.md", "Performance" => "alt_performance.md"],
     "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
 ]
 
@@ -54,7 +54,7 @@ makedocs(;
     format=fmt,
     pages=pages,
     plugins=[bib],
-    pagesonly=true,
+    warnonly=!benchmarks_done,
 )
 
 deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")
