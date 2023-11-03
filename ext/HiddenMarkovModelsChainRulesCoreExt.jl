@@ -10,7 +10,7 @@ function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    logB = reduce(hcat, logdensityof.(d, Ref(obs)) for obs in obs_seq)
+    logB = reduce(hcat, logdensityof.(d, (obs,)) for obs in obs_seq)
     return p, A, logB
 end
 

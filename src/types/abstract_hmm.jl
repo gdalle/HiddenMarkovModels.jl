@@ -5,6 +5,8 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
+- [`length`](@ref)
+- [`eltype`](@ref)
 - [`initialization`](@ref)
 - [`transition_matrix`](@ref)
 - [`obs_distributions`](@ref)
@@ -40,6 +42,19 @@ Return the number of states of `hmm`.
 Base.length
 
 """
+    eltype(hmm::AbstractHMM, obs)
+
+Return a type that can accommodate forward-backward computations on observations similar to `obs`.
+It is typicall a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
+"""
+function Base.eltype(hmm::AbstractHMM, obs)
+    init_type = eltype(initialization(hmm))
+    trans_type = eltype(transition_matrix(hmm))
+    logdensity_type = typeof(logdensityof(obs_distributions(hmm)[1], obs))
+    return promote_type(init_type, trans_type, logdensity_type)
+end
+
+"""
     initialization(hmm::AbstractHMM)
 
 Return the vector of initial state probabilities for `hmm`.
@@ -63,6 +78,18 @@ Each element `dist` of this vector must implement
 - `DensityInterface.logdensityof(dist, obs)`
 """
 function obs_distributions end
+
+"""
+    fit!(
+        hmm::AbstractHMM,
+        fbs::Vector{<:ForwardBackwardStorage},
+        obs_seqs_concat,
+        state_marginals_concat::Matrix
+    )
+
+Update `hmm` in-place based on information generated during forward-backward.
+"""
+StatsAPI.fit!
 
 ## Sampling
 

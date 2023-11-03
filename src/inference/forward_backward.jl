@@ -50,13 +50,9 @@ function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
 end
 
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
-    p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    testval = logdensityof(d[1], obs_seq[1])
-    R = promote_type(eltype(p), eltype(A), typeof(testval))
-
     N, T = length(hmm), length(obs_seq)
+    R = eltype(hmm, obs_seq[1])
+
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
@@ -74,8 +70,8 @@ function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_s
     d = obs_distributions(hmm)
     @unpack logB, logm, B̃ = fb
 
-    for (logb, obs) in zip(eachcol(logB), obs_seq)
-        logb .= logdensityof.(d, Ref(obs))
+    for t in eachindex(axes(logB, 2), obs_seq)
+        logB[:, t] .= logdensityof.(d, (obs_seq[t],))
     end
     maximum!(logm', logB)
     B̃ .= exp.(logB .- logm')

@@ -19,44 +19,40 @@ using Test
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 
-        @testset verbose = true "Type stability" begin
+        @testset "Type stability" begin
             include("type_stability.jl")
         end
 
-        @testset verbose = true "Allocations" begin
+        @testset "Allocations" begin
             include("allocations.jl")
         end
     end
 
-    @testset "Interface" begin
-        nothing
-    end
-
-    @testset verbose = true "Correctness" begin
+    @testset "Correctness" begin
         include("correctness.jl")
     end
 
-    @testset verbose = true "Sparse" begin
+    @testset "Sparse" begin
         include("sparse.jl")
     end
 
-    @testset verbose = true "Static" begin
+    @testset "Static" begin
         include("static.jl")
     end
 
-    @testset verbose = true "Logarithmic" begin
+    @testset "Logarithmic" begin
         include("logarithmic.jl")
     end
 
-    @testset verbose = true "Autodiff" begin
+    @testset "Autodiff" begin
         include("autodiff.jl")
     end
 
-    @testset verbose = true "DNA" begin
+    @testset "DNA" begin
         include("dna.jl")
     end
 
-    @testset verbose = true "Permuted" begin
+    @testset "Permuted" begin
         include("permuted.jl")
     end
 

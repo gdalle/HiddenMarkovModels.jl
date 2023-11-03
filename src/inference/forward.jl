@@ -20,11 +20,7 @@ end
 
 function initialize_forward(hmm::AbstractHMM, obs_seq)
     N = length(hmm)
-    p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    testval = logdensityof(d[1], obs_seq[1])
-    R = promote_type(eltype(p), eltype(A), typeof(testval))
+    R = eltype(hmm, obs_seq[1])
 
     logb = Vector{R}(undef, N)
     αₜ = Vector{R}(undef, N)
@@ -40,14 +36,14 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
     d = obs_distributions(hmm)
     @unpack logb, αₜ, αₜ₊₁ = f
 
-    logb .= logdensityof.(d, Ref(obs_seq[1]))
+    logb .= logdensityof.(d, (obs_seq[1],))
     logm = maximum(logb)
     αₜ .= p .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
     logL = -log(c) + logm
     for t in 1:(T - 1)
-        logb .= logdensityof.(d, Ref(obs_seq[t + 1]))
+        logb .= logdensityof.(d, (obs_seq[t + 1],))
         logm = maximum(logb)
         mul!(αₜ₊₁, A', αₜ)
         αₜ₊₁ .*= exp.(logb .- logm)

@@ -1,4 +1,5 @@
 using HiddenMarkovModels
+using HiddenMarkovModels: PermutedHMM
 using Distributions
 using Test
 

@@ -87,13 +87,22 @@ function HiddenMarkovModels.transition_matrix(dchmm::DNACodingHMM)
     return A
 end
 
-function HiddenMarkovModels.obs_distribution(::DNACodingHMM, s::Integer)
-    return Dirac(get_nucleotide(s))
+function HiddenMarkovModels.obs_distributions(hmm::DNACodingHMM)
+    return [Dirac(get_nucleotide(s)) for s in 1:length(hmm)]
 end
 
-function StatsAPI.fit!(
-    dchmm::DNACodingHMM, init_count, trans_count, obs_seq, state_marginals
-)
+function StatsAPI.fit!(dchmm::DNACodingHMM, fbs, obs_seqs_concat, state_marginals_concat)
+    init_count = zeros(eltype(initialization(dchmm)), 8)
+    for k in eachindex(fbs)
+        @views init_count .+= fbs[k].γ[:, 1]
+    end
+    sum_to_one!(init_count)
+    trans_count = zeros(eltype(transition_matrix(dchmm)), 8, 8)
+    for k in eachindex(fbs)
+        sum!(trans_count, fbs[k].ξ; init=false)
+    end
+    foreach(sum_to_one!, eachrow(hmm.trans))
+
     # Initializations
     for c in 1:2
         dchmm.cod_init[c] = sum(init_count[get_state(c, n)] for n in 1:4)

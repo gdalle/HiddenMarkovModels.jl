@@ -36,7 +36,6 @@ export fit, fit!
 
 include("types/abstract_hmm.jl")
 include("types/permuted_hmm.jl")
-include("types/hmm.jl")
 
 include("utils/check.jl")
 include("utils/probvec.jl")
@@ -48,6 +47,8 @@ include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
+
+include("types/hmm.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()

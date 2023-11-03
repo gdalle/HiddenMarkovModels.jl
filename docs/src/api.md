@@ -19,9 +19,10 @@ HMM
 ```@docs
 rand
 length
+eltype
 initialization
 transition_matrix
-obs_distribution
+obs_distributions
 ```
 
 ## Inference

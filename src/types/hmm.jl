@@ -37,26 +37,34 @@ function Base.copy(hmm::HMM)
 end
 
 Base.length(hmm::HMM) = length(hmm.init)
+
+function Base.eltype(hmm::HMM, obs)
+    init_type = eltype(hmm.init)
+    trans_type = eltype(hmm.trans)
+    logdensity_type = typeof(logdensityof(hmm.dists[1], obs))
+    return promote_type(init_type, trans_type, logdensity_type)
+end
+
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
 
-"""
-    fit!(hmm::HMM, obs_seq, fbs, obs_seqs_concat, state_marginals_concat)
-
-Update `hmm` in-place based on information generated during forward-backward.
-"""
-function StatsAPI.fit!(hmm::HMM, fbs, obs_seqs_concat, state_marginals_concat)
+function StatsAPI.fit!(
+    hmm::HMM, fbs::Vector{<:ForwardBackwardStorage}, obs_seqs_concat, state_marginals_concat
+)
+    # Initialization
     hmm.init .= zero(eltype(hmm.init))
     for k in eachindex(fbs)
         @views hmm.init .+= fbs[k].γ[:, 1]
     end
     sum_to_one!(hmm.init)
+    # Transition matrix
     hmm.trans .= zero(eltype(hmm.trans))
     for k in eachindex(fbs)
         sum!(hmm.trans, fbs[k].ξ; init=false)
     end
     foreach(sum_to_one!, eachrow(hmm.trans))
+    #  Observation distributions
     @views for i in eachindex(hmm.dists)
         fit_element_from_sequence!(
             hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :]
