@@ -45,7 +45,10 @@ baum_welch
 ## Internals
 
 ```@docs
+HiddenMarkovModels.ForwardStorage
+HiddenMarkovModels.ViterbiStorage
 HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.fit_element_from_sequence!
 HiddenMarkovModels.LightDiagNormal
 ```

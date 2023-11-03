@@ -5,31 +5,32 @@ Store forward quantities with element type `R`.
 
 # Fields
 
-Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
-
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
+    "total loglikelihood"
+    logL::RefValue{R}
     "vector of observation loglikelihoods `logb[i]`"
     logb::Vector{R}
-    "scaled forward variables `α[t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
+    "scaled forward variables `α[t]`"
     αₜ::Vector{R}
     "scaled forward variables `α[t+1]`"
     αₜ₊₁::Vector{R}
 end
 
-function initialize_forward(hmm::AbstractHMM, obs_seq)
+function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     N = length(hmm)
     R = eltype(hmm, obs_seq[1])
 
+    logL = RefValue{R}(zero(R))
     logb = Vector{R}(undef, N)
     αₜ = Vector{R}(undef, N)
     αₜ₊₁ = Vector{R}(undef, N)
-    f = ForwardStorage(logb, αₜ, αₜ₊₁)
+    f = ForwardStorage(logL, logb, αₜ, αₜ₊₁)
     return f
 end
 
-function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
+function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
@@ -41,7 +42,7 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
     αₜ .= p .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
-    logL = -log(c) + logm
+    logL[] = -log(c) + logm
     for t in 1:(T - 1)
         logb .= logdensityof.(d, (obs_seq[t + 1],))
         logm = maximum(logb)
@@ -50,9 +51,9 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
         c = inv(sum(αₜ₊₁))
         αₜ₊₁ .*= c
         αₜ .= αₜ₊₁
-        logL += -log(c) + logm
+        logL[] += -log(c) + logm
     end
-    return logL
+    return nothing
 end
 
 """
@@ -65,10 +66,10 @@ Return a tuple `(α, logL)` where
 - `logL` is the loglikelihood of the sequence
 - `α[i]` is the posterior probability of state `i` at the end of the sequence.
 """
-function forward(hmm::AbstractHMM, obs_seq)
+function forward(hmm::AbstractHMM, obs_seq::Vector)
     f = initialize_forward(hmm, obs_seq)
-    logL = forward!(f, hmm, obs_seq)
-    return f.αₜ, logL
+    forward!(f, hmm, obs_seq)
+    return f.αₜ, f.logL[]
 end
 
 """
@@ -84,17 +85,14 @@ Return a vector of tuples `(αₖ, logLₖ)`, where
 !!! warning "Multithreading"
     This function is parallelized across sequences.
 """
-function forward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
+function forward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    f1 = forward(hmm, first(obs_seqs))
-    fs = Vector{typeof(f1)}(undef, nb_seqs)
-    fs[1] = f1
+    R = eltype(hmm, obs_seqs[1][1])
+    fs = Vector{ForwardStorage{R}}(undef, nb_seqs)
     @threads for k in eachindex(fs, obs_seqs)
-        if k > 1
-            fs[k] = forward(hmm, obs_seqs[k])
-        end
+        fs[k] = forward(hmm, obs_seqs[k])
     end
     return fs
 end
@@ -106,8 +104,9 @@ Apply the forward algorithm to compute the loglikelihood of a single observation
 
 Return a number.
 """
-function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq)
-    return last(forward(hmm, obs_seq))
+function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
+    _, logL = forward(hmm, obs_seq)
+    return logL
 end
 
 """
@@ -120,17 +119,16 @@ Return a number.
 !!! warning "Multithreading"
     This function is parallelized across sequences.
 """
-function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
+function DensityInterface.logdensityof(
+    hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
+)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    logL1 = logdensityof(hmm, first(obs_seqs))
-    logLs = Vector{typeof(logL1)}(undef, nb_seqs)
-    logLs[1] = logL1
+    R = eltype(hmm, obs_seqs[1][1])
+    logLs = Vector{R}(undef, nb_seqs)
     @threads for k in eachindex(logLs, obs_seqs)
-        if k > 1
-            logLs[k] = logdensityof(hmm, obs_seqs[k])
-        end
+        logLs[k] = logdensityof(hmm, obs_seqs[k])
     end
     return sum(logLs)
 end

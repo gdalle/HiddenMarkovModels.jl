@@ -9,6 +9,7 @@ $(EXPORTS)
 """
 module HiddenMarkovModels
 
+using Base: RefValue
 using Base.Threads: @threads
 using DensityInterface:
     DensityInterface, DensityKind, HasDensity, NoDensity, densityof, logdensityof

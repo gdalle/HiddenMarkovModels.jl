@@ -12,6 +12,8 @@ $(TYPEDFIELDS)
 Only the `γ` and `ξ` fields are part of the public API.
 """
 struct ForwardBackwardStorage{R}
+    "total loglikelihood"
+    logL::RefValue{R}
     "scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
     α::Matrix{R}
     "scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
@@ -36,23 +38,11 @@ Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
 Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
 duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
 
-function loglikelihood(fb::ForwardBackwardStorage{R}) where {R}
-    logL = -sum(log, fb.c) + sum(fb.logm)
-    return logL
-end
-
-function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
-    logL = zero(R)
-    for fb in fbs
-        logL += loglikelihood(fb)
-    end
-    return logL
-end
-
-function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
+function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     R = eltype(hmm, obs_seq[1])
 
+    logL = RefValue{R}(zero(R))
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
@@ -63,10 +53,10 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
     B̃ = Matrix{R}(undef, N, T)
     B̃β = Matrix{R}(undef, N, T)
 
-    return ForwardBackwardStorage(α, β, γ, ξ, c, logB, logm, B̃, B̃β)
+    return ForwardBackwardStorage(logL, α, β, γ, ξ, c, logB, logm, B̃, B̃β)
 end
 
-function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
+function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     d = obs_distributions(hmm)
     @unpack logB, logm, B̃ = fb
 
@@ -96,6 +86,7 @@ function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
         α[:, t + 1] .*= c[t + 1]
     end
     check_no_nan(α)
+    fb.logL[] = -sum(log, fb.c) + sum(fb.logm)
     return nothing
 end
 
@@ -129,7 +120,7 @@ function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     return nothing
 end
 
-function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
+function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     update_likelihoods!(fb, hmm, obs_seq)
     forward!(fb, hmm)
     backward!(fb, hmm)
@@ -144,7 +135,7 @@ Apply the forward-backward algorithm to estimate the posterior state marginals o
 
 Return a [`ForwardBackwardStorage`](@ref).
 """
-function forward_backward(hmm::AbstractHMM, obs_seq)
+function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     fb = initialize_forward_backward(hmm, obs_seq)
     forward_backward!(fb, hmm, obs_seq)
     return fb
@@ -160,17 +151,14 @@ Return a vector of [`ForwardBackwardStorage`](@ref) objects.
 !!! warning "Multithreading"
     This function is parallelized across sequences.
 """
-function forward_backward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
+function forward_backward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    fb1 = forward_backward(hmm, first(obs_seqs))
-    fbs = Vector{typeof(fb1)}(undef, nb_seqs)
-    fbs[1] = fb1
+    R = eltype(hmm, obs_seqs[1][1])
+    fbs = Vector{ForwardBackwardStorage{R}}(undef, nb_seqs)
     @threads for k in eachindex(obs_seqs, fbs)
-        if k > 2
-            fbs[k] = forward_backward(hmm, obs_seqs[k])
-        end
+        fbs[k] = forward_backward(hmm, obs_seqs[k])
     end
     return fbs
 end

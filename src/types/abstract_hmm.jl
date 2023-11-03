@@ -35,14 +35,14 @@ const AbstractHMM = AbstractHiddenMarkovModel
 ## Interface
 
 """
-    length(hmm::AbstractHMM)
+    length(hmm)
 
 Return the number of states of `hmm`.
 """
 Base.length
 
 """
-    eltype(hmm::AbstractHMM, obs)
+    eltype(hmm, obs)
 
 Return a type that can accommodate forward-backward computations on observations similar to `obs`.
 It is typicall a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
@@ -55,21 +55,21 @@ function Base.eltype(hmm::AbstractHMM, obs)
 end
 
 """
-    initialization(hmm::AbstractHMM)
+    initialization(hmm)
 
 Return the vector of initial state probabilities for `hmm`.
 """
 function initialization end
 
 """
-    transition_matrix(hmm::AbstractHMM) 
+    transition_matrix(hmm) 
 
 Return the matrix of state transition probabilities for `hmm`.
 """
 function transition_matrix end
 
 """
-    obs_distributions(hmm::AbstractHMM)
+    obs_distributions(hmm)
 
 Return a vector of observation distributions for `hmm`.
 
@@ -80,12 +80,7 @@ Each element `dist` of this vector must implement
 function obs_distributions end
 
 """
-    fit!(
-        hmm::AbstractHMM,
-        fbs::Vector{<:ForwardBackwardStorage},
-        obs_seqs_concat,
-        state_marginals_concat::Matrix
-    )
+    fit!(hmm, bw::BaumWelchStorage, obs_seqs)
 
 Update `hmm` in-place based on information generated during forward-backward.
 """

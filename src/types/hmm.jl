@@ -50,7 +50,10 @@ transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
 
 function StatsAPI.fit!(
-    hmm::HMM, fbs::Vector{<:ForwardBackwardStorage}, obs_seqs_concat, state_marginals_concat
+    hmm::HMM,
+    fbs::Vector{<:ForwardBackwardStorage},
+    obs_seqs_concat::Vector,
+    state_marginals_concat::Matrix,
 )
     # Initialization
     hmm.init .= zero(eltype(hmm.init))

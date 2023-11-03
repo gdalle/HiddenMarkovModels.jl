@@ -5,8 +5,6 @@ Store Viterbi quantities with element type `R`.
 
 # Fields
 
-Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
-
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
@@ -18,7 +16,7 @@ struct ViterbiStorage{R}
     q::Vector{Int}
 end
 
-function initialize_viterbi(hmm::AbstractHMM, obs_seq)
+function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     T, N = length(obs_seq), length(hmm)
     R = eltype(hmm, obs_seq[1])
 
@@ -31,7 +29,7 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq)
     return ViterbiStorage(logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q)
 end
 
-function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq)
+function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
@@ -68,7 +66,7 @@ Apply the Viterbi algorithm to compute the most likely state sequence of an HMM.
 
 Return a vector of integers.
 """
-function viterbi(hmm::AbstractHMM, obs_seq)
+function viterbi(hmm::AbstractHMM, obs_seq::Vector)
     v = initialize_viterbi(hmm, obs_seq)
     viterbi!(v, hmm, obs_seq)
     return v.q
@@ -84,7 +82,7 @@ Return a vector of vectors of integers.
 !!! warning "Multithreading"
     This function is parallelized across sequences.
 """
-function viterbi(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
+function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
