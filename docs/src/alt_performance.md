@@ -15,6 +15,10 @@ The test case is an HMM with diagonal multivariate normal observations.
 - `K`: number of trajectories
 - `I`: number of Baum-Welch iterations
 
+!!! danger "Missing benchmarks?"
+    The benchmarks are computationally expensive and we only run them once for each new release.
+    If you don't see any plots below and the links are broken, you are probably on the dev documentation: go to the [stable documentation](https://gdalle.github.io/HiddenMarkovModels.jl/stable/) instead.
+
 ## Reproducibility
 
 These benchmarks were generated in the following environment: [`setup.txt`](./assets/benchmark/results/setup.txt).
