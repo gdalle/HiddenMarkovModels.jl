@@ -1,7 +1,8 @@
+[deps]
+pytorch = ""
+ipykernel = ""
+numpy = ""
 
 [pip.deps]
 pomegranate = ""
-ipykernel = ""
 hmmlearn = ""
-torch = ""
-numpy = ""
