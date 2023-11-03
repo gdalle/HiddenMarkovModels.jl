@@ -11,24 +11,13 @@ function test_allocations(hmm; T)
     @unpack state_seq, obs_seq = rand(hmm, T)
 
     ## Forward
-    logb = HiddenMarkovModels.loglikelihoods_vec(hmm, obs_seq[1])
-    αₜ = zeros(N)
-    αₜ₊₁ = zeros(N)
-    allocs = @ballocated HiddenMarkovModels.forward!(
-        $αₜ, $αₜ₊₁, $logb, $p, $A, $hmm, $obs_seq
-    )
+    f = HiddenMarkovModels.initialize_forward(hmm, obs_seq)
+    allocs = @ballocated HiddenMarkovModels.forward!($f, $hmm, $obs_seq)
     @test allocs == 0
 
     ## Viterbi
-    logb = HiddenMarkovModels.loglikelihoods_vec(hmm, obs_seq[1])
-    δₜ = zeros(N)
-    δₜ₋₁ = zeros(N)
-    δA_tmp = zeros(N)
-    ψ = zeros(Int, N, T)
-    q = zeros(Int, T)
-    allocs = @ballocated HiddenMarkovModels.viterbi!(
-        $q, $δₜ, $δₜ₋₁, $δA_tmp, $ψ, $logb, $p, $A, $hmm, $obs_seq
-    )
+    v = HiddenMarkovModels.initialize_viterbi(hmm, obs_seq)
+    allocs = @ballocated HiddenMarkovModels.viterbi!($v, $hmm, $obs_seq)
     @test allocs == 0
 
     ## Forward-backward
