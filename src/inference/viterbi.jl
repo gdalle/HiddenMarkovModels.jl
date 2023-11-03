@@ -1,22 +1,63 @@
-function viterbi!(q, δₜ, δₜ₋₁, δA_tmp, ψ, logb, p, A, hmm::AbstractHMM, obs_seq)
+"""
+$(TYPEDEF)
+
+Store Viterbi quantities with element type `R`.
+
+# Fields
+
+Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
+
+$(TYPEDFIELDS)
+"""
+struct ViterbiStorage{R}
+    logb::Vector{R}
+    δₜ::Vector{R}
+    δₜ₋₁::Vector{R}
+    δₜ₋₁Aⱼ::Vector{R}
+    ψ::Matrix{Int}
+    q::Vector{Int}
+end
+
+function initialize_viterbi(hmm::AbstractHMM, obs_seq)
+    T, N = length(obs_seq), length(hmm)
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
+    logb = logdensityof.(d, Ref(obs_seq[1]))
+
+    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    δₜ = Vector{R}(undef, N)
+    δₜ₋₁ = Vector{R}(undef, N)
+    δₜ₋₁Aⱼ = Vector{R}(undef, N)
+    ψ = Matrix{Int}(undef, N, T)
+    q = Vector{Int}(undef, T)
+    return ViterbiStorage(logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q)
+end
+
+function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq)
+    @unpack logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q = v
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
     N, T = length(hmm), length(obs_seq)
-    loglikelihoods_vec!(logb, hmm, obs_seq[1])
+
+    logb .= logdensityof(d, Ref(obs_seq[1]))
     logm = maximum(logb)
     δₜ .= p .* exp.(logb .- logm)
     δₜ₋₁ .= δₜ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
-        loglikelihoods_vec!(logb, hmm, obs_seq[t])
+        logb .= logdensityof(d, Ref(obs_seq[t]))
         logm = maximum(logb)
         for j in 1:N
-            @views δA_tmp .= δₜ₋₁ .* A[:, j]
-            i_max = argmax(δA_tmp)
+            @views δₜ₋₁Aⱼ .= δₜ₋₁ .* A[:, j]
+            i_max = argmax(δₜ₋₁Aⱼ)
             ψ[j, t] = i_max
-            δₜ[j] = δA_tmp[i_max] * exp(logb[j] - logm)
+            δₜ[j] = δₜ₋₁Aⱼ[i_max] * exp(logb[j] - logm)
         end
         δₜ₋₁ .= δₜ
     end
-    @views q[T] = argmax(δₜ)
+    q[T] = argmax(δₜ)
     for t in (T - 1):-1:1
         q[t] = ψ[q[t + 1], t + 1]
     end
@@ -31,20 +72,9 @@ Apply the Viterbi algorithm to compute the most likely state sequence of an HMM.
 Return a vector of integers.
 """
 function viterbi(hmm::AbstractHMM, obs_seq)
-    T, N = length(obs_seq), length(hmm)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    logb = loglikelihoods_vec(hmm, obs_seq[1])
-
-    R = promote_type(eltype(p), eltype(A), eltype(logb))
-    δₜ = Vector{R}(undef, N)
-    δₜ₋₁ = Vector{R}(undef, N)
-    δA_tmp = Vector{R}(undef, N)
-    ψ = Matrix{Int}(undef, N, T)
-    q = Vector{Int}(undef, T)
-
-    viterbi!(q, δₜ, δₜ₋₁, δA_tmp, ψ, logb, p, A, hmm, obs_seq)
-    return q
+    v = initialize_viterbi(hmm, obs_seq)
+    viterbi!(v, hmm, obs_seq)
+    return v.q
 end
 
 """
@@ -62,7 +92,7 @@ function viterbi(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
     qs = Vector{Vector{Int}}(undef, nb_seqs)
-    @threads for k in 1:nb_seqs
+    @threads for k in eachindex(qs, obs_seqs)
         qs[k] = viterbi(hmm, obs_seqs[k])
     end
     return qs

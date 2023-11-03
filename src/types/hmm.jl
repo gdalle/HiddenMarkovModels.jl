@@ -1,18 +1,19 @@
 """
-    HiddenMarkovModel{D} <: AbstractHiddenMarkovModel
+$(TYPEDEF)
 
 Basic implementation of an HMM.
 
 # Fields
 
-- `init::AbstractVector`: initial state probabilities
-- `trans::AbstractMatrix`: state transition matrix
-- `dists::AbstractVector{D}`: observation distributions
+$(TYPEDFIELDS)
 """
 struct HiddenMarkovModel{D,U<:AbstractVector,M<:AbstractMatrix,V<:AbstractVector{D}} <:
        AbstractHMM
+    "initial state probabilities"
     init::U
+    "state transition matrix"
     trans::M
+    "observation distributions"
     dists::V
 
     function HiddenMarkovModel(
@@ -36,22 +37,28 @@ function Base.copy(hmm::HMM)
 end
 
 Base.length(hmm::HMM) = length(hmm.init)
-initial_distribution(hmm::HMM) = hmm.init
+initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
-obs_distribution(hmm::HMM, i::Integer) = hmm.dists[i]
+obs_distributions(hmm::HMM) = hmm.dists
 
 """
-    fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
+    fit!(hmm::HMM, obs_seq, fbs, obs_seqs_concat, state_marginals_concat)
 
 Update `hmm` in-place based on information generated during forward-backward.
 """
-function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
-    hmm.init .= init_count
+function StatsAPI.fit!(hmm::HMM, fbs, obs_seqs_concat, state_marginals_concat)
+    hmm.init .= zero(eltype(hmm.init))
+    for k in eachindex(fbs)
+        @views hmm.init .+= fbs[k].γ[:, 1]
+    end
     sum_to_one!(hmm.init)
-    hmm.trans .= trans_count
+    hmm.trans .= zero(eltype(hmm.trans))
+    for k in eachindex(fbs)
+        sum!(hmm.trans, fbs[k].ξ; init=false)
+    end
     foreach(sum_to_one!, eachrow(hmm.trans))
     @views for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seq, state_marginals[i, :])
+        fit_element_from_sequence!(hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :])
     end
     check_hmm(hmm)
     return nothing

@@ -61,7 +61,7 @@ The interface is only different as far as the initialization is concerned.
 
 ```@example tuto
 Base.length(hmm::EquilibriumHMM) = length(hmm.dists)
-HiddenMarkovModels.initial_distribution(hmm::EquilibriumHMM) = markov_equilibrium(hmm.trans)  # this is new
+HiddenMarkovModels.initialization(hmm::EquilibriumHMM) = markov_equilibrium(hmm.trans)  # this is new
 HiddenMarkovModels.transition_matrix(hmm::EquilibriumHMM) = hmm.trans
 HiddenMarkovModels.obs_distribution(hmm::EquilibriumHMM, i::Integer) = hmm.dists[i]
 ```

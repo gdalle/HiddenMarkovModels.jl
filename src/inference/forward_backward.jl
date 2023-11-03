@@ -1,34 +1,34 @@
 """
-    ForwardBackwardStorage{R}
+$(TYPEDEF)
 
 Store forward-backward quantities with element type `R`.
 
 # Fields
 
-Let `X` denote the vector of hidden states and `Y` denote the vector of observations. The following fields are part of the API:
+Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
 
-- `γ::Matrix{R}`: posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`
-- `ξ::Array{R,3}`: posterior two-state marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`
+$(TYPEDFIELDS)
 
-The following fields are internals and subject to change:
-
-- `α::Matrix{R}`: scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)
-- `β::Matrix{R}`: scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)
-- `c::Vector{R}`: forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`
-- `logB::Matrix{R}`: observation loglikelihoods `logB[i, t]`
-- `logm::Vector{R}`: maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`
-- `B̃::Matrix{R}`: numerically stabilized observation likelihoods `B̃[i,t] = exp.(logB[i,t] - logm[t])`
-- `B̃β::Matrix{R}`: numerically stabilized product `B̃β[i,t] = B̃[i,t] * β[i,t]`
+Only the `γ` and `ξ` fields are part of the public API.
 """
 struct ForwardBackwardStorage{R}
+    "scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
     α::Matrix{R}
+    "scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
     β::Matrix{R}
+    "posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
+    "posterior two-state marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`"
     ξ::Array{R,3}
+    "forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`"
     c::Vector{R}
+    "observation loglikelihoods `logB[i, t]`"
     logB::Matrix{R}
+    "maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`"
     logm::Vector{R}
+    "numerically stabilized observation likelihoods `B̃[i,t] = exp.(logB[i,t] - logm[t])`"
     B̃::Matrix{R}
+    "numerically stabilized product `B̃β[i,t] = B̃[i,t] * β[i,t]`"
     B̃β::Matrix{R}
 end
 
@@ -50,7 +50,7 @@ function loglikelihood(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
 end
 
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
-    p = initial_distribution(hmm)
+    p = initialization(hmm)
     A = transition_matrix(hmm)
     testval = logdensityof(obs_distribution(hmm, 1), obs_seq[1])
     R = promote_type(eltype(p), eltype(A), typeof(testval))
@@ -65,18 +65,23 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq)
     logm = Vector{R}(undef, T)
     B̃ = Matrix{R}(undef, N, T)
     B̃β = Matrix{R}(undef, N, T)
+
     return ForwardBackwardStorage(α, β, γ, ξ, c, logB, logm, B̃, B̃β)
 end
 
-function scale_likelihoods!(fb::ForwardBackwardStorage)
+function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
     @unpack logB, logm, B̃ = fb
+    d = obs_distributions(hmm)
+    for (logb, obs) in zip(eachcol(logB), obs_seq)
+        logb .= logdensityof(d, Ref(obs))
+    end
     maximum!(logm', logB)
     B̃ .= exp.(logB .- logm')
     return nothing
 end
 
 function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
-    p = initial_distribution(hmm)
+    p = initialization(hmm)
     A = transition_matrix(hmm)
     @unpack α, c, B̃ = fb
     T = size(α, 2)
@@ -124,8 +129,7 @@ function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
 end
 
 function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq)
-    loglikelihoods!(fb.logB, hmm, obs_seq)
-    scale_likelihoods!(fb)
+    update_likelihoods!(fb, hmm, obs_seq)
     forward!(fb, hmm)
     backward!(fb, hmm)
     marginals!(fb, hmm)
@@ -159,11 +163,13 @@ function forward_backward(hmm::AbstractHMM, obs_seqs, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    fb = forward_backward(hmm, first(obs_seqs))
-    fbs = Vector{typeof(fb)}(undef, nb_seqs)
-    fbs[1] = fb
-    @threads for k in 2:nb_seqs
-        fbs[k] = forward_backward(hmm, obs_seqs[k])
+    fb1 = forward_backward(hmm, first(obs_seqs))
+    fbs = Vector{typeof(fb1)}(undef, nb_seqs)
+    fbs[1] = fb1
+    @threads for k in eachindex(obs_seqs, fbs)
+        if k > 2
+            fbs[k] = forward_backward(hmm, obs_seqs[k])
+        end
     end
     return fbs
 end

@@ -48,7 +48,7 @@ function test_correctness(hmm, hmm_init; T)
         @test isapprox(
             logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)]
         )
-        @test isapprox(initial_distribution(hmm_est), hmm_est_base.a)
+        @test isapprox(initialization(hmm_est), hmm_est_base.a)
         @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)
 
         for (dist, dist_base) in zip(hmm.dists, hmm_base.B)

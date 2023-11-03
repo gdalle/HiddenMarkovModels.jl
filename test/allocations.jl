@@ -6,7 +6,7 @@ using SimpleUnPack
 using Test
 
 function test_allocations(hmm; T)
-    p = initial_distribution(hmm)
+    p = initialization(hmm)
     A = transition_matrix(hmm)
     @unpack state_seq, obs_seq = rand(hmm, T)
 

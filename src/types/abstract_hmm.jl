@@ -3,12 +3,12 @@
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
-# Required interface
+# Interface
 
-- `initial_distribution(hmm)`
-- `transition_matrix(hmm)`
-- `obs_distribution(hmm, i)`
-- `fit!(hmm, init_count, trans_count, obs_seq, state_marginals)` (optional)
+- [`initialization`](@ref)
+- [`transition_matrix`](@ref)
+- [`obs_distributions`](@ref)
+- [`fit!](@ref)
 
 # Applicable methods
 
@@ -33,53 +33,60 @@ const AbstractHMM = AbstractHiddenMarkovModel
 ## Interface
 
 """
-    length(hmm::AbstractHMM) 
+    length(hmm::AbstractHMM)
 
 Return the number of states of `hmm`.
 """
 Base.length
 
 """
-    initial_distribution(hmm::AbstractHMM)
+    initialization(hmm::AbstractHMM)
 
-Return the initial state probabilities of `hmm`.
+Return the vector of initial state probabilities for `hmm`.
 """
-function initial_distribution end
+function initialization end
 
 """
     transition_matrix(hmm::AbstractHMM) 
 
-Return the state transition probabilities of `hmm`.
+Return the matrix of state transition probabilities for `hmm`.
 """
 function transition_matrix end
 
 """
-    obs_distribution(hmm::AbstractHMM, i)
+    obs_distributions(hmm::AbstractHMM)
 
-Return the observation distribution of `hmm` associated with state `i`.
+Return a vector of observation distributions for `hmm`.
 
-The returned object `dist` must implement
+Each element `dist` of this vector must implement
 - `rand(rng, dist)`
-- `DensityInterface.logdensityof(dist, x)`
+- `DensityInterface.logdensityof(dist, obs)`
 """
-function obs_distribution end
+function obs_distributions end
 
 ## Sampling
 
+"""
+    rand([rng,] hmm, T)
+
+Simulate `hmm` for `T` time steps. 
+"""
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    init = initial_distribution(hmm)
-    trans = transition_matrix(hmm)
-    first_state = rand(rng, Categorical(init; check_args=false))
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
+
+    first_state = rand(rng, Categorical(p; check_args=false))
     state_seq = Vector{Int}(undef, T)
     state_seq[1] = first_state
     @views for t in 2:T
-        state_seq[t] = rand(rng, Categorical(trans[state_seq[t - 1], :]; check_args=false))
+        state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
     end
     first_obs = rand(rng, obs_distribution(hmm, first(state_seq)))
     obs_seq = Vector{typeof(first_obs)}(undef, T)
     obs_seq[1] = first_obs
     for t in 2:T
-        obs_seq[t] = rand(rng, obs_distribution(hmm, state_seq[t]))
+        obs_seq[t] = rand(rng, d[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end

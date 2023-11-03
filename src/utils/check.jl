@@ -40,23 +40,28 @@ function check_coherent_sizes(p::AbstractVector, A::AbstractMatrix)
     end
 end
 
-function check_dists(dists)
-    for i in eachindex(dists)
-        if DensityKind(dists[i]) == NoDensity()
+function check_dists(d)
+    for i in eachindex(d)
+        if DensityKind(d[i]) == NoDensity()
             throw(ArgumentError("Observation is not a density"))
         end
     end
 end
 
+"""
+    check_hmm(hmm::AbstractHMM)
+
+Verify that `hmm` satisfies basic assumptions.
+"""
 function check_hmm(hmm::AbstractHMM)
-    init = initial_distribution(hmm)
-    trans = transition_matrix(hmm)
-    dists = [obs_distribution(hmm, i) for i in 1:length(hmm)]
-    if !all(==(length(hmm)), [length(init), size(trans, 1), size(trans, 2), length(dists)])
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = [obs_distribution(hmm, i) for i in 1:length(hmm)]
+    if !all(==(length(hmm)), [length(p), size(A, 1), size(A, 2), length(d)])
         throw(DimensionMismatch("Incoherent sizes"))
     end
-    check_prob_vec(init)
-    check_trans_mat(trans)
-    check_dists(dists)
+    check_prob_vec(p)
+    check_trans_mat(A)
+    check_dists(d)
     return nothing
 end

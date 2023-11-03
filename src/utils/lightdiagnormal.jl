@@ -1,15 +1,22 @@
 """
-    LightDiagNormal
+$(TYPEDEF)
 
 An HMMs-compatible implementation of a multivariate normal distribution with diagonal covariance, enabling allocation-free estimation.
 
 This is not part of the public API and is expected to change.
+
+# Fields
+
+$(TYPEDFIELDS)
 """
 struct LightDiagNormal{
     T1,T2,T3,V1<:AbstractVector{T1},V2<:AbstractVector{T2},V3<:AbstractVector{T3}
 }
+    "vector of means"
     μ::V1
+    "vector of standard deviations"
     σ::V2
+    "vector of log standard deviations"
     logσ::V3
 end
 

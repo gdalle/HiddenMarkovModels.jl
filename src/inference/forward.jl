@@ -1,13 +1,50 @@
-function forward!(αₜ, αₜ₊₁, logb, p, A, hmm::AbstractHMM, obs_seq)
+"""
+$(TYPEDEF)
+
+Store forward quantities with element type `R`.
+
+# Fields
+
+Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
+
+$(TYPEDFIELDS)
+"""
+struct ForwardStorage{R}
+    "vector of observation loglikelihoods `logb[i]`"
+    logb::Vector{R}
+    "scaled forward variables `α[t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
+    αₜ::Vector{R}
+    "scaled forward variables `α[t+1]`"
+    αₜ₊₁::Vector{R}
+end
+
+function initialize_forward(hmm::AbstractHMM, obs_seq)
+    N = length(hmm)
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
+    logb = logdensityof.(d, Ref(obs_seq[1]))
+
+    R = promote_type(eltype(p), eltype(A), eltype(logb))
+    αₜ = Vector{R}(undef, N)
+    αₜ₊₁ = Vector{R}(undef, N)
+    f = ForwardStorage(logb, αₜ, αₜ₊₁)
+    return f
+end
+
+function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq)
+    @unpack logb, αₜ, αₜ₊₁ = f
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
     T = length(obs_seq)
-    loglikelihoods_vec!(logb, hmm, obs_seq[1])
+    update_loglikelihoods!(logb, hmm, obs_seq[1])
     logm = maximum(logb)
     αₜ .= p .* exp.(logb .- logm)
     c = inv(sum(αₜ))
     αₜ .*= c
     logL = -log(c) + logm
     for t in 1:(T - 1)
-        loglikelihoods_vec!(logb, hmm, obs_seq[t + 1])
+        update_loglikelihoods!(logb, hmm, obs_seq[t + 1])
         logm = maximum(logb)
         mul!(αₜ₊₁, A', αₜ)
         αₜ₊₁ .*= exp.(logb .- logm)
@@ -30,16 +67,9 @@ Return a tuple `(α, logL)` where
 - `α[i]` is the posterior probability of state `i` at the end of the sequence.
 """
 function forward(hmm::AbstractHMM, obs_seq)
-    N = length(hmm)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    logb = loglikelihoods_vec(hmm, obs_seq[1])
-
-    R = promote_type(eltype(p), eltype(A), eltype(logb))
-    αₜ = Vector{R}(undef, N)
-    αₜ₊₁ = Vector{R}(undef, N)
-    logL = forward!(αₜ, αₜ₊₁, logb, p, A, hmm, obs_seq)
-    return αₜ, logL
+    f = initialize_forward(hmm, obs_seq)
+    logL = forward!(f, hmm, obs_seq)
+    return f.αₜ, logL
 end
 
 """

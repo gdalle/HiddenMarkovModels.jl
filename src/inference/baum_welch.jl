@@ -1,16 +1,37 @@
+function initialize_state_marginals(fbs::Vector{ForwardBackwardStorage{R}}) where {R}
+    N = length(first(fbs))
+    T_total = sum(duration, fbs)
+    state_marginals_concat = Matrix{R}(undef, N, T_total)
+    return state_marginals_concat
+end
+
+function update_state_marginals!(
+    state_marginals_concat, fbs::Vector{ForwardBackwardStorage{R}}
+) where {R}
+    T = 1
+    for k in eachindex(fbs)
+        Tk = duration(fbs[k])
+        @views state_marginals_concat[:, T:(T + Tk - 1)] .= fbs[k].γ
+        T += Tk
+    end
+    return nothing
+end
+
 function baum_welch!(
     hmm::AbstractHMM, obs_seqs; atol, max_iterations, check_loglikelihood_increasing
 )
     # Pre-allocate nearly all necessary memory
-    fb = initialize_forward_backward(hmm, obs_seqs[1])
-    fbs = Vector{typeof(fb)}(undef, length(obs_seqs))
+    fb1 = initialize_forward_backward(hmm, obs_seqs[1])
+    fbs = Vector{typeof(fb1)}(undef, length(obs_seqs))
+    fbs[1] = fb1
     @threads for k in eachindex(obs_seqs, fbs)
-        fbs[k] = initialize_forward_backward(hmm, obs_seqs[k])
+        if k > 2
+            fbs[k] = initialize_forward_backward(hmm, obs_seqs[k])
+        end
     end
 
-    init_count, trans_count = initialize_states_stats(fbs)
-    state_marginals_concat = initialize_observations_stats(fbs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
+    state_marginals_concat = initialize_state_marginals(fbs)
     logL_evolution = eltype(fbs[1])[]
 
     for iteration in 1:max_iterations
@@ -18,13 +39,12 @@ function baum_welch!(
         @threads for k in eachindex(obs_seqs, fbs)
             forward_backward!(fbs[k], hmm, obs_seqs[k])
         end
+        update_state_marginals!(state_marginals_concat, fbs)
         logL = loglikelihood(fbs)
         push!(logL_evolution, logL)
 
         # M step
-        update_states_stats!(init_count, trans_count, fbs)
-        update_observations_stats!(state_marginals_concat, fbs)
-        fit!(hmm, init_count, trans_count, obs_seqs_concat, state_marginals_concat)
+        fit!(hmm, fbs, obs_seqs_concat, state_marginals_concat)
 
         #  Stopping criterion
         if iteration > 1

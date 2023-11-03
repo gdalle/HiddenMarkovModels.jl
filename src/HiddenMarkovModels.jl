@@ -3,7 +3,9 @@
 
 A Julia package for HMM modeling, simulation, inference and learning.
 
-The alias `HMMs` is exported for the package name.
+# Exports
+
+$(EXPORTS)
 """
 module HiddenMarkovModels
 
@@ -17,6 +19,7 @@ using Distributions:
     UnivariateDistribution,
     MultivariateDistribution,
     MatrixDistribution
+using DocStringExtensions
 using LinearAlgebra: Diagonal, dot, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: Random, AbstractRNG, default_rng
@@ -24,10 +27,10 @@ using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
-export AbstractHiddenMarkovModel, AbstractHMM, PermutedHMM
+export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
-export initial_distribution, transition_matrix, obs_distribution
+export initialization, transition_matrix, obs_distribution
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit, fit!
 
@@ -45,7 +48,6 @@ include("inference/loglikelihoods.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
-include("inference/sufficient_stats.jl")
 include("inference/baum_welch.jl")
 
 if !isdefined(Base, :get_extension)

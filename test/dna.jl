@@ -73,7 +73,7 @@ get_state(coding, nucleotide) = 4(coding - 1) + nucleotide
 
 Base.length(dchmm::DNACodingHMM) = 8
 
-function HiddenMarkovModels.initial_distribution(dchmm::DNACodingHMM)
+function HiddenMarkovModels.initialization(dchmm::DNACodingHMM)
     return repeat(dchmm.cod_init; inner=4) .* repeat(dchmm.nuc_init; outer=2)
 end
 
