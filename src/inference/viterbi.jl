@@ -7,12 +7,10 @@ This storage is relative to a single sequence.
 
 # Fields
 
-These fields are not part of the public API.
-
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
-    "vector of loglikelihood values for each state"
+    "vector of observation loglikelihoods `logb[i]`"
     logb::Vector{R}
     δₜ::Vector{R}
     δₜ₋₁::Vector{R}
@@ -76,10 +74,12 @@ end
 
 """
     viterbi(hmm, obs_seq)
+    viterbi(hmm, obs_seqs, nb_seqs)
 
-Apply the Viterbi algorithm to compute the most likely state sequence of an HMM.
+Apply the Viterbi algorithm to infer the most likely state sequence of an HMM.
 
-Return a vector of integers.
+When applied on a single sequence, this function returns a vector of integers.
+When applied on multiple sequences, it returns a vector of vectors of integers.
 """
 function viterbi(hmm::AbstractHMM, obs_seq::Vector)
     v = initialize_viterbi(hmm, obs_seq)
@@ -87,16 +87,6 @@ function viterbi(hmm::AbstractHMM, obs_seq::Vector)
     return v.q
 end
 
-"""
-    viterbi(hmm, obs_seqs, nb_seqs)
-
-Apply the Viterbi algorithm to compute the most likely state sequences of an HMM, based on multiple observation sequences.
-
-Return a vector of vectors of integers.
-
-!!! warning "Multithreading"
-    This function is parallelized across sequences.
-"""
 function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))

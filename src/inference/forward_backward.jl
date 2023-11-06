@@ -7,38 +7,52 @@ This storage is relative to a single sequence.
 
 # Fields
 
-These fields are not part of the public API.
-
 Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
 
 $(TYPEDFIELDS)
 """
-struct ForwardBackwardStorage{R}
+struct ForwardBackwardStorage{
+    R,V<:AbstractVector{R},M<:AbstractMatrix{R},A3<:AbstractArray{R,3}
+}
     "total loglikelihood"
     logL::RefValue{R}
     "scaled forward variables `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
-    α::Matrix{R}
+    α::M
     "scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
-    β::Matrix{R}
+    β::M
     "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
-    γ::Matrix{R}
+    γ::M
     "posterior transition marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`"
-    ξ::Array{R,3}
+    ξ::A3
     "forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`"
-    c::Vector{R}
+    c::V
     "observation loglikelihoods `logB[i, t]`"
-    logB::Matrix{R}
+    logB::M
     "maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`"
-    logm::Vector{R}
+    logm::V
     "numerically stabilized observation likelihoods `B̃[i,t] = exp.(logB[i,t] - logm[t])`"
-    B̃::Matrix{R}
+    B̃::M
     "numerically stabilized product `B̃β[i,t] = B̃[i,t] * β[i,t]`"
-    B̃β::Matrix{R}
+    B̃β::M
 end
 
 Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
 Base.length(fb::ForwardBackwardStorage) = size(fb.α, 1)
 duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
+
+function Base.view(fb::ForwardBackwardStorage{R}, r::AbstractUnitRange) where {R}
+    logL = Ref(zero(R))
+    α = view(fb.α, :, r)
+    β = view(fb.β, :, r)
+    γ = view(fb.γ, :, r)
+    ξ = view(fb.ξ, :, :, r)
+    c = view(fb.c, r)
+    logB = view(fb.logB, :, r)
+    logm = view(fb.logm, r)
+    B̃ = view(fb.B̃, :, r)
+    B̃β = view(fb.B̃β, :, r)
+    return ForwardBackwardStorage(logL, α, β, γ, ξ, c, logB, logm, B̃, B̃β)
+end
 
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
@@ -48,7 +62,7 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
-    ξ = Array{R,3}(undef, N, N, T - 1)
+    ξ = Array{R,3}(undef, N, N, T)
     c = Vector{R}(undef, T)
     logB = Matrix{R}(undef, N, T)
     logm = Vector{R}(undef, T)
@@ -118,6 +132,7 @@ function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     @views for t in 1:(T - 1)
         ξ[:, :, t] .= α[:, t] .* A .* B̃β[:, t + 1]'
     end
+    ξ[:, :, T] .= zero(eltype(ξ))
     check_no_nan(ξ)
     return nothing
 end
@@ -141,14 +156,17 @@ end
 
 """
     forward_backward(hmm, obs_seq)
+    forward_backward(hmm, obs_seqs, nb_seqs)
 
-Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM.
+Run the forward-backward algorithm to infer the posterior state and transition marginals of an HMM.
 
-Return a tuple `(γ, ξ, logL)` where
+When applied on a single sequence, this function returns a tuple `(γ, ξ, logL)` where
 
 - `γ` is a matrix containing the posterior state marginals `γ[i, t]` 
 - `ξ` is a 3-tensor containing the posterior transition marginals `ξ[i, j, t]`
 - `logL` is the loglikelihood of the sequence
+
+WHen applied on multiple sequences, it returns a vector of tuples.
 """
 function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     fb = initialize_forward_backward(hmm, obs_seq)
@@ -156,20 +174,6 @@ function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     return (fb.γ, fb.ξ, fb.logL[])
 end
 
-"""
-    forward_backward(hmm, obs_seqs, nb_seqs)
-
-Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM, based on multiple observation sequences.
-
-Return a vector of tuples `(γₖ, ξₖ, logLₖ)` where
-
-- `γₖ` is a matrix containing the posterior state marginals `γₖ[i, t]` for sequence `k`
-- `ξₖ` is a 3-tensor containing the posterior transition marginals `ξ[i, j, t]` for sequence `k`
-- `logLₖ` is the loglikelihood of sequence `k`
-
-!!! warning "Multithreading"
-    This function is parallelized across sequences.
-"""
 function forward_backward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))

@@ -5,20 +5,20 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-- `length`
-- `initialization`
-- `transition_matrix`
-- `obs_distributions`
-- `fit`
+- `length(hmm)`
+- `initialization(hmm)`
+- `transition_matrix(hmm)`
+- `obs_distributions(hmm)`
+- `fit!(hmm, fbs, obs_seqs, fb_concat, obs_seqs_concat)`
 
 # Applicable methods
 
 - `rand([rng,] hmm, T)`
-- `logdensityof(hmm, obs_seq)` / `logdensityof(hmm, obs_seqs, nb_seqs)`
-- `forward(hmm, obs_seq)` / `forward(hmm, obs_seqs, nb_seqs)`
-- `viterbi(hmm, obs_seq)` / `viterbi(hmm, obs_seqs, nb_seqs)`
-- `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
-- `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
+- `logdensityof(hmm, obs_seq)`
+- `forward(hmm, obs_seq)`
+- `viterbi(hmm, obs_seq)`
+- `forward_backward(hmm, obs_seq)`
+- `baum_welch(hmm, obs_seq)` if `fit!` is implemented
 """
 abstract type AbstractHiddenMarkovModel end
 
@@ -79,9 +79,9 @@ Each element `dist` of this vector must implement
 function obs_distributions end
 
 """
-    fit!(hmm, bw::BaumWelchStorage, obs_seqs)
+    fit!(hmm, obs_seqs, fbs)
 
-Update `hmm` in-place based on information generated during forward-backward.
+Update `hmm` in-place based on several observation sequences `obs_seqs` as well as information `fbs` generated during forward-backward.
 """
 StatsAPI.fit!
 

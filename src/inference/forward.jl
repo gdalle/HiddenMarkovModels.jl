@@ -7,8 +7,6 @@ This storage is relative to a single sequence.
 
 # Fields
 
-These fields are not part of the public API.
-
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
@@ -71,13 +69,16 @@ end
 
 """
     forward(hmm, obs_seq)
+    forward(hmm, obs_seqs, nb_seqs)
 
-Apply the forward algorithm to an HMM.
+Run the forward algorithm to infer the current state of an HMM.
     
-Return a tuple `(α, logL)` where
+When applied on a single sequence, this function returns a tuple `(α, logL)` where
 
 - `α[i]` is the posterior probability of state `i` at the end of the sequence
 - `logL` is the loglikelihood of the sequence
+
+When applied on multiple sequences, this function returns a vector of tuples.
 """
 function forward(hmm::AbstractHMM, obs_seq::Vector)
     f = initialize_forward(hmm, obs_seq)
@@ -85,19 +86,6 @@ function forward(hmm::AbstractHMM, obs_seq::Vector)
     return f.αₜ, f.logL[]
 end
 
-"""
-    forward(hmm, obs_seqs, nb_seqs)
-
-Apply the forward algorithm to an HMM, based on multiple observation sequences.
-
-Return a vector of tuples `(αₖ, logLₖ)`, where
-
-- `αₖ[i]` is the posterior probability of state `i` at the end of sequence `k`
-- `logLₖ` is the loglikelihood of sequence `k`
-
-!!! warning "Multithreading"
-    This function is parallelized across sequences.
-"""
 function forward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
@@ -109,26 +97,17 @@ end
 
 """
     logdensityof(hmm, obs_seq)
+    logdensityof(hmm, obs_seqs, nb_seqs)
 
-Apply the forward algorithm to compute the loglikelihood of a single observation sequence for an HMM.
+Run the forward algorithm to compute the posterior loglikelihood of observations for an HMM.
 
-Return a number.
+Whether it is applied on one or multiple sequences, this function returns a number.
 """
 function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
     _, logL = forward(hmm, obs_seq)
     return logL
 end
 
-"""
-    logdensityof(hmm, obs_seqs, nb_seqs)
-
-Apply the forward algorithm to compute the total loglikelihood of multiple observation sequences for an HMM.
-
-Return a number.
-
-!!! warning "Multithreading"
-    This function is parallelized across sequences.
-"""
 function DensityInterface.logdensityof(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
 )

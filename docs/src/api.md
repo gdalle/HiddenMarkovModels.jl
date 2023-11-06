@@ -48,13 +48,17 @@ rand_prob_vec
 rand_trans_mat
 ```
 
+## Storage
+
+```@docs
+HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.ForwardStorage
+HiddenMarkovModels.ViterbiStorage
+```
+
 ## Internals
 
 ```@docs
-HiddenMarkovModels.ForwardStorage
-HiddenMarkovModels.ViterbiStorage
-HiddenMarkovModels.ForwardBackwardStorage
-HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.fit_element_from_sequence!
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.PermutedHMM

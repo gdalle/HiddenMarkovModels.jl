@@ -11,32 +11,34 @@ function test_allocations(hmm; T)
 
     ## Forward
     f = HMMs.initialize_forward(hmm, obs_seq)
-    allocs = @ballocated HiddenMarkovModels.forward!($f, $hmm, $obs_seq)
+    allocs = @ballocated HiddenMarkovModels.forward!($f, $hmm, $obs_seq) samples = 2
     @test allocs == 0
 
     ## Viterbi
     v = HMMs.initialize_viterbi(hmm, obs_seq)
-    allocs = @ballocated HMMs.viterbi!($v, $hmm, $obs_seq)
+    allocs = @ballocated HMMs.viterbi!($v, $hmm, $obs_seq) samples = 2
     @test allocs == 0
 
     ## Forward-backward
     fb = HMMs.initialize_forward_backward(hmm, obs_seq)
-    allocs = @ballocated HMMs.forward_backward!($fb, $hmm, $obs_seq)
+    allocs = @ballocated HMMs.forward_backward!($fb, $hmm, $obs_seq) samples = 2
     @test allocs == 0
 
     ## Baum-Welch
-    nb_seqs = 2
-    obs_seqs = [obs_seq for _ in 1:nb_seqs]
-    bw = HMMs.initialize_baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2)
+    fb = HMMs.initialize_forward_backward(hmm, obs_seq)
+    R = eltype(hmm, obs_seq[1])
+    logL_evolution = R[]
+    sizehint!(logL_evolution, 2)
     allocs = @ballocated HMMs.baum_welch!(
+        $fb,
+        $logL_evolution,
         $hmm,
-        $bw,
-        $obs_seqs;
+        $obs_seq;
         atol=-Inf,
         max_iterations=2,
-        check_loglikelihood_increasing=false,
-    )
-    @test_broken allocs == 0  # @threads introduces type instability, see https://discourse.julialang.org/t/type-instability-because-of-threads-boxing-variables/78395/
+        loglikelihood_increasing=false,
+    ) samples = 2
+    @test allocs == 0
 end
 
 N = 5
@@ -48,6 +50,5 @@ A = rand_trans_mat(N)
 dists = [LightDiagNormal(randn(2), ones(2)) for i in 1:N]
 
 hmm = HMM(p, A, dists)
-obs_seq = rand(hmm, T).obs_seq
 
 test_allocations(hmm; T)

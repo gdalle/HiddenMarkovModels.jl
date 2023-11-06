@@ -1,147 +1,123 @@
-"""
-$(TYPEDEF)
-
-Store Baum-Welch quantities with element type `R` and observation type `O`.
-
-Unlike the other storage types, this one is relative to multiple sequences.
-
-# Fields
-
-$(TYPEDFIELDS)
-"""
-struct BaumWelchStorage{R,O}
-    "one `ForwardBackwardStorage` for each observation sequence"
-    fbs::Vector{ForwardBackwardStorage{R}}
-    "number of iterations performed"
-    iteration::RefValue{Int}
-    "history of total loglikelihood values throughout the algorithm"
-    logL_evolution::Vector{R}
-    "concatenation of `γ` matrices for all observation sequences (useful to avoid allocations in fitting)"
-    state_marginals_concat::Matrix{R}
-    "concatenation of observation sequences (useful to avoid allocations in fitting)"
-    obs_seqs_concat::Vector{O}
-    "temporal limits of each observation sequence in the concatenations"
-    limits::Vector{Int}
-end
-
-function initialize_baum_welch(
-    hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer; max_iterations::Integer
+function baum_welch_has_converged(
+    logL_evolution::Vector; atol::Real, loglikelihood_increasing::Bool
 )
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    if length(logL_evolution) >= 2
+        logL, logL_prev = logL_evolution[end], logL_evolution[end - 1]
+        progress = logL - logL_prev
+        if loglikelihood_increasing && progress < 0
+            error("Loglikelihood decreased in Baum-Welch")
+        elseif progress < atol
+            return true
+        end
     end
-    N, T = length(hmm), sum(length, obs_seqs)
-    R = eltype(hmm, obs_seqs[1][1])
-    fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    iteration = Ref(0)
-    logL_evolution = Vector{R}(undef, max_iterations)
-    state_marginals_concat = Matrix{R}(undef, N, T)
-    obs_seqs_concat = reduce(vcat, obs_seqs)
-    limits = vcat(0, cumsum(length.(obs_seqs)))
-    return BaumWelchStorage(
-        fbs, iteration, logL_evolution, state_marginals_concat, obs_seqs_concat, limits
-    )
+    return false
 end
 
 function baum_welch!(
+    fb::ForwardBackwardStorage,
+    logL_evolution::Vector,
     hmm::AbstractHMM,
-    bw::BaumWelchStorage,
-    obs_seqs::Vector{<:Vector};
+    obs_seq::Vector;
     atol::Real,
     max_iterations::Integer,
-    check_loglikelihood_increasing::Bool,
+    loglikelihood_increasing::Bool,
 )
-    @unpack (
-        fbs, iteration, logL_evolution, state_marginals_concat, obs_seqs_concat, limits
-    ) = bw
-    iteration[] = 0
+    for _ in 1:max_iterations
+        forward_backward!(fb, hmm, obs_seq)
+        push!(logL_evolution, fb.logL[])
+        fit!(hmm, (fb,), (obs_seq,), fb, obs_seq)
+        if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
+            break
+        end
+    end
+    return nothing
+end
 
-    while iteration[] < max_iterations
-        # E step
+function baum_welch!(
+    fbs::Vector{<:ForwardBackwardStorage},
+    fb_concat::ForwardBackwardStorage,
+    logL_evolution::Vector,
+    hmm::AbstractHMM,
+    obs_seqs::Vector{<:Vector},
+    obs_seqs_concat::Vector;
+    atol::Real,
+    max_iterations::Integer,
+    loglikelihood_increasing::Bool,
+)
+    for _ in 1:max_iterations
         @threads for k in eachindex(obs_seqs, fbs)
             forward_backward!(fbs[k], hmm, obs_seqs[k])
-            @views state_marginals_concat[:, (limits[k] + 1):limits[k + 1]] .= fbs[k].γ
         end
-
-        # M step
-        fit!(hmm, bw)
-
-        # # Record likelihood
-        iteration[] += 1
-        logL_evolution[iteration[]] = sum(fb.logL[] for fb in fbs)
-
-        # #  Stopping criterion
-        if iteration[] > 1
-            progress = logL_evolution[iteration[]] - logL_evolution[iteration[] - 1]
-            if check_loglikelihood_increasing && progress < 0
-                error("Loglikelihood decreased in Baum-Welch")
-            elseif progress < atol
-                break
-            end
+        push!(logL_evolution, sum(fb.logL[] for fb in fbs))
+        fit!(hmm, fbs, obs_seqs, fb_concat, obs_seqs_concat)
+        if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
+            break
         end
     end
+    return nothing
 end
 
 """
-    baum_welch(
-        hmm_init, obs_seqs, nb_seqs;
-        atol, max_iterations, check_loglikelihood_increasing
-    )
+    baum_welch(hmm_init, obs_seq; kwargs...)
+    baum_welch(hmm_init, obs_seqs, nb_seqs; kwargs...)
 
-Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`, based on `nb_seqs` observation sequences.
-
-Return a tuple `(hmm_est, logL_evolution)`.
-
-!!! warning "Multithreading"
-    This function is parallelized across sequences.
-
-# Keyword arguments
-
-- `atol`: Minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
-- `max_iterations`: Maximum number of iterations of the algorithm
-- `check_loglikelihood_increasing`: Whether to throw an error if the loglikelihood decreases
-"""
-function baum_welch(
-    hmm_init::AbstractHMM,
-    obs_seqs::Vector{<:Vector},
-    nb_seqs::Integer;
-    atol=1e-5,
-    max_iterations=100,
-    check_loglikelihood_increasing=true,
-)
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
-    end
-    hmm = deepcopy(hmm_init)
-    bw = initialize_baum_welch(hmm, obs_seqs, nb_seqs; max_iterations)
-    baum_welch!(hmm, bw, obs_seqs; atol, max_iterations, check_loglikelihood_increasing)
-    return hmm, bw.logL_evolution[1:bw.iteration[]]
-end
-
-"""
-    baum_welch(
-        hmm_init, obs_seq;
-        atol, max_iterations, check_loglikelihood_increasing
-    )
-
-Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`.
+Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`, based on one or several observation sequences.
 
 Return a tuple `(hmm_est, logL_evolution)`.
 
 # Keyword arguments
 
-- `atol`: Minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
-- `max_iterations`: Maximum number of iterations of the algorithm
-- `check_loglikelihood_increasing`: Whether to throw an error if the loglikelihood decreases
+- `atol`: minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
+- `max_iterations`: maximum number of iterations of the algorithm
+- `loglikelihood_increasing`: whether to throw an error if the loglikelihood decreases
 """
 function baum_welch(
     hmm_init::AbstractHMM,
     obs_seq::Vector;
     atol=1e-5,
     max_iterations=100,
-    check_loglikelihood_increasing=true,
+    loglikelihood_increasing=true,
 )
-    return baum_welch(
-        hmm_init, [obs_seq], 1; atol, max_iterations, check_loglikelihood_increasing
+    hmm = deepcopy(hmm_init)
+    fb = initialize_forward_backward(hmm, obs_seq)
+    R = eltype(hmm, obs_seq[1])
+    logL_evolution = R[]
+    sizehint!(logL_evolution, max_iterations)
+    baum_welch!(
+        fb, logL_evolution, hmm, obs_seq; atol, max_iterations, loglikelihood_increasing
     )
+    return hmm, logL_evolution
+end
+
+function baum_welch(
+    hmm_init::AbstractHMM,
+    obs_seqs::Vector{<:Vector},
+    nb_seqs::Integer;
+    atol=1e-5,
+    max_iterations=100,
+    loglikelihood_increasing=true,
+)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
+    end
+    hmm = deepcopy(hmm_init)
+    limits = vcat(0, cumsum(length.(obs_seqs)))
+    obs_seqs_concat = reduce(vcat, obs_seqs)
+    fb_concat = initialize_forward_backward(hmm, obs_seqs_concat)
+    fbs = [view(fb_concat, (limits[k] + 1):limits[k + 1]) for k in eachindex(obs_seqs)]
+    R = eltype(hmm, obs_seqs[1][1])
+    logL_evolution = R[]
+    sizehint!(logL_evolution, max_iterations)
+    baum_welch!(
+        fbs,
+        fb_concat,
+        logL_evolution,
+        hmm,
+        obs_seqs,
+        obs_seqs_concat;
+        atol,
+        max_iterations,
+        loglikelihood_increasing,
+    )
+    return hmm, logL_evolution
 end
