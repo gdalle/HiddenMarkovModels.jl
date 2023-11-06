@@ -30,12 +30,12 @@ benchmarks_done = (
 pages = [
     "Home" => "index.md",
     "Essentials" => ["Background" => "background.md", "API reference" => "api.md"],
-    "Tutorials" => [
-        "Built-in HMM" => "builtin.md",
-        "Custom HMM" => "custom.md",
-        "Debugging" => "debugging.md",
-    ],
-    "Alternatives" => ["Features" => "features.md", "Benchmarks" => "benchmarks.md"],
+    "Tutorials" => ["Built-in HMM" => "builtin.md", "Debugging" => "debugging.md"],
+    "Alternatives" => if benchmarks_done
+        ["Features" => "features.md", "Benchmarks" => "benchmarks.md"]
+    else
+        ["Features" => "features.md"]
+    end,
     "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
 ]
 
@@ -53,7 +53,7 @@ makedocs(;
     format=fmt,
     pages=pages,
     plugins=[bib],
-    warnonly=!benchmarks_done,
+    pagesonly=true,
 )
 
 deploydocs(; repo="github.com/gdalle/HiddenMarkovModels.jl", devbranch="main")

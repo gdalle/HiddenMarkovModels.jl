@@ -29,7 +29,7 @@ transition_matrix(hmm)
 ```
 
 ```@example tuto
-[obs_distribution(hmm, i) for i in 1:N]
+obs_distributions(hmm)
 ```
 
 Simulating a sequence:
@@ -70,15 +70,15 @@ first(logL_evolution), last(logL_evolution)
 Correcting state order because we know observation means are increasing in the true model:
 
 ```@example tuto
-[obs_distribution(hmm_est, i) for i in 1:N]
+d_est = obs_distributions(hmm_est)
 ```
 
 ```@example tuto
-perm = sortperm(1:3, by=i->obs_distribution(hmm_est, i).μ)
+perm = sortperm(1:3, by=i->d_est[i].μ)
 ```
 
 ```@example tuto
-hmm_est = PermutedHMM(hmm_est, perm)
+hmm_est = HiddenMarkovModels.PermutedHMM(hmm_est, perm)
 ```
 
 Evaluating errors:

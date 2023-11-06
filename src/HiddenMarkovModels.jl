@@ -33,7 +33,8 @@ export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
 export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch
-export fit, fit!
+export fit!
+export check_hmm
 
 include("types/abstract_hmm.jl")
 include("types/permuted_hmm.jl")
@@ -62,7 +63,6 @@ if !isdefined(Base, :get_extension)
     end
 end
 
-#=
 @compile_workload begin
     N, D, T = 5, 3, 100
     p = rand_prob_vec(N)
@@ -78,6 +78,5 @@ end
     forward_backward(hmm, obs_seqs, nb_seqs)
     baum_welch(hmm, obs_seqs, nb_seqs; max_iterations=2, atol=-Inf)
 end
-=#
 
 end

@@ -5,12 +5,11 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-- [`length`](@ref)
-- [`eltype`](@ref)
-- [`initialization`](@ref)
-- [`transition_matrix`](@ref)
-- [`obs_distributions`](@ref)
-- [`fit!](@ref)
+- `length`
+- `initialization`
+- `transition_matrix`
+- `obs_distributions`
+- `fit`
 
 # Applicable methods
 

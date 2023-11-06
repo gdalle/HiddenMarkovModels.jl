@@ -32,10 +32,7 @@ function initialize_baum_welch(
     end
     N, T = length(hmm), sum(length, obs_seqs)
     R = eltype(hmm, obs_seqs[1][1])
-    fbs = Vector{ForwardBackwardStorage{R}}(undef, length(obs_seqs))
-    @threads for k in eachindex(obs_seqs, fbs)
-        fbs[k] = initialize_forward_backward(hmm, obs_seqs[k])
-    end
+    fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     iteration = Ref(0)
     logL_evolution = Vector{R}(undef, max_iterations)
     state_marginals_concat = Matrix{R}(undef, N, T)

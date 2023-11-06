@@ -37,14 +37,6 @@ function Base.copy(hmm::HMM)
 end
 
 Base.length(hmm::HMM) = length(hmm.init)
-
-function Base.eltype(hmm::HMM, obs)
-    init_type = eltype(hmm.init)
-    trans_type = eltype(hmm.trans)
-    logdensity_type = typeof(logdensityof(hmm.dists[1], obs))
-    return promote_type(init_type, trans_type, logdensity_type)
-end
-
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
