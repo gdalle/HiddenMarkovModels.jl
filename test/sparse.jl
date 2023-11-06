@@ -6,7 +6,7 @@ using SparseArrays
 using SimpleUnPack
 using Test
 
-N = 4
+N = 3
 T = 2000
 
 p = ones(N) / N
@@ -18,7 +18,7 @@ dists_init = [Normal(i + randn(), 1) for i in 1:N]
 hmm = HMM(p, A, dists)
 hmm_init = HMM(p, A, dists_init)
 
-@unpack state_seq, obs_seq = rand(hmm, T)
+obs_seq = rand(hmm, T).obs_seq
 hmm_est, logL_evolution = @inferred baum_welch(hmm_init, obs_seq)
 
 @test typeof(hmm_est) == typeof(hmm_init)

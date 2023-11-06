@@ -4,6 +4,7 @@ using ChainRulesCore:
     ChainRulesCore, NoTangent, ZeroTangent, RuleConfig, rrule_via_ad, @not_implemented
 using DensityInterface: logdensityof
 using HiddenMarkovModels
+import HiddenMarkovModels as HMMs
 using SimpleUnPack
 
 function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq)
@@ -18,8 +19,8 @@ function ChainRulesCore.rrule(
     rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq
 )
     (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
-    fb = forward_backward(hmm, obs_seq)
-    logL = HiddenMarkovModels.loglikelihood(fb)
+    fb = HMMs.initialize_forward_backward(hmm, obs_seq)
+    HMMs.forward_backward!(fb, hmm, obs_seq)
     @unpack α, β, γ, c, B̃β = fb
     T = length(obs_seq)
 
@@ -36,7 +37,7 @@ function ChainRulesCore.rrule(
         return Δlogdensityof, Δhmm, Δobs_seq
     end
 
-    return logL, logdensityof_hmm_pullback
+    return fb.logL[], logdensityof_hmm_pullback
 end
 
 end

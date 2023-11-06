@@ -6,35 +6,38 @@ using SimpleUnPack
 using Test
 
 function test_correctness(hmm, hmm_init; T)
-    @unpack state_seq, obs_seq = rand(hmm, T)
+    obs_seq = rand(hmm, T).obs_seq
     obs_mat = collect(reduce(hcat, obs_seq)')
+
+    nb_seqs = 2
+    obs_seqs = [obs_seq for _ in 1:nb_seqs]
 
     hmm_base = HMMBase.HMM(deepcopy(hmm))
     hmm_init_base = HMMBase.HMM(deepcopy(hmm_init))
 
     @testset "Logdensity" begin
         _, logL_base = HMMBase.forward(hmm_base, obs_mat)
-        logL = @inferred logdensityof(hmm, obs_seq)
-        @test logL ≈ logL_base
+        logL = @inferred logdensityof(hmm, obs_seqs, nb_seqs)
+        @test logL ≈ logL_base * nb_seqs
     end
 
     @testset "Forward" begin
         α_base, logL_base = HMMBase.forward(hmm_base, obs_mat)
-        α, logL = @inferred forward(hmm, obs_seq)
+        α, logL = @inferred first(forward(hmm, obs_seqs, nb_seqs))
         @test isapprox(α, α_base[end, :])
         @test logL ≈ logL_base
     end
 
     @testset "Viterbi" begin
-        best_state_seq_base = HMMBase.viterbi(hmm_base, obs_mat)
-        best_state_seq = @inferred viterbi(hmm, obs_seq)
-        @test isequal(best_state_seq, best_state_seq_base)
+        q_base = HMMBase.viterbi(hmm_base, obs_mat)
+        q = @inferred first(viterbi(hmm, obs_seqs, nb_seqs))
+        @test isequal(q, q_base)
     end
 
     @testset "Forward-backward" begin
         γ_base = HMMBase.posteriors(hmm_base, obs_mat)
-        fb = @inferred forward_backward(hmm, obs_seq)
-        @test isapprox(fb.γ, γ_base')
+        γ, ξ = @inferred first(forward_backward(hmm, obs_seqs, nb_seqs))
+        @test isapprox(γ, γ_base')
     end
 
     @testset "Baum-Welch" begin
@@ -43,10 +46,10 @@ function test_correctness(hmm, hmm_init; T)
         )
         logL_evolution_base = hist_base.logtots
         hmm_est, logL_evolution = @inferred baum_welch(
-            hmm_init, obs_seq; max_iterations=10, atol=-Inf
+            hmm_init, obs_seqs, nb_seqs; max_iterations=10, atol=-Inf
         )
         @test isapprox(
-            logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)]
+            logL_evolution[(begin + 1):end], logL_evolution_base[begin:(end - 1)] .* nb_seqs
         )
         @test isapprox(initialization(hmm_est), hmm_est_base.a)
         @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)

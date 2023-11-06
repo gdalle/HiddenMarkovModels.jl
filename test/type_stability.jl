@@ -6,44 +6,57 @@ using JET
 using SimpleUnPack
 using Test
 
-function test_type_stability(hmm, hmm_init; T, K)
-    obs_seqs = [rand(hmm, T).obs_seq for k in 1:K]
+function test_type_stability(hmm, hmm_init; T)
+    obs_seq = rand(hmm, T).obs_seq
+    nb_seqs = 2
+    obs_seqs = [obs_seq for _ in 1:nb_seqs]
 
     @testset "Logdensity" begin
-        @inferred logdensityof(hmm, obs_seqs, K)
-        @test_opt target_modules = (HiddenMarkovModels,) logdensityof(hmm, obs_seqs, K)
-        @test_call target_modules = (HiddenMarkovModels,) logdensityof(hmm, obs_seqs, K)
+        @inferred logdensityof(hmm, obs_seqs, nb_seqs)
+        @test_opt target_modules = (HiddenMarkovModels,) logdensityof(
+            hmm, obs_seqs, nb_seqs
+        )
+        @test_call target_modules = (HiddenMarkovModels,) logdensityof(
+            hmm, obs_seqs, nb_seqs
+        )
     end
 
     @testset "Forward" begin
-        @inferred forward(hmm, obs_seqs, K)
-        @test_opt target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, K)
-        @test_call target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, K)
+        @inferred forward(hmm, obs_seqs, nb_seqs)
+        @test_opt target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, nb_seqs)
+        @test_call target_modules = (HiddenMarkovModels,) forward(hmm, obs_seqs, nb_seqs)
     end
 
     @testset "Viterbi" begin
-        @inferred viterbi(hmm, obs_seqs, K)
-        @test_opt target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seqs, K)
-        @test_call target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seqs, K)
+        @inferred viterbi(hmm, obs_seqs, nb_seqs)
+        @test_opt target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seqs, nb_seqs)
+        @test_call target_modules = (HiddenMarkovModels,) viterbi(hmm, obs_seqs, nb_seqs)
     end
 
     @testset "Forward-backward" begin
-        @inferred forward_backward(hmm, obs_seqs, K)
-        @test_opt target_modules = (HiddenMarkovModels,) forward_backward(hmm, obs_seqs, K)
-        @test_call target_modules = (HiddenMarkovModels,) forward_backward(hmm, obs_seqs, K)
+        @inferred forward_backward(hmm, obs_seqs, nb_seqs)
+        @test_opt target_modules = (HiddenMarkovModels,) forward_backward(
+            hmm, obs_seqs, nb_seqs
+        )
+        @test_call target_modules = (HiddenMarkovModels,) forward_backward(
+            hmm, obs_seqs, nb_seqs
+        )
     end
 
     @testset "Baum-Welch" begin
-        @inferred baum_welch(hmm_init, obs_seqs, K)
-        @test_opt target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, obs_seqs, K)
-        @test_call target_modules = (HiddenMarkovModels,) baum_welch(hmm_init, obs_seqs, K)
+        @inferred baum_welch(hmm_init, obs_seqs, nb_seqs)
+        @test_opt target_modules = (HiddenMarkovModels,) baum_welch(
+            hmm_init, obs_seqs, nb_seqs
+        )
+        @test_call target_modules = (HiddenMarkovModels,) baum_welch(
+            hmm_init, obs_seqs, nb_seqs
+        )
     end
 end
 
-N = 5
+N = 2
 D = 3
 T = 100
-K = 4
 
 p = rand_prob_vec(N)
 p_init = rand_prob_vec(N)
@@ -60,7 +73,7 @@ hmm_norm = HMM(p, A, dists_norm)
 hmm_norm_init = HMM(p_init, A_init, dists_norm_init)
 
 @testset "Normal" begin
-    test_type_stability(hmm_norm, hmm_norm_init; T, K)
+    test_type_stability(hmm_norm, hmm_norm_init; T)
 end
 
 # DiagNormal
@@ -72,7 +85,7 @@ hmm_diagnorm = HMM(p, A, dists_diagnorm)
 hmm_diagnorm_init = HMM(p, A, dists_diagnorm_init)
 
 @testset "DiagNormal" begin
-    test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T, K)
+    test_type_stability(hmm_diagnorm, hmm_diagnorm_init; T)
 end
 
 ## LightDiagNormal
@@ -84,5 +97,5 @@ hmm_lightdiagnorm = HMM(p, A, dists_lightdiagnorm)
 hmm_lightdiagnorm_init = HMM(p, A, dists_lightdiagnorm_init)
 
 @testset "LightDiagNormal" begin
-    test_type_stability(hmm_lightdiagnorm, hmm_lightdiagnorm_init; T, K)
+    test_type_stability(hmm_lightdiagnorm, hmm_lightdiagnorm_init; T)
 end

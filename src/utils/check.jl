@@ -57,7 +57,7 @@ function check_hmm(hmm::AbstractHMM)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    if !all(==(length(hmm)), [length(p), size(A, 1), size(A, 2), length(d)])
+    if !all(==(length(hmm)), (length(p), size(A, 1), size(A, 2), length(d)))
         throw(DimensionMismatch("Incoherent sizes"))
     end
     check_prob_vec(p)

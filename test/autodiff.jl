@@ -15,7 +15,7 @@ A = rand_trans_mat(N)
 dists = [Normal(μ[i], 1.0) for i in 1:N]
 hmm = HMM(p, A, dists)
 
-@unpack state_seq, obs_seq = rand(hmm, T);
+obs_seq = rand(hmm, T).obs_seq;
 
 function f_init(_p)
     hmm = HMM(_p, A, dists)

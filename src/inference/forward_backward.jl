@@ -3,13 +3,15 @@ $(TYPEDEF)
 
 Store forward-backward quantities with element type `R`.
 
+This storage is relative to a single sequence.
+
 # Fields
+
+These fields are not part of the public API.
 
 Let `X` denote the vector of hidden states and `Y` denote the vector of observations.
 
 $(TYPEDFIELDS)
-
-Only the `γ` and `ξ` fields are part of the public API.
 """
 struct ForwardBackwardStorage{R}
     "total loglikelihood"
@@ -18,9 +20,9 @@ struct ForwardBackwardStorage{R}
     α::Matrix{R}
     "scaled backward variables `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
     β::Matrix{R}
-    "posterior one-state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
+    "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
-    "posterior two-state marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`"
+    "posterior transition marginals `ξ[i,j,t] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`"
     ξ::Array{R,3}
     "forward variable inverse normalizations `c[t] = 1 / sum(α[:,t])`"
     c::Vector{R}
@@ -128,17 +130,30 @@ function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq
     return nothing
 end
 
+function forward_backward!(
+    fbs::Vector{<:ForwardBackwardStorage}, hmm::AbstractHMM, obs_seqs::Vector{<:Vector}
+)
+    @threads for k in eachindex(fbs, obs_seqs)
+        forward_backward!(fbs[k], hmm, obs_seqs[k])
+    end
+    return nothing
+end
+
 """
     forward_backward(hmm, obs_seq)
 
 Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM.
 
-Return a [`ForwardBackwardStorage`](@ref).
+Return a tuple `(γ, ξ, logL)` where
+
+- `γ` is a matrix containing the posterior state marginals `γ[i, t]` 
+- `ξ` is a 3-tensor containing the posterior transition marginals `ξ[i, j, t]`
+- `logL` is the loglikelihood of the sequence
 """
 function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     fb = initialize_forward_backward(hmm, obs_seq)
     forward_backward!(fb, hmm, obs_seq)
-    return fb
+    return (fb.γ, fb.ξ, fb.logL[])
 end
 
 """
@@ -146,7 +161,11 @@ end
 
 Apply the forward-backward algorithm to estimate the posterior state marginals of an HMM, based on multiple observation sequences.
 
-Return a vector of [`ForwardBackwardStorage`](@ref) objects.
+Return a vector of tuples `(γₖ, ξₖ, logLₖ)` where
+
+- `γₖ` is a matrix containing the posterior state marginals `γₖ[i, t]` for sequence `k`
+- `ξₖ` is a 3-tensor containing the posterior transition marginals `ξ[i, j, t]` for sequence `k`
+- `logLₖ` is the loglikelihood of sequence `k`
 
 !!! warning "Multithreading"
     This function is parallelized across sequences.
@@ -155,10 +174,7 @@ function forward_backward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs:
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    R = eltype(hmm, obs_seqs[1][1])
-    fbs = Vector{ForwardBackwardStorage{R}}(undef, nb_seqs)
-    @threads for k in eachindex(obs_seqs, fbs)
-        fbs[k] = forward_backward(hmm, obs_seqs[k])
-    end
-    return fbs
+    fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
+    forward_backward!(fbs, hmm, obs_seqs)
+    return [(fb.γ, fb.ξ, fb.logL[]) for fb in fbs]
 end

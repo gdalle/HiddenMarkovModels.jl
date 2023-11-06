@@ -3,7 +3,11 @@ $(TYPEDEF)
 
 Store forward quantities with element type `R`.
 
+This storage is relative to a single sequence.
+
 # Fields
+
+These fields are not part of the public API.
 
 $(TYPEDFIELDS)
 """
@@ -35,7 +39,7 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    @unpack logb, αₜ, αₜ₊₁ = f
+    @unpack logL, logb, αₜ, αₜ₊₁ = f
 
     logb .= logdensityof.(d, (obs_seq[1],))
     logm = maximum(logb)
@@ -56,6 +60,15 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
+function forward!(
+    fs::Vector{<:ForwardStorage}, hmm::AbstractHMM, obs_seqs::Vector{<:Vector}
+)
+    @threads for k in eachindex(fs, obs_seqs)
+        forward!(fs[k], hmm, obs_seqs[k])
+    end
+    return nothing
+end
+
 """
     forward(hmm, obs_seq)
 
@@ -63,8 +76,8 @@ Apply the forward algorithm to an HMM.
     
 Return a tuple `(α, logL)` where
 
+- `α[i]` is the posterior probability of state `i` at the end of the sequence
 - `logL` is the loglikelihood of the sequence
-- `α[i]` is the posterior probability of state `i` at the end of the sequence.
 """
 function forward(hmm::AbstractHMM, obs_seq::Vector)
     f = initialize_forward(hmm, obs_seq)
@@ -79,8 +92,8 @@ Apply the forward algorithm to an HMM, based on multiple observation sequences.
 
 Return a vector of tuples `(αₖ, logLₖ)`, where
 
-- `logLₖ` is the loglikelihood of sequence `k`
 - `αₖ[i]` is the posterior probability of state `i` at the end of sequence `k`
+- `logLₖ` is the loglikelihood of sequence `k`
 
 !!! warning "Multithreading"
     This function is parallelized across sequences.
@@ -89,12 +102,9 @@ function forward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    R = eltype(hmm, obs_seqs[1][1])
-    fs = Vector{ForwardStorage{R}}(undef, nb_seqs)
-    @threads for k in eachindex(fs, obs_seqs)
-        fs[k] = forward(hmm, obs_seqs[k])
-    end
-    return fs
+    fs = [initialize_forward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
+    forward!(fs, hmm, obs_seqs)
+    return [(f.αₜ, f.logL[]) for f in fs]
 end
 
 """
@@ -122,13 +132,6 @@ Return a number.
 function DensityInterface.logdensityof(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
 )
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
-    end
-    R = eltype(hmm, obs_seqs[1][1])
-    logLs = Vector{R}(undef, nb_seqs)
-    @threads for k in eachindex(logLs, obs_seqs)
-        logLs[k] = logdensityof(hmm, obs_seqs[k])
-    end
-    return sum(logLs)
+    logαs_and_logLs = forward(hmm, obs_seqs, nb_seqs)
+    return sum(last, logαs_and_logLs)
 end

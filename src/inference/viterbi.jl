@@ -3,16 +3,22 @@ $(TYPEDEF)
 
 Store Viterbi quantities with element type `R`.
 
+This storage is relative to a single sequence.
+
 # Fields
+
+These fields are not part of the public API.
 
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
+    "vector of loglikelihood values for each state"
     logb::Vector{R}
     δₜ::Vector{R}
     δₜ₋₁::Vector{R}
     δₜ₋₁Aⱼ::Vector{R}
     ψ::Matrix{Int}
+    "vector of most likely state at each time"
     q::Vector{Int}
 end
 
@@ -59,6 +65,15 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
+function viterbi!(
+    vs::Vector{<:ViterbiStorage}, hmm::AbstractHMM, obs_seqs::Vector{<:Vector}
+)
+    @threads for k in eachindex(vs, obs_seqs)
+        viterbi!(vs[k], hmm, obs_seqs[k])
+    end
+    return nothing
+end
+
 """
     viterbi(hmm, obs_seq)
 
@@ -86,9 +101,7 @@ function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
     if nb_seqs != length(obs_seqs)
         throw(ArgumentError("nb_seqs != length(obs_seqs)"))
     end
-    qs = Vector{Vector{Int}}(undef, nb_seqs)
-    @threads for k in eachindex(qs, obs_seqs)
-        qs[k] = viterbi(hmm, obs_seqs[k])
-    end
-    return qs
+    vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
+    viterbi!(vs, hmm, obs_seqs)
+    return [v.q for v in vs]
 end

@@ -91,7 +91,9 @@ function HiddenMarkovModels.obs_distributions(hmm::DNACodingHMM)
     return [Dirac(get_nucleotide(s)) for s in 1:length(hmm)]
 end
 
-function StatsAPI.fit!(dchmm::DNACodingHMM, fbs, obs_seqs_concat, state_marginals_concat)
+function StatsAPI.fit!(dchmm::DNACodingHMM, bw::HiddenMarkovModels.BaumWelchStorage)
+    @unpack fbs, obs_seqs_concat, state_marginals_concat = bw
+
     init_count = zeros(eltype(initialization(dchmm)), 8)
     for k in eachindex(fbs)
         @views init_count .+= fbs[k].γ[:, 1]

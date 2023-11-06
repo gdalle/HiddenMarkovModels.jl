@@ -49,16 +49,12 @@ initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
 
-function StatsAPI.fit!(
-    hmm::HMM,
-    fbs::Vector{<:ForwardBackwardStorage},
-    obs_seqs_concat::Vector,
-    state_marginals_concat::Matrix,
-)
+function StatsAPI.fit!(hmm::HMM, bw::BaumWelchStorage)
+    @unpack fbs, state_marginals_concat, obs_seqs_concat = bw
     # Initialization
     hmm.init .= zero(eltype(hmm.init))
     for k in eachindex(fbs)
-        @views hmm.init .+= fbs[k].γ[:, 1]
+        hmm.init .+= view(fbs[k].γ, :, 1)
     end
     sum_to_one!(hmm.init)
     # Transition matrix
@@ -68,9 +64,9 @@ function StatsAPI.fit!(
     end
     foreach(sum_to_one!, eachrow(hmm.trans))
     #  Observation distributions
-    @views for i in eachindex(hmm.dists)
+    for i in eachindex(hmm.dists)
         fit_element_from_sequence!(
-            hmm.dists, i, obs_seqs_concat, state_marginals_concat[i, :]
+            hmm.dists, i, obs_seqs_concat, view(state_marginals_concat, i, :)
         )
     end
     check_hmm(hmm)
