@@ -76,7 +76,7 @@ end
 N, D, T = 3, 2, 100
 
 @testset "Categorical" begin
-    test_correctness(rand_categorical_hmm(N, 2D), rand_categorical_hmm(N, 2D); T)
+    test_correctness(rand_categorical_hmm(N, 10), rand_categorical_hmm(N, 10); T)
 end
 
 @testset "Normal" begin
