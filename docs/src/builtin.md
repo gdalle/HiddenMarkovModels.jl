@@ -15,8 +15,8 @@ Creating a model:
 function gaussian_hmm(N; noise=0)
     p = ones(N) / N  # initial distribution
     A = rand_trans_mat(N)  # transition matrix
-    dists = [Normal(i + noise * randn(), 0.5) for i in 1:N]  # observation distributions
-    return HMM(p, A, dists)
+    d = [Normal(i + noise * randn(), 0.5) for i in 1:N]  # observation distributions
+    return HMM(p, A, d)
 end
 ```
 

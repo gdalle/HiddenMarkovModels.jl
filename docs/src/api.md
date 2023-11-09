@@ -31,13 +31,8 @@ logdensityof
 forward
 viterbi
 forward_backward
-```
-
-## Learning
-
-```@docs
-fit!
 baum_welch
+fit!
 ```
 
 ## Misc
@@ -48,17 +43,13 @@ rand_prob_vec
 rand_trans_mat
 ```
 
-## Storage
-
-```@docs
-HiddenMarkovModels.ForwardBackwardStorage
-HiddenMarkovModels.ForwardStorage
-HiddenMarkovModels.ViterbiStorage
-```
-
 ## Internals
 
 ```@docs
+HiddenMarkovModels.ForwardStorage
+HiddenMarkovModels.ViterbiStorage
+HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.fit_element_from_sequence!
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.PermutedHMM
@@ -77,10 +68,11 @@ HiddenMarkovModels.PermutedHMM
 
 - `p` or `init`: initialization (vector of state probabilities)
 - `A` or `trans`: transition_matrix (matrix of transition probabilities)
-- `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
+- `d` or `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
 - `state_seq`: a sequence of states (vector of integers)
 - `obs_seq`: a sequence of observations (vector of individual observations)
 - `obs_seqs`: several sequences of observations
+- `nb_seqs`: number of observation sequences
 
 ### Forward backward
 
@@ -88,9 +80,9 @@ HiddenMarkovModels.PermutedHMM
 - `(log)B`: matrix of observation (log)likelihoods by state for a sequence of observations
 - `α`: scaled forward variables
 - `β`: scaled backward variables
-- `γ`: one-state marginals
-- `ξ`: two-state marginals
-- `logL`: loglikelihood of a sequence of observations
+- `γ`: state marginals
+- `ξ`: transition marginals
+- `logL`: posterior loglikelihood of a sequence of observations
 
 ## Index
 

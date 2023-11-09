@@ -7,19 +7,17 @@ Basic implementation of an HMM.
 
 $(TYPEDFIELDS)
 """
-struct HiddenMarkovModel{D,U<:AbstractVector,M<:AbstractMatrix,V<:AbstractVector{D}} <:
+struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} <:
        AbstractHMM
     "initial state probabilities"
-    init::U
+    init::I
     "state transition matrix"
-    trans::M
+    trans::T
     "observation distributions"
-    dists::V
+    dists::D
 
-    function HiddenMarkovModel(
-        init::U, trans::M, dists::V
-    ) where {D,U<:AbstractVector,M<:AbstractMatrix,V<:AbstractVector{D}}
-        hmm = new{D,U,M,V}(init, trans, dists)
+    function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
+        hmm = new{I,T,D}(init, trans, dists)
         check_hmm(hmm)
         return hmm
     end
@@ -42,21 +40,21 @@ transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
 
 function StatsAPI.fit!(
-    hmm::HMM, fbs, obs_seqs, fb_concat::ForwardBackwardStorage, obs_seqs_concat::Vector
+    hmm::HMM,
+    init_count::Vector,
+    trans_count::AbstractMatrix,
+    obs_seq::Vector,
+    state_marginals::Matrix,
 )
     # Initialization
-    hmm.init .= zero(eltype(hmm.init))
-    for k in eachindex(fbs)
-        hmm.init .+= view(fbs[k].γ, :, 1)
-    end
+    hmm.init .= init_count
     sum_to_one!(hmm.init)
     # Transition matrix
-    hmm.trans .= zero(eltype(hmm.trans))
-    sum!(hmm.trans, fb_concat.ξ; init=false)
+    hmm.trans .= trans_count
     foreach(sum_to_one!, eachrow(hmm.trans))
     #  Observation distributions
     for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seqs_concat, view(fb_concat.γ, i, :))
+        fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
     end
     check_hmm(hmm)
     return nothing

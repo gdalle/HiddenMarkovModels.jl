@@ -28,20 +28,20 @@ using Test
         end
     end
 
+    @testset "Doctests" begin
+        Documenter.doctest(HiddenMarkovModels)
+    end
+
     @testset "Correctness" begin
         include("correctness.jl")
     end
 
-    @testset "Sparse" begin
-        include("sparse.jl")
+    @testset "Array types" begin
+        include("arrays.jl")
     end
 
-    @testset "Static" begin
-        include("static.jl")
-    end
-
-    @testset "Logarithmic" begin
-        include("logarithmic.jl")
+    @testset "Number types" begin
+        include("numbers.jl")
     end
 
     @testset "Autodiff" begin
@@ -52,11 +52,7 @@ using Test
         include("dna.jl")
     end
 
-    @testset "Permuted" begin
-        include("permuted.jl")
-    end
-
-    @testset "Doctests" begin
-        Documenter.doctest(HiddenMarkovModels)
+    @testset "Misc" begin
+        include("misc.jl")
     end
 end

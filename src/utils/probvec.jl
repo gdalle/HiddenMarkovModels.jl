@@ -5,7 +5,8 @@ end
 sum_to_one!(x) = x ./= sum(x)
 
 """
-    rand_prob_vec([rng,] N)
+    rand_prob_vec(N)
+    rand_prob_vec(rng, N)
 
 Generate a random probability distribution of size `N`.
 """

@@ -30,7 +30,11 @@ benchmarks_done = (
 pages = [
     "Home" => "index.md",
     "Essentials" => ["Background" => "background.md", "API reference" => "api.md"],
-    "Tutorials" => ["Built-in HMM" => "builtin.md", "Debugging" => "debugging.md"],
+    "Tutorials" => [
+        "Built-in HMM" => "builtin.md",
+        "Custom HMM" => "custom.md",
+        "Debugging" => "debugging.md",
+    ],
     "Alternatives" => if benchmarks_done
         ["Features" => "features.md", "Benchmarks" => "benchmarks.md"]
     else

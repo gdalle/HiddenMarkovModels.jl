@@ -7,16 +7,22 @@ This storage is relative to a single sequence.
 
 # Fields
 
+The only field useful outside of the algorithm is `q`.
+
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
-    "vector of observation loglikelihoods `logb[i]`"
+    "observation loglikelihoods at a given time step"
     logb::Vector{R}
-    δₜ::Vector{R}
-    δₜ₋₁::Vector{R}
-    δₜ₋₁Aⱼ::Vector{R}
+    "highest path scores when accounting for the first `t` observations and ending at a given state"
+    δ::Vector{R}
+    "same as `δ` but for the previous time step"
+    δ_prev::Vector{R}
+    "temporary variable used to store products `δ_prev .* A[:, j]`"
+    δA::Vector{R}
+    "penultimate state maximizing the path score"
     ψ::Matrix{Int}
-    "vector of most likely state at each time"
+    "most likely state at each time `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
 end
 
@@ -25,12 +31,12 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     R = eltype(hmm, obs_seq[1])
 
     logb = Vector{R}(undef, N)
-    δₜ = Vector{R}(undef, N)
-    δₜ₋₁ = Vector{R}(undef, N)
-    δₜ₋₁Aⱼ = Vector{R}(undef, N)
+    δ = Vector{R}(undef, N)
+    δ_prev = Vector{R}(undef, N)
+    δA = Vector{R}(undef, N)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
-    return ViterbiStorage(logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q)
+    return ViterbiStorage(logb, δ, δ_prev, δA, ψ, q)
 end
 
 function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
@@ -38,25 +44,25 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     d = obs_distributions(hmm)
-    @unpack logb, δₜ, δₜ₋₁, δₜ₋₁Aⱼ, ψ, q = v
+    @unpack logb, δ, δ_prev, δA, ψ, q = v
 
     logb .= logdensityof.(d, (obs_seq[1],))
     logm = maximum(logb)
-    δₜ .= p .* exp.(logb .- logm)
-    δₜ₋₁ .= δₜ
+    δ .= p .* exp.(logb .- logm)
+    δ_prev .= δ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
         logb .= logdensityof.(d, (obs_seq[t],))
         logm = maximum(logb)
         for j in 1:N
-            @views δₜ₋₁Aⱼ .= δₜ₋₁ .* A[:, j]
-            i_max = argmax(δₜ₋₁Aⱼ)
+            @views δA .= δ_prev .* A[:, j]
+            i_max = argmax(δA)
             ψ[j, t] = i_max
-            δₜ[j] = δₜ₋₁Aⱼ[i_max] * exp(logb[j] - logm)
+            δ[j] = δA[i_max] * exp(logb[j] - logm)
         end
-        δₜ₋₁ .= δₜ
+        δ_prev .= δ
     end
-    q[T] = argmax(δₜ)
+    q[T] = argmax(δ)
     for t in (T - 1):-1:1
         q[t] = ψ[q[t + 1], t + 1]
     end
@@ -64,8 +70,12 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
 end
 
 function viterbi!(
-    vs::Vector{<:ViterbiStorage}, hmm::AbstractHMM, obs_seqs::Vector{<:Vector}
+    vs::Vector{<:ViterbiStorage},
+    hmm::AbstractHMM,
+    obs_seqs::Vector{<:Vector},
+    nb_seqs::Integer,
 )
+    check_lengths(obs_seqs, nb_seqs)
     @threads for k in eachindex(vs, obs_seqs)
         viterbi!(vs[k], hmm, obs_seqs[k])
     end
@@ -81,17 +91,13 @@ Apply the Viterbi algorithm to infer the most likely state sequence of an HMM.
 When applied on a single sequence, this function returns a vector of integers.
 When applied on multiple sequences, it returns a vector of vectors of integers.
 """
-function viterbi(hmm::AbstractHMM, obs_seq::Vector)
-    v = initialize_viterbi(hmm, obs_seq)
-    viterbi!(v, hmm, obs_seq)
-    return v.q
+function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
+    check_lengths(obs_seqs, nb_seqs)
+    vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
+    viterbi!(vs, hmm, obs_seqs, nb_seqs)
+    return [v.q for v in vs]
 end
 
-function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
-    end
-    vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    viterbi!(vs, hmm, obs_seqs)
-    return [v.q for v in vs]
+function viterbi(hmm::AbstractHMM, obs_seq::Vector)
+    return only(viterbi(hmm, [obs_seq], 1))
 end

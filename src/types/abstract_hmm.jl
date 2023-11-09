@@ -5,20 +5,25 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-- `length(hmm)`
-- `initialization(hmm)`
-- `transition_matrix(hmm)`
-- `obs_distributions(hmm)`
-- `fit!(hmm, fbs, obs_seqs, fb_concat, obs_seqs_concat)`
+To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement the following methods:
 
-# Applicable methods
+- [`length(hmm)`](@ref)
+- [`eltype(hmm, obs)`](@ref)
+- [`initialization(hmm)`](@ref)
+- [`transition_matrix(hmm)`](@ref)
+- [`obs_distributions(hmm)`](@ref)
+- [`fit!(hmm, init_count, trans_count, obs_seq, state_marginals)`](@ref) (optional)
 
-- `rand([rng,] hmm, T)`
-- `logdensityof(hmm, obs_seq)`
-- `forward(hmm, obs_seq)`
-- `viterbi(hmm, obs_seq)`
-- `forward_backward(hmm, obs_seq)`
-- `baum_welch(hmm, obs_seq)` if `fit!` is implemented
+# Applicable functions
+
+Any HMM object which satisfies the interface can be given as input to the following functions:
+
+- [`rand(rng, hmm, T)`](@ref)
+- [`logdensityof(hmm, obs_seq)`](@ref)
+- [`forward(hmm, obs_seq)`](@ref)
+- [`viterbi(hmm, obs_seq)`](@ref)
+- [`forward_backward(hmm, obs_seq)`](@ref)
+- [`baum_welch(hmm, obs_seq)`](@ref) (if the optional `fit!` is implemented)
 """
 abstract type AbstractHiddenMarkovModel end
 
@@ -79,16 +84,31 @@ Each element `dist` of this vector must implement
 function obs_distributions end
 
 """
-    fit!(hmm, obs_seqs, fbs)
+    fit!(hmm, init_count, trans_count, obs_seq, state_marginals)
 
-Update `hmm` in-place based on several observation sequences `obs_seqs` as well as information `fbs` generated during forward-backward.
+Update `hmm` in-place based on information generated during forward-backward.
+
+This method is only necessary for the Baum-Welch algorithm.
+
+# Arguments
+
+- `init_count::Vector`: posterior initialization counts for each state (size `N`)
+- `trans_count::AbstractMatrix`: posterior transition counts for each state (size `(N, N)`)
+- `obs_seq::Vector`: sequence of observation, possibly concatenated (size `T`)
+- `state_marginals::Matrix`: posterior probabilities of being in each state at each time, to be used as weights during maximum likelihood fitting of the observation distributions (size `(N, T)`).
+
+# See also
+
+- [`BaumWelchStorage`](@ref)
+- [`ForwardBackwardStorage`](@ref)
 """
-StatsAPI.fit!
+StatsAPI.fit!  # TODO: complete
 
 ## Sampling
 
 """
-    rand([rng,] hmm, T)
+    rand(hmm, T)
+    rand(rng, hmm, T)
 
 Simulate `hmm` for `T` time steps. 
 """

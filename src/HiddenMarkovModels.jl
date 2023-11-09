@@ -26,6 +26,7 @@ using PrecompileTools: @compile_workload, @setup_workload
 using Random: Random, AbstractRNG, default_rng
 using Requires: @require
 using SimpleUnPack: @unpack
+using SparseArrays: SparseMatrixCSC, nzrange, nnz
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHiddenMarkovModel, AbstractHMM
@@ -44,6 +45,7 @@ include("utils/probvec.jl")
 include("utils/transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
+include("utils/mul.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
@@ -51,6 +53,8 @@ include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 
 include("types/hmm.jl")
+
+include("HMMTest.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()

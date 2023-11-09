@@ -26,6 +26,10 @@ function LightDiagNormal(μ, σ)
     return LightDiagNormal(μ, σ, log.(σ))
 end
 
+function Base.show(io::IO, dist::LightDiagNormal)
+    return print(io, "LightDiagNormal($(dist.μ), $(dist.σ))")
+end
+
 @inline DensityInterface.DensityKind(::LightDiagNormal) = HasDensity()
 
 Base.length(dist::LightDiagNormal) = length(dist.μ)
