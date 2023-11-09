@@ -45,7 +45,7 @@ end
 
 @testset "Normal sparse" begin
     # see https://discourse.julialang.org/t/why-does-mul-u-a-v-allocate-when-a-is-sparse-and-u-v-are-views/105995
-    @test_skip test_allocations(rand_gaussian_hmm_1d(N; sparse_trans=true); T)
+    test_allocations(rand_gaussian_hmm_1d(N; sparse_trans=true); T)
 end
 
 @testset "LightDiagNormal" begin
