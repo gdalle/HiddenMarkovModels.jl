@@ -1,17 +1,3 @@
-using BenchmarkTools
-using CondaPkg
-using CSV
-using DataFrames
-using InteractiveUtils
-using LinearAlgebra
-using Pkg
-using Revise
-
-includet("hmms.jl")
-includet("hmmbase.jl")
-includet("hmmlearn.jl")
-includet("pomegranate.jl")
-
 function benchmarkables_by_implem(; implem, algos, kwargs...)
     if implem == "HMMs.jl"
         return benchmarkables_hmms(; algos, kwargs...)
@@ -79,9 +65,12 @@ function run_suite(;
 
     julia_results = minimum(raw_julia_results)
     python_results = minimum(raw_python_results)
+    return (; julia_results, python_results)
+end
 
+function parse_results(many_results...; path=nothing)
     data = DataFrame()
-    for results in (julia_results, python_results)
+    for results in many_results
         for implem in identity.(keys(results))
             for algo in identity.(keys(results[implem]))
                 for (N, D, T, K, I) in identity.(keys(results[implem][algo]))
@@ -109,13 +98,8 @@ function print_setup(; path)
             println("\n# Multithreading\n")
             println("Julia threads = $(Threads.nthreads())")
             println("OpenBLAS threads = $(BLAS.get_num_threads())")
-            println("Pytorch threads = $(torch.get_num_threads())")
             println("\n# Julia packages\n")
             Pkg.status()
-            println("\n# Python packages\n")
-        end
-        redirect_stderr(file) do
-            CondaPkg.status()
         end
     end
 end

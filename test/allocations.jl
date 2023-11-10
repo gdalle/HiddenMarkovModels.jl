@@ -1,6 +1,6 @@
 using BenchmarkTools
 using HiddenMarkovModels
-using HiddenMarkovModels.HMMTest
+using HiddenMarkovModels.Test
 import HiddenMarkovModels as HMMs
 using Test
 

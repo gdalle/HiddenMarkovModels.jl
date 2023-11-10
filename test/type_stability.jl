@@ -1,5 +1,5 @@
 using HiddenMarkovModels
-using HiddenMarkovModels.HMMTest
+using HiddenMarkovModels.Test
 import HiddenMarkovModels as HMMs
 using JET
 using SimpleUnPack

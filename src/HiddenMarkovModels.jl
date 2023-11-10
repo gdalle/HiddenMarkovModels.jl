@@ -54,7 +54,7 @@ include("inference/baum_welch.jl")
 
 include("types/hmm.jl")
 
-include("HMMTest.jl")
+include("utils/Test.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()

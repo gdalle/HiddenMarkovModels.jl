@@ -1,7 +1,3 @@
-using BenchmarkTools
-using HiddenMarkovModels
-using SimpleUnPack
-
 function rand_params_hmms(; N, D)
     p = ones(N) / N
     A = ones(N, N) / N

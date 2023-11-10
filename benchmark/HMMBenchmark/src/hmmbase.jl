@@ -1,8 +1,3 @@
-using BenchmarkTools
-using Distributions
-using Distributions: PDiagMat
-using HMMBase: HMMBase
-using SimpleUnPack
 
 function rand_params_hmmbase(; N, D)
     p = ones(N) / N

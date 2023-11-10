@@ -22,10 +22,7 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
-benchmarks_done = (
-    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "plots"))) > 1) &&  # plots present
-    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "results"))) > 1)  # results present
-)
+benchmarks_done = false
 
 pages = [
     "Home" => "index.md",

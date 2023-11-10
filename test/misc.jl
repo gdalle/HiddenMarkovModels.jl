@@ -1,5 +1,5 @@
 using HiddenMarkovModels
-using HiddenMarkovModels.HMMTest
+using HiddenMarkovModels.Test
 using HiddenMarkovModels: PermutedHMM
 using Distributions
 using Test
