@@ -1,49 +1,53 @@
 using BenchmarkTools
-using Distributions
-using Distributions: PDiagMat
 using HiddenMarkovModels
-using SimpleUnPack
+using HiddenMarkovModels.HMMTest
+import HiddenMarkovModels as HMMs
 using Test
 
 function test_allocations(hmm; T)
-    p = initial_distribution(hmm)
-    A = transition_matrix(hmm)
-    @unpack state_seq, obs_seq = rand(hmm, T)
+    obs_seq = rand(hmm, T).obs_seq
+    nb_seqs = 2
+    obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
 
     ## Forward
-    logb = HMMs.loglikelihoods_vec(hmm, obs_seq[1])
-    αₜ = zeros(N)
-    αₜ₊₁ = zeros(N)
-    allocs = @ballocated HMMs.forward!($αₜ, $αₜ₊₁, $logb, $p, $A, $hmm, $obs_seq)
+    f = HMMs.initialize_forward(hmm, obs_seq)
+    allocs = @ballocated HiddenMarkovModels.forward!($f, $hmm, $obs_seq)
     @test allocs == 0
 
     ## Viterbi
-    logb = HMMs.loglikelihoods_vec(hmm, obs_seq[1])
-    δₜ = zeros(N)
-    δₜ₋₁ = zeros(N)
-    δA_tmp = zeros(N)
-    ψ = zeros(Int, N, T)
-    q = zeros(Int, T)
-    allocs = @ballocated HMMs.viterbi!(
-        $q, $δₜ, $δₜ₋₁, $δA_tmp, $ψ, $logb, $p, $A, $hmm, $obs_seq
-    )
+    v = HMMs.initialize_viterbi(hmm, obs_seq)
+    allocs = @ballocated HMMs.viterbi!($v, $hmm, $obs_seq)
     @test allocs == 0
 
     ## Forward-backward
-    logB = HMMs.loglikelihoods(hmm, obs_seq)
-    fb = HMMs.initialize_forward_backward(p, A, logB)
-    allocs = @ballocated HMMs.forward_backward!($fb, $p, $A, $logB)
+    fb = HMMs.initialize_forward_backward(hmm, obs_seq)
+    allocs = @ballocated HMMs.forward_backward!($fb, $hmm, $obs_seq)
+    @test allocs == 0
+
+    ## Baum-Welch
+    fbs = [HMMs.initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
+    bw = HMMs.initialize_baum_welch(hmm, obs_seqs, nb_seqs)
+    obs_seqs_concat = reduce(vcat, obs_seqs)
+    HMMs.forward_backward!(fbs, hmm, obs_seqs, nb_seqs)
+    HMMs.update_sufficient_statistics!(bw, fbs)
+    fit!(hmm, bw, obs_seqs_concat)
+    allocs = @ballocated HMMs.update_sufficient_statistics!($bw, $fbs)
+    @test allocs == 0
+    allocs = @ballocated fit!($hmm, $bw, $obs_seqs_concat)
     @test allocs == 0
 end
 
-N = 5
-D = 3
-T = 100
+N, D, T = 3, 2, 100
 
-p = rand_prob_vec(N)
-A = rand_trans_mat(N)
-dists = [Normal(randn(), 1.0) for i in 1:N]
+@testset "Normal" begin
+    test_allocations(rand_gaussian_hmm_1d(N); T)
+end
 
-hmm = HMM(p, A, dists)
+@testset "Normal sparse" begin
+    # see https://discourse.julialang.org/t/why-does-mul-u-a-v-allocate-when-a-is-sparse-and-u-v-are-views/105995
+    @test_skip test_allocations(rand_gaussian_hmm_1d(N; sparse_trans=true); T)
+end
 
-test_allocations(hmm; T)
+@testset "LightDiagNormal" begin
+    test_allocations(rand_gaussian_hmm_2d_light(N, D); T)
+end

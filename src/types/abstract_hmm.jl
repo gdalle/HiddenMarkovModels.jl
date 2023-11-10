@@ -1,25 +1,31 @@
 """
-    AbstractHiddenMarkovModel <: AbstractMarkovChain 
+    AbstractHiddenMarkovModel 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
-# Required interface
+# Interface
 
-- `initial_distribution(hmm)`
-- `transition_matrix(hmm)`
-- `obs_distribution(hmm, i)`
-- `fit!(hmm, init_count, trans_count, obs_seq, state_marginals)` (optional)
+To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement the following methods:
 
-# Applicable methods
+- [`length(hmm)`](@ref)
+- [`eltype(hmm, obs)`](@ref)
+- [`initialization(hmm)`](@ref)
+- [`transition_matrix(hmm)`](@ref)
+- [`obs_distributions(hmm)`](@ref)
+- [`fit!(hmm, init_count, trans_count, obs_seq, state_marginals)`](@ref) (optional)
 
-- `rand([rng,] hmm, T)`
-- `logdensityof(hmm, obs_seq)` / `logdensityof(hmm, obs_seqs, nb_seqs)`
-- `forward(hmm, obs_seq)` / `forward(hmm, obs_seqs, nb_seqs)`
-- `viterbi(hmm, obs_seq)` / `viterbi(hmm, obs_seqs, nb_seqs)`
-- `forward_backward(hmm, obs_seq)` / `forward_backward(hmm, obs_seqs, nb_seqs)`
-- `baum_welch(hmm, obs_seq)` / `baum_welch(hmm, obs_seqs, nb_seqs)` if `fit!` is implemented
+# Applicable functions
+
+Any HMM object which satisfies the interface can be given as input to the following functions:
+
+- [`rand(rng, hmm, T)`](@ref)
+- [`logdensityof(hmm, obs_seq)`](@ref)
+- [`forward(hmm, obs_seq)`](@ref)
+- [`viterbi(hmm, obs_seq)`](@ref)
+- [`forward_backward(hmm, obs_seq)`](@ref)
+- [`baum_welch(hmm, obs_seq)`](@ref) (if the optional `fit!` is implemented)
 """
-abstract type AbstractHiddenMarkovModel <: AbstractMarkovChain end
+abstract type AbstractHiddenMarkovModel end
 
 """
     AbstractHMM
@@ -30,65 +36,100 @@ const AbstractHMM = AbstractHiddenMarkovModel
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
-@required AbstractHMM begin
-    Base.length(::AbstractHMM)
-    initial_distribution(::AbstractHMM)
-    transition_matrix(::AbstractHMM)
-    obs_distribution(::AbstractHMM, ::Integer)
+## Interface
+
+"""
+    length(hmm)
+
+Return the number of states of `hmm`.
+"""
+Base.length
+
+"""
+    eltype(hmm, obs)
+
+Return a type that can accommodate forward-backward computations on observations similar to `obs`.
+It is typicall a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
+"""
+function Base.eltype(hmm::AbstractHMM, obs)
+    init_type = eltype(initialization(hmm))
+    trans_type = eltype(transition_matrix(hmm))
+    logdensity_type = typeof(logdensityof(obs_distributions(hmm)[1], obs))
+    return promote_type(init_type, trans_type, logdensity_type)
 end
 
 """
-    obs_distribution(hmm::AbstractHMM, i)
+    initialization(hmm)
 
-Return the observation distribution of `hmm` associated with state `i`.
-
-The returned object `dist` must implement
-- `rand(rng, dist)`
-- `DensityInterface.logdensityof(dist, x)`
+Return the vector of initial state probabilities for `hmm`.
 """
-function obs_distribution end
+function initialization end
 
+"""
+    transition_matrix(hmm) 
+
+Return the matrix of state transition probabilities for `hmm`.
+"""
+function transition_matrix end
+
+"""
+    obs_distributions(hmm)
+
+Return a vector of observation distributions for `hmm`.
+
+Each element `dist` of this vector must implement
+- `rand(rng, dist)`
+- `DensityInterface.logdensityof(dist, obs)`
+"""
+function obs_distributions end
+
+"""
+    fit!(hmm, init_count, trans_count, obs_seq, state_marginals)
+
+Update `hmm` in-place based on information generated during forward-backward.
+
+This method is only necessary for the Baum-Welch algorithm.
+
+# Arguments
+
+- `init_count::Vector`: posterior initialization counts for each state (size `N`)
+- `trans_count::AbstractMatrix`: posterior transition counts for each state (size `(N, N)`)
+- `obs_seq::Vector`: sequence of observation, possibly concatenated (size `T`)
+- `state_marginals::Matrix`: posterior probabilities of being in each state at each time, to be used as weights during maximum likelihood fitting of the observation distributions (size `(N, T)`).
+
+# See also
+
+- [`BaumWelchStorage`](@ref)
+- [`ForwardBackwardStorage`](@ref)
+"""
+StatsAPI.fit!  # TODO: complete
+
+## Sampling
+
+"""
+    rand(hmm, T)
+    rand(rng, hmm, T)
+
+Simulate `hmm` for `T` time steps. 
+"""
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    mc = MarkovChain(hmm)
-    state_seq = rand(rng, mc, T)
-    first_obs = rand(rng, obs_distribution(hmm, first(state_seq)))
+    p = initialization(hmm)
+    A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
+
+    first_state = rand(rng, Categorical(p; check_args=false))
+    state_seq = Vector{Int}(undef, T)
+    state_seq[1] = first_state
+    @views for t in 2:T
+        state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
+    end
+    first_obs = rand(rng, d[state_seq[1]])
     obs_seq = Vector{typeof(first_obs)}(undef, T)
     obs_seq[1] = first_obs
     for t in 2:T
-        obs_seq[t] = rand(rng, obs_distribution(hmm, state_seq[t]))
+        obs_seq[t] = rand(rng, d[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-function MarkovChain(hmm::AbstractHMM)
-    return MarkovChain(initial_distribution(hmm), transition_matrix(hmm))
-end
-
-"""
-    PermutedHMM{H<:AbstractHMM}
-
-Wrapper around an `AbstractHMM` that permutes its states.
-
-This is computationally inefficient and mostly useful for evaluation.
-
-# Fields
-
-- `hmm:H`: the old HMM
-- `perm::Vector{Int}`: a permutation such that state `i` in the new HMM corresponds to state `perm[i]` in the old.
-"""
-struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
-    hmm::H
-    perm::Vector{Int}
-end
-
-Base.length(p::PermutedHMM) = length(p.hmm)
-
-HMMs.initial_distribution(p::PermutedHMM) = initial_distribution(p.hmm)[p.perm]
-
-function HMMs.transition_matrix(p::PermutedHMM)
-    return transition_matrix(p.hmm)[p.perm, :][:, p.perm]
-end
-
-function HMMs.obs_distribution(p::PermutedHMM, i::Integer)
-    return obs_distribution(p.hmm, p.perm[i])
-end
+Base.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)

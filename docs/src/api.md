@@ -6,22 +6,10 @@ HiddenMarkovModels
 
 ## Types
 
-### Markov chains
-
-```@docs
-AbstractMarkovChain
-MarkovChain
-AbstractMC
-MC
-```
-
-### Hidden Markov Models
-
 ```@docs
 AbstractHiddenMarkovModel
 HiddenMarkovModel
 AbstractHMM
-HiddenMarkovModels.PermutedHMM
 HMM
 ```
 
@@ -30,9 +18,10 @@ HMM
 ```@docs
 rand
 length
-initial_distribution
+eltype
+initialization
 transition_matrix
-obs_distribution
+obs_distributions
 ```
 
 ## Inference
@@ -42,22 +31,28 @@ logdensityof
 forward
 viterbi
 forward_backward
+baum_welch
+fit!
 ```
 
-## Learning
+## Misc
 
 ```@docs
-fit!
-fit
-baum_welch
+check_hmm
+rand_prob_vec
+rand_trans_mat
 ```
 
 ## Internals
 
 ```@docs
-HMMs.ForwardBackwardStorage
-HMMs.fit_element_from_sequence!
-HMMs.LightDiagNormal
+HiddenMarkovModels.ForwardStorage
+HiddenMarkovModels.ViterbiStorage
+HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.BaumWelchStorage
+HiddenMarkovModels.fit_element_from_sequence!
+HiddenMarkovModels.LightDiagNormal
+HiddenMarkovModels.PermutedHMM
 ```
 
 ## Notations
@@ -71,12 +66,13 @@ HMMs.LightDiagNormal
 
 ### Models and simulations
 
-- `p` or `init`: initial_distribution (vector of state probabilities)
+- `p` or `init`: initialization (vector of state probabilities)
 - `A` or `trans`: transition_matrix (matrix of transition probabilities)
-- `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
+- `d` or `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
 - `state_seq`: a sequence of states (vector of integers)
 - `obs_seq`: a sequence of observations (vector of individual observations)
 - `obs_seqs`: several sequences of observations
+- `nb_seqs`: number of observation sequences
 
 ### Forward backward
 
@@ -84,9 +80,9 @@ HMMs.LightDiagNormal
 - `(log)B`: matrix of observation (log)likelihoods by state for a sequence of observations
 - `α`: scaled forward variables
 - `β`: scaled backward variables
-- `γ`: one-state marginals
-- `ξ`: two-state marginals
-- `logL`: loglikelihood of a sequence of observations
+- `γ`: state marginals
+- `ξ`: transition marginals
+- `logL`: posterior loglikelihood of a sequence of observations
 
 ## Index
 

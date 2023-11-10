@@ -1,65 +1,58 @@
+using Aqua: Aqua
+using Documenter: Documenter
+using HiddenMarkovModels
+using JuliaFormatter: JuliaFormatter
+using JET: JET
 using Test
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     @testset "Code formatting" begin
-        include("formatting.jl")
+        @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
     end
 
     if VERSION >= v"1.9"
         @testset "Code quality" begin
-            include("quality.jl")
+            Aqua.test_all(HiddenMarkovModels; ambiguities=false)
         end
 
         @testset "Code linting" begin
-            include("linting.jl")
+            JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 
-        @testset verbose = true "Type stability" begin
+        @testset "Type stability" begin
             include("type_stability.jl")
         end
 
-        @testset verbose = true "Allocations" begin
+        @testset "Allocations" begin
             include("allocations.jl")
         end
     end
 
-    @testset "Interface" begin
-        include("interface.jl")
+    @testset "Doctests" begin
+        Documenter.doctest(HiddenMarkovModels)
     end
 
-    @testset "Markov chain" begin
-        include("mc.jl")
-    end
-
-    @testset verbose = true "Correctness" begin
+    @testset "Correctness" begin
         include("correctness.jl")
     end
 
-    @testset verbose = true "Sparse" begin
-        include("sparse.jl")
+    @testset "Array types" begin
+        include("arrays.jl")
     end
 
-    @testset verbose = true "Static" begin
-        include("static.jl")
+    @testset "Number types" begin
+        include("numbers.jl")
     end
 
-    @testset verbose = true "Logarithmic" begin
-        include("logarithmic.jl")
-    end
-
-    @testset verbose = true "Autodiff" begin
+    @testset "Autodiff" begin
         include("autodiff.jl")
     end
 
-    @testset verbose = true "DNA" begin
+    @testset "DNA" begin
         include("dna.jl")
     end
 
-    @testset verbose = true "Permuted" begin
-        include("permuted.jl")
-    end
-
-    @testset "Doctests" begin
-        include("doctests.jl")
+    @testset "Misc" begin
+        include("misc.jl")
     end
 end

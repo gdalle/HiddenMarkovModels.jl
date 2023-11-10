@@ -1,24 +1,23 @@
 """
-    HiddenMarkovModel{D} <: AbstractHiddenMarkovModel
+$(TYPEDEF)
 
 Basic implementation of an HMM.
 
 # Fields
 
-- `init::AbstractVector`: initial state probabilities
-- `trans::AbstractMatrix`: state transition matrix
-- `dists::AbstractVector{D}`: observation distributions
+$(TYPEDFIELDS)
 """
-struct HiddenMarkovModel{D,U<:AbstractVector,M<:AbstractMatrix,V<:AbstractVector{D}} <:
+struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} <:
        AbstractHMM
-    init::U
-    trans::M
-    dists::V
+    "initial state probabilities"
+    init::I
+    "state transition matrix"
+    trans::T
+    "observation distributions"
+    dists::D
 
-    function HiddenMarkovModel(
-        init::U, trans::M, dists::V
-    ) where {D,U<:AbstractVector,M<:AbstractMatrix,V<:AbstractVector{D}}
-        hmm = new{D,U,M,V}(init, trans, dists)
+    function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
+        hmm = new{I,T,D}(init, trans, dists)
         check_hmm(hmm)
         return hmm
     end
@@ -36,22 +35,26 @@ function Base.copy(hmm::HMM)
 end
 
 Base.length(hmm::HMM) = length(hmm.init)
-initial_distribution(hmm::HMM) = hmm.init
+initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
-obs_distribution(hmm::HMM, i::Integer) = hmm.dists[i]
+obs_distributions(hmm::HMM) = hmm.dists
 
-"""
-    fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
-
-Update `hmm` in-place based on information generated during forward-backward.
-"""
-function StatsAPI.fit!(hmm::HMM, init_count, trans_count, obs_seq, state_marginals)
+function StatsAPI.fit!(
+    hmm::HMM,
+    init_count::Vector,
+    trans_count::AbstractMatrix,
+    obs_seq::Vector,
+    state_marginals::Matrix,
+)
+    # Initialization
     hmm.init .= init_count
     sum_to_one!(hmm.init)
+    # Transition matrix
     hmm.trans .= trans_count
     foreach(sum_to_one!, eachrow(hmm.trans))
-    @views for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seq, state_marginals[i, :])
+    #  Observation distributions
+    for i in eachindex(hmm.dists)
+        fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
     end
     check_hmm(hmm)
     return nothing

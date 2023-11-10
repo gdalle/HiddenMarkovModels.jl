@@ -15,6 +15,12 @@ function is_trans_mat(A::AbstractMatrix; atol=1e-2)
     end
 end
 
+"""
+    rand_trans_mat(N)
+    rand_trans_mat(rng, N)
+
+Generate a random transition matrix of size `(N, N)`.
+"""
 function rand_trans_mat(rng::AbstractRNG, N)
     A = rand(rng, N, N)
     foreach(sum_to_one!, eachrow(A))
