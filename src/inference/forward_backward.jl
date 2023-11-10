@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `γ`, `ξ` and `logL`.
+The only fields useful outside of the algorithm are `γ` and `logL`, as well as `init_count` and `trans_count`.
 
 $(TYPEDFIELDS)
 """
@@ -20,18 +20,20 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     β::Matrix{R}
     "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
-    "posterior transition marginals `ξ[t][i,j] = ℙ(X[t:t+1]=(i,j) | Y[1:T])`"
-    ξ::Vector{M}
     "forward message inverse normalizations `c[t] = 1 / sum(α[:,t])`"
     c::Vector{R}
     "observation loglikelihoods `logB[i,t] = ℙ(Y[t] | X[t]=i)`"
     logB::Matrix{R}
     "maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`"
     logm::Vector{R}
-    "numerically stabilized observation likelihoods `B̃[i,t] = exp.(logB[i,t] - logm[t])`"
-    B̃::Matrix{R}
-    "product `B̃β[i,t] = B̃[i,t] * β[i,t]`"
-    B̃β::Matrix{R}
+    "numerically stabilized observation likelihoods `B[i,t] = exp.(logB[i,t] - logm[t])`"
+    B::Matrix{R}
+    "product `Bβ[i,t] = B[i,t] * β[i,t]`"
+    Bβ::Matrix{R}
+    "posterior initialization count"
+    init_count::Vector{R}
+    "posterior transition count"
+    trans_count::M
 end
 
 Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
@@ -41,53 +43,47 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     A = transition_matrix(hmm)
     R = eltype(hmm, obs_seq[1])
-    M = typeof(similar(A, R))
 
     logL = RefValue{R}(zero(R))
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
-    ξ = Vector{M}(undef, T - 1)
-    for t in 1:(T - 1)
-        ξ[t] = similar(A, R)
-    end
     c = Vector{R}(undef, T)
     logB = Matrix{R}(undef, N, T)
     logm = Vector{R}(undef, T)
-    B̃ = Matrix{R}(undef, N, T)
-    B̃β = Matrix{R}(undef, N, T)
-
-    return ForwardBackwardStorage{R,M}(logL, α, β, γ, ξ, c, logB, logm, B̃, B̃β)
+    B = Matrix{R}(undef, N, T)
+    Bβ = Matrix{R}(undef, N, T)
+    init_count = Vector{R}(undef, N)
+    trans_count = similar(A, R)
+    M = typeof(trans_count)
+    return ForwardBackwardStorage{R,M}(
+        logL, α, β, γ, c, logB, logm, B, Bβ, init_count, trans_count
+    )
 end
 
 function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
-    d = obs_distributions(hmm)
-    @unpack logB, logm, B̃ = fb
-    N, T = length(hmm), duration(fb)
-
-    for t in 1:T
-        logB[:, t] .= logdensityof.(d, (obs_seq[t],))
-    end
-    check_no_nan(logB)
+    @unpack logB, logm, B = fb
+    obs_logdensities!(logB, hmm, obs_seq)
     maximum!(logm', logB)
-    B̃ .= exp.(logB .- logm')
+    B .= exp.(logB .- logm')
+    check_no_nan(B)
     return nothing
 end
 
 function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    @unpack α, c, B̃ = fb
+    @unpack α, c, B = fb
     N, T = length(hmm), duration(fb)
 
     @views begin
-        α[:, 1] .= p .* B̃[:, 1]
+        α[:, 1] .= p .* B[:, 1]
         c[1] = inv(sum(α[:, 1]))
         α[:, 1] .*= c[1]
     end
     @views for t in 1:(T - 1)
         mul!(α[:, t + 1], A', α[:, t])
-        α[:, t + 1] .*= B̃[:, t + 1]
+        α[:, t + 1] .*= B[:, t + 1]
         c[t + 1] = inv(sum(α[:, t + 1]))
         α[:, t + 1] .*= c[t + 1]
     end
@@ -97,28 +93,31 @@ end
 
 function backward!(fb::ForwardBackwardStorage{R}, hmm::AbstractHMM) where {R}
     A = transition_matrix(hmm)
-    @unpack β, c, B̃, B̃β = fb
+    @unpack β, c, B, Bβ = fb
     N, T = length(hmm), duration(fb)
 
     β[:, T] .= c[T]
     @views for t in (T - 1):-1:1
-        B̃β[:, t + 1] .= B̃[:, t + 1] .* β[:, t + 1]
-        mul!(β[:, t], A, B̃β[:, t + 1])
+        Bβ[:, t + 1] .= B[:, t + 1] .* β[:, t + 1]
+        mul!(β[:, t], A, Bβ[:, t + 1])
         β[:, t] .*= c[t]
     end
-    @views B̃β[:, 1] .= B̃[:, 1] .* β[:, 1]
+    @views Bβ[:, 1] .= B[:, 1] .* β[:, 1]
     return nothing
 end
 
 function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
     A = transition_matrix(hmm)
-    @unpack α, β, c, B̃β, γ, ξ = fb
+    @unpack α, β, c, Bβ, γ, init_count, trans_count = fb
     N, T = length(hmm), duration(fb)
 
     γ .= α .* β ./ c'
     check_no_nan(γ)
+
+    init_count .= @view γ[:, 1]
+    trans_count .= zero(eltype(trans_count))
     @views for t in 1:(T - 1)
-        mul_rows_cols!(ξ[t], α[:, t], A, B̃β[:, t + 1])
+        add_mul_rows_cols!(trans_count, α[:, t], A, Bβ[:, t + 1])
     end
     return nothing
 end

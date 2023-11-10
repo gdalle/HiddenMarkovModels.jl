@@ -4,7 +4,6 @@ authors = ["Guillaume Dalle"]
 version = "0.4.0"
 
 [deps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -25,7 +24,6 @@ HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
 HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
 [compat]
-ChainRulesCore = "1.16"
 DensityInterface = "0.4"
 Distributions = "0.25"
 DocStringExtensions = "0.9"

@@ -32,13 +32,14 @@ using StatsAPI: StatsAPI, fit, fit!
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
-export initialization, transition_matrix, obs_distributions
+export initialization, transition_matrix, obs_logdensities!
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit!
 export check_hmm
 
 include("types/abstract_hmm.jl")
 include("types/permuted_hmm.jl")
+include("types/hmm.jl")
 
 include("utils/check.jl")
 include("utils/probvec.jl")
@@ -52,9 +53,7 @@ include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 
-include("types/hmm.jl")
-
-include("HMMTest.jl")
+include("utils/Test.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()

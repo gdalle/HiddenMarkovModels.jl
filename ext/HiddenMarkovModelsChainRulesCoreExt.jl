@@ -10,8 +10,7 @@ using SimpleUnPack
 function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    logB = reduce(hcat, logdensityof.(d, (obs,)) for obs in obs_seq)
+    logB = obs_logdensities_matrix(hmm, obs_seq)
     return p, A, logB
 end
 

@@ -38,17 +38,16 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
     @unpack logL, logb, α, α_next = f
 
-    logb .= logdensityof.(d, (obs_seq[1],))
+    obs_logdensities!(logb, hmm, obs_seq[1])
     logm = maximum(logb)
     α .= p .* exp.(logb .- logm)
     c = inv(sum(α))
     α .*= c
     logL[] = -log(c) + logm
     for t in 1:(T - 1)
-        logb .= logdensityof.(d, (obs_seq[t + 1],))
+        obs_logdensities!(logb, hmm, obs_seq[t + 1])
         logm = maximum(logb)
         mul!(α_next, A', α)
         α_next .*= exp.(logb .- logm)

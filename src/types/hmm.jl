@@ -13,7 +13,7 @@ struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} 
     init::I
     "state transition matrix"
     trans::T
-    "observation distributions"
+    "observation distributions (must be amenable to `logdensityof` and `rand`)"
     dists::D
 
     function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
@@ -37,7 +37,23 @@ end
 Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
-obs_distributions(hmm::HMM) = hmm.dists
+
+function obs_logdensities!(logb::AbstractVector, hmm::HMM, obs)
+    for i in eachindex(logb, hmm.dists)
+        logb[i] = logdensityof(hmm.dists[i], obs)
+    end
+end
+
+function obs_sample(rng::AbstractRNG, hmm::HMM, i::Integer)
+    return rand(rng, hmm.dists[i])
+end
+
+function Base.eltype(hmm::HMM, obs)
+    init_type = eltype(hmm.init)
+    trans_type = eltype(hmm.trans)
+    logdensity_type = typeof(logdensityof(hmm.dists[1], obs))
+    return promote_type(init_type, trans_type, logdensity_type)
+end
 
 function StatsAPI.fit!(
     hmm::HMM,

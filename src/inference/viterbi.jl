@@ -18,12 +18,12 @@ struct ViterbiStorage{R}
     δ::Vector{R}
     "same as `δ` but for the previous time step"
     δ_prev::Vector{R}
-    "temporary variable used to store products `δ_prev .* A[:, j]`"
-    δA::Vector{R}
     "penultimate state maximizing the path score"
     ψ::Matrix{Int}
     "most likely state at each time `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
+    "scratch storage space"
+    scratch::Vector{R}
 end
 
 function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
@@ -33,32 +33,31 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     logb = Vector{R}(undef, N)
     δ = Vector{R}(undef, N)
     δ_prev = Vector{R}(undef, N)
-    δA = Vector{R}(undef, N)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
-    return ViterbiStorage(logb, δ, δ_prev, δA, ψ, q)
+    scratch = Vector{R}(undef, N)
+    return ViterbiStorage(logb, δ, δ_prev, ψ, q, scratch)
 end
 
 function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    @unpack logb, δ, δ_prev, δA, ψ, q = v
+    @unpack logb, δ, δ_prev, ψ, q, scratch = v
 
-    logb .= logdensityof.(d, (obs_seq[1],))
+    obs_logdensities!(logb, hmm, obs_seq[1])
     logm = maximum(logb)
     δ .= p .* exp.(logb .- logm)
     δ_prev .= δ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
-        logb .= logdensityof.(d, (obs_seq[t],))
+        obs_logdensities!(logb, hmm, obs_seq[t])
         logm = maximum(logb)
         for j in 1:N
-            @views δA .= δ_prev .* A[:, j]
-            i_max = argmax(δA)
+            @views scratch .= δ_prev .* A[:, j]
+            i_max = argmax(scratch)
             ψ[j, t] = i_max
-            δ[j] = δA[i_max] * exp(logb[j] - logm)
+            δ[j] = scratch[i_max] * exp(logb[j] - logm)
         end
         δ_prev .= δ
     end

@@ -54,12 +54,9 @@ function update_sufficient_statistics!(
     trans_count .= zero(R)
     state_marginals_concat .= zero(R)
     for k in eachindex(fbs)
-        @unpack γ, ξ, B̃β = fbs[k]
-        init_count .+= view(γ, :, 1)
-        for t in eachindex(ξ)
-            trans_count .+= ξ[t]
-        end
-        state_marginals_concat[:, (limits[k] + 1):limits[k + 1]] .= γ
+        init_count .+= fbs[k].init_count
+        trans_count .+= fbs[k].trans_count
+        state_marginals_concat[:, (limits[k] + 1):limits[k + 1]] .= fbs[k].γ
     end
     return nothing
 end

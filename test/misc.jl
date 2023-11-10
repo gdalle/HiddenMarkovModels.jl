@@ -1,5 +1,5 @@
 using HiddenMarkovModels
-using HiddenMarkovModels.HMMTest
+using HiddenMarkovModels.Test
 using HiddenMarkovModels: PermutedHMM
 using Distributions
 using Test
@@ -12,11 +12,11 @@ hmm_perm = PermutedHMM(hmm, perm)
 
 p = initialization(hmm)
 A = transition_matrix(hmm)
-d = obs_distributions(hmm)
+d = hmm.dists
 
 p_perm = initialization(hmm_perm)
 A_perm = transition_matrix(hmm_perm)
-d_perm = obs_distributions(hmm_perm)
+d_perm = hmm_perm.dists
 
 @testset "PermutedHMM" begin
     for i in 1:3

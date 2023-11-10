@@ -29,7 +29,7 @@ transition_matrix(hmm)
 ```
 
 ```@example tuto
-obs_distributions(hmm)
+hmm.dists
 ```
 
 Simulating a sequence:
@@ -70,7 +70,7 @@ first(logL_evolution), last(logL_evolution)
 Correcting state order because we know observation means are increasing in the true model:
 
 ```@example tuto
-d_est = obs_distributions(hmm_est)
+d_est = hmm_est.dists
 ```
 
 ```@example tuto

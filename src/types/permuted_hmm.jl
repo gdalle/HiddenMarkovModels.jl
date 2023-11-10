@@ -17,6 +17,7 @@ struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
 end
 
 Base.length(p::PermutedHMM) = length(p.hmm)
+Base.eltype(p::PermutedHMM, obs) = eltype(p.hmm, obs)
 
 initialization(p::PermutedHMM) = initialization(p.hmm)[p.perm]
 
@@ -24,6 +25,12 @@ function transition_matrix(p::PermutedHMM)
     return transition_matrix(p.hmm)[p.perm, :][:, p.perm]
 end
 
-function obs_distributions(p::PermutedHMM)
-    return obs_distributions(p.hmm)[p.perm]
+function obs_logdensities!(logb::AbstractVector, p::PermutedHMM, obs)
+    for i in eachindex(logb, p.dists)
+        logb[i] = logdensityof(p.dists[p.perm[i]], obs)
+    end
+end
+
+function obs_sample(rng::AbstractRNG, p::PermutedHMM, i::Integer)
+    return obs_sample(rng, p, p.perm[i])
 end

@@ -21,7 +21,7 @@ length
 eltype
 initialization
 transition_matrix
-obs_distributions
+obs_logdensities!
 ```
 
 ## Inference
