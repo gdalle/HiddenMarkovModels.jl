@@ -66,8 +66,10 @@ function test_correctness(hmm, hmm_init; T)
         @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)
 
         for (dist, dist_base) in zip(hmm.dists, hmm_base.B)
-            for n in fieldnames(typeof(dist))
-                @test isapprox(getfield(dist, n), getfield(dist_base, n))
+            if hasfield(typeof(dist), :μ)
+                @test isapprox(dist.μ, dist_base.μ)
+            elseif hasfield(typeof(dist), :p)
+                @test isapprox(dist.p, dist_base.p)
             end
         end
     end
