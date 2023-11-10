@@ -22,6 +22,7 @@ eltype
 initialization
 transition_matrix
 obs_logdensities!
+obs_sample
 ```
 
 ## Inference

@@ -76,11 +76,11 @@ Fill the vector `logb` with the logdensities of observation `obs` for each state
 function obs_logdensities! end
 
 """
-    obs_sample(hmm, i)
+    obs_sample(rng, hmm, i)
 
-Sample an observation from the distribution of `hmm` corresponding to state `i`.
+Sample from the observation distribution of `hmm` corresponding to state `i`.
 """
-function obs_logdensities! end
+function obs_sample end
 
 """
     fit!(hmm, init_count, trans_count, obs_seq, state_marginals)

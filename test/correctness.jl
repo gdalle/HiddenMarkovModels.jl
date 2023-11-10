@@ -1,7 +1,7 @@
 using Distributions
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels.Test
+using HiddenMarkovModels.HMMTest
 using SimpleUnPack
 using Test
 

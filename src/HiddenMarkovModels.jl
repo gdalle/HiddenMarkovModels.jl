@@ -53,7 +53,7 @@ include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 
-include("utils/Test.jl")
+include("utils/HMMTest.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()
