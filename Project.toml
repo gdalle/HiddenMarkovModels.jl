@@ -25,6 +25,7 @@ HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
 HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
 [compat]
+ChainRulesCore = "1.16"
 DensityInterface = "0.4"
 Distributions = "0.25"
 DocStringExtensions = "0.9"
