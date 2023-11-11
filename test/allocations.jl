@@ -3,6 +3,7 @@ using HiddenMarkovModels
 using HiddenMarkovModels.HMMTest
 import HiddenMarkovModels as HMMs
 using Test
+using SparseArrays
 
 function test_allocations(hmm; T)
     obs_seq = rand(hmm, T).obs_seq
@@ -11,17 +12,20 @@ function test_allocations(hmm; T)
 
     ## Forward
     f = HMMs.initialize_forward(hmm, obs_seq)
-    allocs = @ballocated HiddenMarkovModels.forward!($f, $hmm, $obs_seq)
+    HiddenMarkovModels.forward!(f, hmm, obs_seq)
+    allocs = @allocated HiddenMarkovModels.forward!(f, hmm, obs_seq)
     @test allocs == 0
 
     ## Viterbi
     v = HMMs.initialize_viterbi(hmm, obs_seq)
-    allocs = @ballocated HMMs.viterbi!($v, $hmm, $obs_seq)
+    HMMs.viterbi!(v, hmm, obs_seq)
+    allocs = @allocated HMMs.viterbi!(v, hmm, obs_seq)
     @test allocs == 0
 
     ## Forward-backward
     fb = HMMs.initialize_forward_backward(hmm, obs_seq)
-    allocs = @ballocated HMMs.forward_backward!($fb, $hmm, $obs_seq)
+    HMMs.forward_backward!(fb, hmm, obs_seq)
+    allocs = @allocated HMMs.forward_backward!(fb, hmm, obs_seq)
     @test allocs == 0
 
     ## Baum-Welch
@@ -31,10 +35,10 @@ function test_allocations(hmm; T)
     HMMs.forward_backward!(fbs, hmm, obs_seqs, nb_seqs)
     HMMs.update_sufficient_statistics!(bw, fbs)
     fit!(hmm, bw, obs_seqs_concat)
-    allocs = @ballocated HMMs.update_sufficient_statistics!($bw, $fbs)
-    @test allocs == 0
-    allocs = @ballocated fit!($hmm, $bw, $obs_seqs_concat)
-    @test allocs == 0
+    allocs1 = @allocated HMMs.update_sufficient_statistics!(bw, fbs)
+    allocs2 = @allocated fit!(hmm, bw, obs_seqs_concat)
+    @test allocs1 == 0
+    @test allocs2 == 0
 end
 
 N, D, T = 3, 2, 100

@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `γ` and `logL`, as well as `init_count` and `trans_count`.
+The only fields useful outside of the algorithm are `γ`, `logL`, `init_count` and `trans_count`.
 
 $(TYPEDFIELDS)
 """
@@ -36,9 +36,6 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     trans_count::M
 end
 
-Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
-duration(fb::ForwardBackwardStorage) = size(fb.α, 2)
-
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     A = transition_matrix(hmm)
@@ -61,72 +58,56 @@ function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     )
 end
 
-function update_likelihoods!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
-    @unpack logB, logm, B = fb
-    obs_logdensities!(logB, hmm, obs_seq)
-    maximum!(logm', logB)
-    B .= exp.(logB .- logm')
-    check_no_nan(B)
-    return nothing
-end
-
-function forward!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
+function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    @unpack α, c, B = fb
-    N, T = length(hmm), duration(fb)
+    T = length(obs_seq)
+    @unpack α, β, c, γ, logB, logm, B, Bβ, init_count, trans_count = fb
 
+    # Observation loglikelihoods
+    for (logb, obs) in zip(eachcol(logB), obs_seq)
+        obs_logdensities!(logb, hmm, obs)
+    end
+    check_right_finite(logB)
+    maximum!(logm', logB)
+    B .= exp.(logB .- logm')
+
+    # Forward
     @views begin
         α[:, 1] .= p .* B[:, 1]
         c[1] = inv(sum(α[:, 1]))
-        α[:, 1] .*= c[1]
+        lmul!(c[1], α[:, 1])
     end
     @views for t in 1:(T - 1)
         mul!(α[:, t + 1], A', α[:, t])
         α[:, t + 1] .*= B[:, t + 1]
         c[t + 1] = inv(sum(α[:, t + 1]))
-        α[:, t + 1] .*= c[t + 1]
+        lmul!(c[t + 1], α[:, t + 1])
     end
-    fb.logL[] = -sum(log, fb.c) + sum(fb.logm)
-    return nothing
-end
 
-function backward!(fb::ForwardBackwardStorage{R}, hmm::AbstractHMM) where {R}
-    A = transition_matrix(hmm)
-    @unpack β, c, B, Bβ = fb
-    N, T = length(hmm), duration(fb)
-
+    # Backward
     β[:, T] .= c[T]
     @views for t in (T - 1):-1:1
         Bβ[:, t + 1] .= B[:, t + 1] .* β[:, t + 1]
         mul!(β[:, t], A, Bβ[:, t + 1])
-        β[:, t] .*= c[t]
+        lmul!(c[t], β[:, t])
     end
     @views Bβ[:, 1] .= B[:, 1] .* β[:, 1]
-    return nothing
-end
 
-function marginals!(fb::ForwardBackwardStorage, hmm::AbstractHMM)
-    A = transition_matrix(hmm)
-    @unpack α, β, c, Bβ, γ, init_count, trans_count = fb
-    N, T = length(hmm), duration(fb)
-
+    # Marginals
     γ .= α .* β ./ c'
-    check_no_nan(γ)
+    check_finite(γ)
 
+    # Sufficient stats
     init_count .= @view γ[:, 1]
     trans_count .= zero(eltype(trans_count))
     @views for t in 1:(T - 1)
         add_mul_rows_cols!(trans_count, α[:, t], A, Bβ[:, t + 1])
     end
-    return nothing
-end
 
-function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
-    update_likelihoods!(fb, hmm, obs_seq)
-    forward!(fb, hmm)
-    backward!(fb, hmm)
-    marginals!(fb, hmm)
+    # Loglikelihood
+    fb.logL[] = -sum(log, fb.c) + sum(fb.logm)
+
     return nothing
 end
 
@@ -136,7 +117,7 @@ function forward_backward!(
     obs_seqs::Vector{<:Vector},
     nb_seqs::Integer,
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     @threads for k in eachindex(fbs, obs_seqs)
         forward_backward!(fbs[k], hmm, obs_seqs[k])
     end
@@ -157,7 +138,7 @@ When applied on a single sequence, this function returns a tuple `(γ, ξ, logL)
 WHen applied on multiple sequences, it returns a vector of tuples.
 """
 function forward_backward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     forward_backward!(fbs, hmm, obs_seqs, nb_seqs)
     return [(fb.γ, fb.logL[]) for fb in fbs]

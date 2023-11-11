@@ -5,6 +5,14 @@ using SimpleUnPack
 using StatsAPI
 using Test
 
+struct Dirac{T}
+    val::T
+end
+
+Base.rand(::AbstractRNG, d::Dirac) = d.val
+DensityInterface.DensityKind(::Dirac) = HasDensity()
+DensityInterface.logdensityof(d::Dirac, x) = x == d.val ? 0.0 : -Inf
+
 """
     DNACodingHMM <: AbstractHMM
 
@@ -63,8 +71,7 @@ get_state(coding, nucleotide) = 4(coding - 1) + nucleotide
 @test get_nucleotide.(1:8) == repeat(1:4; outer=2)
 @test get_state.(get_coding.(1:8), get_nucleotide.(1:8)) == collect(1:8)
 
-Base.length(::DNACodingHMM) = 8
-Base.eltype(::DNACodingHMM) = Float64
+Base.length(dchmm::DNACodingHMM) = 8
 
 function HiddenMarkovModels.initialization(dchmm::DNACodingHMM)
     return repeat(dchmm.cod_init; inner=4) .* repeat(dchmm.nuc_init; outer=2)
@@ -80,14 +87,8 @@ function HiddenMarkovModels.transition_matrix(dchmm::DNACodingHMM)
     return A
 end
 
-function HiddenMarkovModels.obs_logdensities!(logb::AbstractVector, hmm::DNACodingHMM, obs)
-    for s in 1:length(hmm)
-        logb[s] = obs == s ? 0.0 : -Inf
-    end
-end
-
-function HiddenMarkovModels.obs_sample(hmm::DNACodingHMM, s::Integer)
-    return s
+function HiddenMarkovModels.obs_distributions(hmm::DNACodingHMM)
+    return [Dirac(get_nucleotide(s)) for s in 1:length(hmm)]
 end
 
 function StatsAPI.fit!(

@@ -25,7 +25,7 @@ end
 function initialize_baum_welch(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     N, T_concat = length(hmm), sum(length, obs_seqs)
     A = transition_matrix(hmm)
     R = eltype(hmm, obs_seqs[1][1])
@@ -39,7 +39,7 @@ end
 function initialize_logL_evolution(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer; max_iterations::Integer
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     R = eltype(hmm, obs_seqs[1][1])
     logL_evolution = R[]
     sizehint!(logL_evolution, max_iterations)
@@ -53,9 +53,9 @@ function update_sufficient_statistics!(
     init_count .= zero(R)
     trans_count .= zero(R)
     state_marginals_concat .= zero(R)
-    for k in eachindex(fbs)
+    for k in eachindex(fbs)  # TODO: ThreadsX?
         init_count .+= fbs[k].init_count
-        trans_count .+= fbs[k].trans_count
+        mynonzeros(trans_count) .+= mynonzeros(fbs[k].trans_count)
         state_marginals_concat[:, (limits[k] + 1):limits[k + 1]] .= fbs[k].γ
     end
     return nothing
@@ -130,7 +130,7 @@ function baum_welch(
     max_iterations=100,
     loglikelihood_increasing=true,
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     hmm = deepcopy(hmm_init)
     fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     bw = initialize_baum_welch(hmm, obs_seqs, nb_seqs)

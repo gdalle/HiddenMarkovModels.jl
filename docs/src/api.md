@@ -21,8 +21,7 @@ length
 eltype
 initialization
 transition_matrix
-obs_logdensities!
-obs_sample
+obs_distributions
 ```
 
 ## Inference
@@ -39,7 +38,6 @@ fit!
 ## Misc
 
 ```@docs
-check_hmm
 rand_prob_vec
 rand_trans_mat
 ```
@@ -53,7 +51,6 @@ HiddenMarkovModels.ForwardBackwardStorage
 HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.fit_element_from_sequence!
 HiddenMarkovModels.LightDiagNormal
-HiddenMarkovModels.PermutedHMM
 ```
 
 ## Notations

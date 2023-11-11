@@ -1,3 +1,8 @@
+sum_to_one!(x) = ldiv!(sum(x), x)
+
+mynonzeros(x::AbstractArray) = x
+mynonzeros(x::AbstractSparseArray) = nonzeros(x)
+
 function add_mul_rows_cols!(
     B::AbstractMatrix, l::AbstractVector, A::AbstractMatrix, r::AbstractVector
 )

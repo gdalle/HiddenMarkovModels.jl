@@ -46,12 +46,15 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     @unpack logb, δ, δ_prev, ψ, q, scratch = v
 
     obs_logdensities!(logb, hmm, obs_seq[1])
+    check_right_finite(logb)
     logm = maximum(logb)
     δ .= p .* exp.(logb .- logm)
+    check_finite(δ)
     δ_prev .= δ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
         obs_logdensities!(logb, hmm, obs_seq[t])
+        check_right_finite(logb)
         logm = maximum(logb)
         for j in 1:N
             @views scratch .= δ_prev .* A[:, j]
@@ -59,6 +62,7 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
             ψ[j, t] = i_max
             δ[j] = scratch[i_max] * exp(logb[j] - logm)
         end
+        check_finite(δ)
         δ_prev .= δ
     end
     q[T] = argmax(δ)
@@ -74,7 +78,7 @@ function viterbi!(
     obs_seqs::Vector{<:Vector},
     nb_seqs::Integer,
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     @threads for k in eachindex(vs, obs_seqs)
         viterbi!(vs[k], hmm, obs_seqs[k])
     end
@@ -91,7 +95,7 @@ When applied on a single sequence, this function returns a vector of integers.
 When applied on multiple sequences, it returns a vector of vectors of integers.
 """
 function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     viterbi!(vs, hmm, obs_seqs, nb_seqs)
     return [v.q for v in vs]

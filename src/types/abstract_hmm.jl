@@ -50,9 +50,15 @@ Base.length
     eltype(hmm, obs)
 
 Return a type that can accommodate forward-backward computations on observations similar to `obs`.
-It is typicall a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
+
+It is typically a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
 """
-Base.eltype
+function Base.eltype(hmm::AbstractHMM, obs)
+    init_type = eltype(initialization(hmm))
+    trans_type = eltype(transition_matrix(hmm))
+    logdensity_type = typeof(logdensityof(obs_distributions(hmm)[1], obs))
+    return promote_type(init_type, trans_type, logdensity_type)
+end
 
 """
     initialization(hmm)
@@ -69,18 +75,20 @@ Return the matrix of state transition probabilities for `hmm`.
 function transition_matrix end
 
 """
-    obs_logdensities!(logb, hmm, obs)
+    obs_distributions(hmm)
 
-Fill the vector `logb` with the logdensities of observation `obs` for each state of `hmm`.
-"""
-function obs_logdensities! end
+Return a vector of observation distributions, one for each state of `hmm`.
 
+There objects should support `rand(rng, dist)` and `DensityInterface.logdensityof(dist, obs)`.
 """
-    obs_sample(rng, hmm, i)
+function obs_distributions end
 
-Sample from the observation distribution of `hmm` corresponding to state `i`.
-"""
-function obs_sample end
+function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs)
+    d = obs_distributions(hmm)
+    for i in eachindex(logb, d)
+        logb[i] = logdensityof(d[i], obs)
+    end
+end
 
 """
     fit!(hmm, init_count, trans_count, obs_seq, state_marginals)
@@ -103,21 +111,6 @@ This method is only necessary for the Baum-Welch algorithm.
 """
 StatsAPI.fit!  # TODO: complete
 
-## Fallbacks
-
-function obs_logdensities!(logB::AbstractMatrix, hmm::AbstractHMM, obs_seq::Vector)
-    for (logb, obs) in zip(eachcol(logB), obs_seq)
-        obs_logdensities!(logb, hmm, obs)
-    end
-end
-
-function obs_logdensities_matrix(hmm::AbstractHMM, obs_seq::Vector)
-    R = eltype(hmm, obs_seq[1])
-    logB = Matrix{R}(length(hmm), length(obs_seq))
-    obs_logdensities!(logB, hmm, obs_seq)
-    return logB
-end
-
 ## Sampling
 
 """
@@ -129,12 +122,13 @@ Simulate `hmm` for `T` time steps.
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     p = initialization(hmm)
     A = transition_matrix(hmm)
+    d = obs_distributions(hmm)
     state_seq = Vector{Int}(undef, T)
     state_seq[1] = rand(rng, Categorical(p; check_args=false))
     @views for t in 2:T
         state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
     end
-    obs_seq = [obs_sample(rng, hmm, state_seq[t]) for t in 1:T]
+    obs_seq = [rand(rng, d[state_seq[t]]) for t in 1:T]
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 

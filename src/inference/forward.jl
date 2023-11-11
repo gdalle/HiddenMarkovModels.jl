@@ -41,19 +41,23 @@ function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     @unpack logL, logb, α, α_next = f
 
     obs_logdensities!(logb, hmm, obs_seq[1])
+    check_right_finite(logb)
     logm = maximum(logb)
     α .= p .* exp.(logb .- logm)
     c = inv(sum(α))
     α .*= c
+    check_finite(α)
     logL[] = -log(c) + logm
     for t in 1:(T - 1)
         obs_logdensities!(logb, hmm, obs_seq[t + 1])
+        check_right_finite(logb)
         logm = maximum(logb)
         mul!(α_next, A', α)
         α_next .*= exp.(logb .- logm)
         c = inv(sum(α_next))
         α_next .*= c
         α .= α_next
+        check_finite(α)
         logL[] += -log(c) + logm
     end
     return nothing
@@ -65,7 +69,7 @@ function forward!(
     obs_seqs::Vector{<:Vector},
     nb_seqs::Integer,
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     @threads for k in eachindex(fs, obs_seqs)
         forward!(fs[k], hmm, obs_seqs[k])
     end
@@ -86,7 +90,7 @@ When applied on a single sequence, this function returns a tuple `(α, logL)` wh
 When applied on multiple sequences, this function returns a vector of tuples.
 """
 function forward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     fs = [initialize_forward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     forward!(fs, hmm, obs_seqs, nb_seqs)
     return [(f.α, f.logL[]) for f in fs]

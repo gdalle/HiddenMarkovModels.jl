@@ -1,71 +1,77 @@
+function check_finite(a)
+    if !all(isfinite, mynonzeros(a))
+        throw(OverflowError("Some values are infinite or NaN"))
+    end
+end
+
+function check_right_finite(a)
+    if !all(<(typemax(eltype(a))), mynonzeros(a))
+        throw(OverflowError("Some values are positive infinite or NaN"))
+    end
+end
+
 function check_no_nan(a)
-    if any(isnan, a)
+    if any(isnan, mynonzeros(a))
         throw(OverflowError("Some values are NaN"))
     end
 end
 
-function check_no_inf(a)
-    if any(isequal(typemax(eltype(a))), a)
-        throw(OverflowError("Some values are infinite"))
-    end
-end
-
 function check_positive(a)
-    if any(!>(zero(eltype(a))), a)
+    if !all(>(zero(eltype(a))), mynonzeros(a))
         throw(OverflowError("Some values are not positive"))
     end
 end
 
 function check_prob_vec(p::AbstractVector)
-    check_no_nan(p)
-    if !is_prob_vec(p)
+    check_finite(p)
+    if !valid_prob_vec(p)
         throw(ArgumentError("Invalid probability distribution."))
     end
 end
 
 function check_trans_mat(A::AbstractMatrix)
-    check_no_nan(A)
-    if !is_trans_mat(A)
+    check_finite(A)
+    if !valid_trans_mat(A)
         throw(ArgumentError("Invalid transition matrix."))
     end
 end
 
-function check_coherent_sizes(p::AbstractVector, A::AbstractMatrix)
-    if size(A) != (length(p), length(p))
+function check_dists(d::AbstractVector)
+    for i in eachindex(d)
+        if DensityKind(d[i]) == NoDensity()
+            throw(
+                ArgumentError(
+                    "Invalid observation distributions (do not satisfy DensityInterface.jl)"
+                ),
+            )
+        end
+    end
+    return true
+end
+
+function check_hmm_sizes(p::AbstractVector, A::AbstractMatrix, d::AbstractVector)
+    if !(size(A) == (length(p), length(p)) == (length(d), length(d)))
         throw(
             DimensionMismatch(
-                "Probability distribution and transition matrix are incompatible."
+                "Initialization, transition matrix and observation distributions have incompatible sizes.",
             ),
         )
     end
 end
 
-function check_dists(d)
-    for i in eachindex(d)
-        if DensityKind(d[i]) == NoDensity()
-            throw(ArgumentError("Observation is not a density"))
-        end
+function check_nb_seqs(obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("Incoherent sizes provided: `nb_seqs != length(obs_seqs)`"))
     end
 end
 
-"""
-    check_hmm(hmm::AbstractHMM)
-
-Verify that `hmm` satisfies basic assumptions.
-"""
 function check_hmm(hmm::AbstractHMM)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    if !all(==(length(hmm)), (length(p), size(A, 1), size(A, 2)))
-        throw(DimensionMismatch("Incoherent sizes"))
-    end
+    d = obs_distributions(hmm)
+    check_hmm_sizes(p, A, d)
     check_prob_vec(p)
     check_trans_mat(A)
+    check_dists(d)
     return nothing
-end
-
-function check_lengths(obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("nb_seqs != length(obs_seqs)"))
-    end
 end

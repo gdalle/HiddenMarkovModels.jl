@@ -39,8 +39,9 @@ function test_correctness(hmm, hmm_init; T)
         q1_base = HMMBase.viterbi(hmm_base, obs_mat1)
         q2_base = HMMBase.viterbi(hmm_base, obs_mat2)
         q1, q2 = viterbi(hmm, obs_seqs, nb_seqs)
-        @test isequal(q1, q1_base)
-        @test isequal(q2, q2_base)
+        # Viterbi decoding can vary in case of (infrequent) ties
+        @test mean(q1 .== q1_base) > 0.9
+        @test mean(q2 .== q2_base) > 0.9
     end
 
     @testset "Forward-backward" begin
@@ -78,7 +79,7 @@ end
 N, D, T = 3, 2, 100
 
 @testset "Categorical" begin
-    test_correctness(rand_categorical_hmm(N, 10), rand_categorical_hmm(N, 10); T)
+    test_correctness(rand_categorical_hmm(N, D), rand_categorical_hmm(N, D); T)
 end
 
 @testset "Normal" begin

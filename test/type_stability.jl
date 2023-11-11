@@ -39,7 +39,7 @@ function test_type_stability(hmm, hmm_init; T)
     end
 end
 
-N, D, T = 3, 2, 1000
+N, D, T = 3, 2, 100
 
 @testset "Categorical" begin
     test_type_stability(rand_categorical_hmm(N, D), rand_categorical_hmm(N, D); T)

@@ -37,23 +37,7 @@ end
 Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
-
-function obs_logdensities!(logb::AbstractVector, hmm::HMM, obs)
-    for i in eachindex(logb, hmm.dists)
-        logb[i] = logdensityof(hmm.dists[i], obs)
-    end
-end
-
-function obs_sample(rng::AbstractRNG, hmm::HMM, i::Integer)
-    return rand(rng, hmm.dists[i])
-end
-
-function Base.eltype(hmm::HMM, obs)
-    init_type = eltype(hmm.init)
-    trans_type = eltype(hmm.trans)
-    logdensity_type = typeof(logdensityof(hmm.dists[1], obs))
-    return promote_type(init_type, trans_type, logdensity_type)
-end
+obs_distributions(hmm::HMM) = hmm.dists
 
 function StatsAPI.fit!(
     hmm::HMM,
@@ -72,6 +56,9 @@ function StatsAPI.fit!(
     for i in eachindex(hmm.dists)
         fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
     end
-    check_hmm(hmm)
     return nothing
+end
+
+function permute(hmm::AbstractHMM, perm::Vector{Int})
+    return HMM(hmm.init[perm], hmm.trans[perm, :][:, perm], hmm.dists[perm])
 end

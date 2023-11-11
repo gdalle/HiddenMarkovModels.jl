@@ -21,32 +21,30 @@ using Distributions:
     MultivariateDistribution,
     MatrixDistribution
 using DocStringExtensions
-using LinearAlgebra: Diagonal, dot, mul!
+using LinearAlgebra: Diagonal, axpy!, dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: Random, AbstractRNG, default_rng
 using Requires: @require
 using SimpleUnPack: @unpack
-using SparseArrays: SparseMatrixCSC, nzrange, nnz
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
 export rand_prob_vec, rand_trans_mat
-export initialization, transition_matrix, obs_logdensities!
+export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit!
 export check_hmm
 
 include("types/abstract_hmm.jl")
-include("types/permuted_hmm.jl")
 include("types/hmm.jl")
 
+include("utils/linalg.jl")
 include("utils/check.jl")
-include("utils/probvec.jl")
-include("utils/transmat.jl")
+include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
-include("utils/mul.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
