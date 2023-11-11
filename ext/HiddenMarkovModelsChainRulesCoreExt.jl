@@ -1,34 +1,39 @@
 module HiddenMarkovModelsChainRulesCoreExt
 
-using ChainRulesCore:
-    ChainRulesCore, NoTangent, ZeroTangent, RuleConfig, rrule_via_ad, @not_implemented
+using ChainRulesCore: ChainRulesCore, NoTangent, RuleConfig, rrule_via_ad
 using DensityInterface: logdensityof
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using SimpleUnPack
 
-function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq)
+function obs_logdensities_matrix(hmm::AbstractHMM, obs_seq::Vector)
+    d = obs_distributions(hmm)
+    logB = reduce(hcat, logdensityof.(d, (obs_seq[t],)) for t in 1:length(obs_seq))
+    return logB
+end
+
+function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq::Vector)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    logB = reduce(hcat, logdensityof.(d, (obs,)) for obs in obs_seq)
+    logB = obs_logdensities_matrix(hmm, obs_seq)
     return p, A, logB
 end
 
 function ChainRulesCore.rrule(
-    rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq
+    rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq::Vector
 )
+    @info "Chain rule used"
     (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
-    fb = HMMs.initialize_forward_backward(hmm, obs_seq)
-    HMMs.forward_backward!(fb, hmm, obs_seq)
-    @unpack α, β, γ, c, B̃β = fb
+    storage = HMMs.initialize_forward_backward(hmm, obs_seq)
+    HMMs.forward_backward!(storage, hmm, obs_seq)
+    @unpack logL, α, β, γ, c, Bβ = storage
     T = length(obs_seq)
 
     function logdensityof_hmm_pullback(ΔlogL)
-        Δp = ΔlogL .* B̃β[:, 1]
-        ΔA = ΔlogL .* α[:, 1] .* B̃β[:, 2]'
+        Δp = ΔlogL .* Bβ[:, 1]
+        ΔA = ΔlogL .* α[:, 1] .* Bβ[:, 2]'
         @views for t in 2:(T - 1)
-            ΔA .+= ΔlogL .* α[:, t] .* B̃β[:, t + 1]'
+            ΔA .+= ΔlogL .* α[:, t] .* Bβ[:, t + 1]'
         end
         ΔlogB = ΔlogL .* γ
 
@@ -37,7 +42,7 @@ function ChainRulesCore.rrule(
         return Δlogdensityof, Δhmm, Δobs_seq
     end
 
-    return fb.logL[], logdensityof_hmm_pullback
+    return logL[], logdensityof_hmm_pullback
 end
 
 end

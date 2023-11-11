@@ -2,17 +2,12 @@
     HiddenMarkovModels
 
 A Julia package for HMM modeling, simulation, inference and learning.
-
-# Exports
-
-$(EXPORTS)
 """
 module HiddenMarkovModels
 
 using Base: RefValue
 using Base.Threads: @threads
-using DensityInterface:
-    DensityInterface, DensityKind, HasDensity, NoDensity, densityof, logdensityof
+using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
 using Distributions:
     Distributions,
     Categorical,
@@ -21,12 +16,12 @@ using Distributions:
     MultivariateDistribution,
     MatrixDistribution
 using DocStringExtensions
-using LinearAlgebra: Diagonal, dot, mul!
+using LinearAlgebra: Diagonal, axpy!, dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload, @setup_workload
 using Random: Random, AbstractRNG, default_rng
 using Requires: @require
 using SimpleUnPack: @unpack
-using SparseArrays: SparseMatrixCSC, nzrange, nnz
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHiddenMarkovModel, AbstractHMM
@@ -38,31 +33,26 @@ export fit!
 export check_hmm
 
 include("types/abstract_hmm.jl")
-include("types/permuted_hmm.jl")
+include("types/hmm.jl")
 
+include("utils/linalg.jl")
 include("utils/check.jl")
-include("utils/probvec.jl")
-include("utils/transmat.jl")
+include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
-include("utils/mul.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 
-include("types/hmm.jl")
-
-include("HMMTest.jl")
+include("utils/HMMTest.jl")
 
 if !isdefined(Base, :get_extension)
+    include("../ext/HiddenMarkovModelsChainRulesCoreExt.jl")
     function __init__()
         @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" include(
             "../ext/HiddenMarkovModelsHMMBaseExt.jl"
-        )
-        @require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include(
-            "../ext/HiddenMarkovModelsChainRulesCoreExt.jl"
         )
     end
 end

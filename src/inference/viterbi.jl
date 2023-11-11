@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only field useful outside of the algorithm is `q`.
+The only field useful outside of the algorithm is `q`, the rest does not belong to the public API.
 
 $(TYPEDFIELDS)
 """
@@ -18,14 +18,17 @@ struct ViterbiStorage{R}
     δ::Vector{R}
     "same as `δ` but for the previous time step"
     δ_prev::Vector{R}
-    "temporary variable used to store products `δ_prev .* A[:, j]`"
-    δA::Vector{R}
     "penultimate state maximizing the path score"
     ψ::Matrix{Int}
     "most likely state at each time `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
+    "scratch storage space"
+    scratch::Vector{R}
 end
 
+"""
+    initialize_viterbi(hmm, obs_seq)
+"""
 function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     T, N = length(obs_seq), length(hmm)
     R = eltype(hmm, obs_seq[1])
@@ -33,33 +36,39 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     logb = Vector{R}(undef, N)
     δ = Vector{R}(undef, N)
     δ_prev = Vector{R}(undef, N)
-    δA = Vector{R}(undef, N)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
-    return ViterbiStorage(logb, δ, δ_prev, δA, ψ, q)
+    scratch = Vector{R}(undef, N)
+    return ViterbiStorage(logb, δ, δ_prev, ψ, q, scratch)
 end
 
-function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
+"""
+    viterbi!(storage, hmm, obs_seq)
+"""
+function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    @unpack logb, δ, δ_prev, δA, ψ, q = v
+    @unpack logb, δ, δ_prev, ψ, q, scratch = storage
 
-    logb .= logdensityof.(d, (obs_seq[1],))
+    obs_logdensities!(logb, hmm, obs_seq[1])
+    check_right_finite(logb)
     logm = maximum(logb)
     δ .= p .* exp.(logb .- logm)
+    check_finite(δ)
     δ_prev .= δ
     @views ψ[:, 1] .= zero(eltype(ψ))
     for t in 2:T
-        logb .= logdensityof.(d, (obs_seq[t],))
+        obs_logdensities!(logb, hmm, obs_seq[t])
+        check_right_finite(logb)
         logm = maximum(logb)
         for j in 1:N
-            @views δA .= δ_prev .* A[:, j]
-            i_max = argmax(δA)
+            @views scratch .= δ_prev .* A[:, j]
+            i_max = argmax(scratch)
             ψ[j, t] = i_max
-            δ[j] = δA[i_max] * exp(logb[j] - logm)
+            δ[j] = scratch[i_max] * exp(logb[j] - logm)
         end
+        check_finite(δ)
         δ_prev .= δ
     end
     q[T] = argmax(δ)
@@ -69,35 +78,15 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
-function viterbi!(
-    vs::Vector{<:ViterbiStorage},
-    hmm::AbstractHMM,
-    obs_seqs::Vector{<:Vector},
-    nb_seqs::Integer,
-)
-    check_lengths(obs_seqs, nb_seqs)
-    @threads for k in eachindex(vs, obs_seqs)
-        viterbi!(vs[k], hmm, obs_seqs[k])
-    end
-    return nothing
-end
-
 """
     viterbi(hmm, obs_seq)
-    viterbi(hmm, obs_seqs, nb_seqs)
 
-Apply the Viterbi algorithm to infer the most likely state sequence of an HMM.
+Apply the Viterbi algorithm to infer the most likely state sequence corresponding to `obs_seq` for `hmm`.
 
-When applied on a single sequence, this function returns a vector of integers.
-When applied on multiple sequences, it returns a vector of vectors of integers.
+This function returns a vector of integers.
 """
-function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_lengths(obs_seqs, nb_seqs)
-    vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    viterbi!(vs, hmm, obs_seqs, nb_seqs)
-    return [v.q for v in vs]
-end
-
 function viterbi(hmm::AbstractHMM, obs_seq::Vector)
-    return only(viterbi(hmm, [obs_seq], 1))
+    storage = initialize_viterbi(hmm, obs_seq)
+    viterbi!(storage, hmm, obs_seq)
+    return storage.q
 end

@@ -22,10 +22,19 @@ struct BaumWelchStorage{R,M<:AbstractMatrix{R}}
     limits::Vector{Int}
 end
 
+function check_nb_seqs(obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("Incoherent sizes provided: `nb_seqs != length(obs_seqs)`"))
+    end
+end
+
+"""
+    initialize_baum_welch(hmm, obs_seqs, nb_seqs)
+"""
 function initialize_baum_welch(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     N, T_concat = length(hmm), sum(length, obs_seqs)
     A = transition_matrix(hmm)
     R = eltype(hmm, obs_seqs[1][1])
@@ -36,10 +45,13 @@ function initialize_baum_welch(
     return BaumWelchStorage(init_count, trans_count, state_marginals_concat, limits)
 end
 
+"""
+    initialize_logL_evolution(hmm, obs_seqs, nb_seqs; max_iterations)
+"""
 function initialize_logL_evolution(
     hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer; max_iterations::Integer
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     R = eltype(hmm, obs_seqs[1][1])
     logL_evolution = R[]
     sizehint!(logL_evolution, max_iterations)
@@ -47,17 +59,17 @@ function initialize_logL_evolution(
 end
 
 function update_sufficient_statistics!(
-    bw::BaumWelchStorage{R}, fbs::Vector{<:ForwardBackwardStorage}
+    bw_storage::BaumWelchStorage{R}, fb_storages::Vector{<:ForwardBackwardStorage}
 ) where {R}
-    @unpack init_count, trans_count, state_marginals_concat, limits = bw
+    @unpack init_count, trans_count, state_marginals_concat, limits = bw_storage
     init_count .= zero(R)
     trans_count .= zero(R)
     state_marginals_concat .= zero(R)
-    for k in eachindex(fbs)
-        @unpack γ, ξ, B̃β = fbs[k]
-        init_count .+= view(γ, :, 1)
+    for k in eachindex(fb_storages)  # TODO: ThreadsX?
+        @unpack γ, ξ = fb_storages[k]
+        init_count .+= @view γ[:, 1]
         for t in eachindex(ξ)
-            trans_count .+= ξ[t]
+            mynonzeros(trans_count) .+= mynonzeros(ξ[t])
         end
         state_marginals_concat[:, (limits[k] + 1):limits[k + 1]] .= γ
     end
@@ -79,15 +91,23 @@ function baum_welch_has_converged(
     return false
 end
 
-function StatsAPI.fit!(hmm::AbstractHMM, bw::BaumWelchStorage, obs_seqs_concat::Vector)
-    return fit!(
-        hmm, bw.init_count, bw.trans_count, obs_seqs_concat, bw.state_marginals_concat
-    )
+function StatsAPI.fit!(
+    hmm::AbstractHMM, bw_storage::BaumWelchStorage, obs_seqs_concat::Vector
+)
+    @unpack init_count, trans_count, state_marginals_concat = bw_storage
+    return fit!(hmm, init_count, trans_count, obs_seqs_concat, state_marginals_concat)
 end
 
+"""
+    baum_welch!(
+        fb_storages, bw_storage, logL_evolution,
+        hmm, obs_seqs, obs_seqs_concat;
+        atol, max_iterations, loglikelihood_increasing
+    )
+"""
 function baum_welch!(
-    fbs::Vector{<:ForwardBackwardStorage},
-    bw::BaumWelchStorage,
+    fb_storages::Vector{<:ForwardBackwardStorage},
+    bw_storage::BaumWelchStorage,
     logL_evolution::Vector,
     hmm::AbstractHMM,
     obs_seqs::Vector{<:Vector},
@@ -97,12 +117,12 @@ function baum_welch!(
     loglikelihood_increasing::Bool,
 )
     for _ in 1:max_iterations
-        @threads for k in eachindex(obs_seqs, fbs)
-            forward_backward!(fbs[k], hmm, obs_seqs[k])
+        for k in eachindex(obs_seqs, fb_storages)
+            forward_backward!(fb_storages[k], hmm, obs_seqs[k])
         end
-        update_sufficient_statistics!(bw, fbs)
-        push!(logL_evolution, sum(fb.logL[] for fb in fbs))
-        fit!(hmm, bw, obs_seqs_concat)
+        update_sufficient_statistics!(bw_storage, fb_storages)
+        push!(logL_evolution, sum(fb.logL[] for fb in fb_storages))
+        fit!(hmm, bw_storage, obs_seqs_concat)
         check_hmm(hmm)
         if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
             break
@@ -133,7 +153,7 @@ function baum_welch(
     max_iterations=100,
     loglikelihood_increasing=true,
 )
-    check_lengths(obs_seqs, nb_seqs)
+    check_nb_seqs(obs_seqs, nb_seqs)
     hmm = deepcopy(hmm_init)
     fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
     bw = initialize_baum_welch(hmm, obs_seqs, nb_seqs)

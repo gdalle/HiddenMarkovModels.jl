@@ -13,7 +13,7 @@ struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} 
     init::I
     "state transition matrix"
     trans::T
-    "observation distributions"
+    "observation distributions (must be amenable to `logdensityof` and `rand`)"
     dists::D
 
     function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
@@ -56,6 +56,9 @@ function StatsAPI.fit!(
     for i in eachindex(hmm.dists)
         fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
     end
-    check_hmm(hmm)
     return nothing
+end
+
+function permute(hmm::AbstractHMM, perm::Vector{Int})
+    return HMM(hmm.init[perm], hmm.trans[perm, :][:, perm], hmm.dists[perm])
 end
