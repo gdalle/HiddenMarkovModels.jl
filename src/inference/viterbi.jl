@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only field useful outside of the algorithm is `q`.
+The only field useful outside of the algorithm is `q`, the rest does not belong to the public API.
 
 $(TYPEDFIELDS)
 """
@@ -26,6 +26,9 @@ struct ViterbiStorage{R}
     scratch::Vector{R}
 end
 
+"""
+    initialize_viterbi(hmm, obs_seq)
+"""
 function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     T, N = length(obs_seq), length(hmm)
     R = eltype(hmm, obs_seq[1])
@@ -39,11 +42,14 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     return ViterbiStorage(logb, δ, δ_prev, ψ, q, scratch)
 end
 
-function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
+"""
+    viterbi!(storage, hmm, obs_seq)
+"""
+function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    @unpack logb, δ, δ_prev, ψ, q, scratch = v
+    @unpack logb, δ, δ_prev, ψ, q, scratch = storage
 
     obs_logdensities!(logb, hmm, obs_seq[1])
     check_right_finite(logb)
@@ -72,35 +78,15 @@ function viterbi!(v::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
-function viterbi!(
-    vs::Vector{<:ViterbiStorage},
-    hmm::AbstractHMM,
-    obs_seqs::Vector{<:Vector},
-    nb_seqs::Integer,
-)
-    check_nb_seqs(obs_seqs, nb_seqs)
-    @threads for k in eachindex(vs, obs_seqs)
-        viterbi!(vs[k], hmm, obs_seqs[k])
-    end
-    return nothing
-end
-
 """
     viterbi(hmm, obs_seq)
-    viterbi(hmm, obs_seqs, nb_seqs)
 
-Apply the Viterbi algorithm to infer the most likely state sequence of an HMM.
+Apply the Viterbi algorithm to infer the most likely state sequence corresponding to `obs_seq` for `hmm`.
 
-When applied on a single sequence, this function returns a vector of integers.
-When applied on multiple sequences, it returns a vector of vectors of integers.
+This function returns a vector of integers.
 """
-function viterbi(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_nb_seqs(obs_seqs, nb_seqs)
-    vs = [initialize_viterbi(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    viterbi!(vs, hmm, obs_seqs, nb_seqs)
-    return [v.q for v in vs]
-end
-
 function viterbi(hmm::AbstractHMM, obs_seq::Vector)
-    return only(viterbi(hmm, [obs_seq], 1))
+    storage = initialize_viterbi(hmm, obs_seq)
+    viterbi!(storage, hmm, obs_seq)
+    return storage.q
 end

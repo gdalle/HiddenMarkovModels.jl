@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `γ`, `logL`, `init_count` and `trans_count`.
+The only fields useful outside of the algorithm are `γ`, `logL`, `init_count` and `trans_count`, the rest does not belong to the public API.
 
 $(TYPEDFIELDS)
 """
@@ -20,6 +20,8 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     β::Matrix{R}
     "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
+    "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
+    ξ::Vector{M}
     "forward message inverse normalizations `c[t] = 1 / sum(α[:,t])`"
     c::Vector{R}
     "observation loglikelihoods `logB[i,t] = ℙ(Y[t] | X[t]=i)`"
@@ -30,39 +32,43 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     B::Matrix{R}
     "product `Bβ[i,t] = B[i,t] * β[i,t]`"
     Bβ::Matrix{R}
-    "posterior initialization count"
-    init_count::Vector{R}
-    "posterior transition count"
-    trans_count::M
 end
 
+"""
+    initialize_forward_backward(hmm, obs_seq)
+"""
 function initialize_forward_backward(hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
     A = transition_matrix(hmm)
     R = eltype(hmm, obs_seq[1])
+    M = typeof(similar(A, R))
 
     logL = RefValue{R}(zero(R))
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     γ = Matrix{R}(undef, N, T)
+    ξ = Vector{M}(undef, T - 1)
+    for t in 1:(T - 1)
+        ξ[t] = similar(A, R)
+    end
     c = Vector{R}(undef, T)
     logB = Matrix{R}(undef, N, T)
     logm = Vector{R}(undef, T)
     B = Matrix{R}(undef, N, T)
     Bβ = Matrix{R}(undef, N, T)
-    init_count = Vector{R}(undef, N)
-    trans_count = similar(A, R)
-    M = typeof(trans_count)
-    return ForwardBackwardStorage{R,M}(
-        logL, α, β, γ, c, logB, logm, B, Bβ, init_count, trans_count
-    )
+    return ForwardBackwardStorage{R,M}(logL, α, β, γ, ξ, c, logB, logm, B, Bβ)
 end
 
-function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector)
+"""
+    forward_backward!(storage, hmm, obs_seq)
+"""
+function forward_backward!(
+    storage::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq::Vector
+)
     p = initialization(hmm)
     A = transition_matrix(hmm)
     T = length(obs_seq)
-    @unpack α, β, c, γ, logB, logm, B, Bβ, init_count, trans_count = fb
+    @unpack logL, α, β, c, γ, ξ, logB, logm, B, Bβ = storage
 
     # Observation loglikelihoods
     for (logb, obs) in zip(eachcol(logB), obs_seq)
@@ -97,53 +103,33 @@ function forward_backward!(fb::ForwardBackwardStorage, hmm::AbstractHMM, obs_seq
     # Marginals
     γ .= α .* β ./ c'
     check_finite(γ)
-
-    # Sufficient stats
-    init_count .= @view γ[:, 1]
-    trans_count .= zero(eltype(trans_count))
-    @views for t in 1:(T - 1)
-        add_mul_rows_cols!(trans_count, α[:, t], A, Bβ[:, t + 1])
+    for t in 1:(T - 1)
+        mul_rows_cols!(ξ[t], view(α, :, t), A, view(Bβ, :, t + 1))
     end
 
     # Loglikelihood
-    fb.logL[] = -sum(log, fb.c) + sum(fb.logm)
+    logL[] = -sum(log, c) + sum(logm)
 
-    return nothing
-end
-
-function forward_backward!(
-    fbs::Vector{<:ForwardBackwardStorage},
-    hmm::AbstractHMM,
-    obs_seqs::Vector{<:Vector},
-    nb_seqs::Integer,
-)
-    check_nb_seqs(obs_seqs, nb_seqs)
-    @threads for k in eachindex(fbs, obs_seqs)
-        forward_backward!(fbs[k], hmm, obs_seqs[k])
-    end
     return nothing
 end
 
 """
     forward_backward(hmm, obs_seq)
-    forward_backward(hmm, obs_seqs, nb_seqs)
 
-Run the forward-backward algorithm to infer the posterior state and transition marginals of an HMM.
+Run the forward-backward algorithm to infer the posterior state and transition marginals of `hmm` on the sequence `obs_seq`.
 
-When applied on a single sequence, this function returns a tuple `(γ, ξ, logL)` where
+This function returns a tuple `(γ, ξ, logL)` where
 
-- `γ` is a matrix containing the posterior state marginals `γ[i, t]` 
+- `γ` is a matrix containing the posterior state marginals `γ[i,t]` 
+- `ξ` is a vector of matrices containing the posterior transition marginals `ξ[t][i,j]` 
 - `logL` is the loglikelihood of the sequence
 
-WHen applied on multiple sequences, it returns a vector of tuples.
-"""
-function forward_backward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_nb_seqs(obs_seqs, nb_seqs)
-    fbs = [initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    forward_backward!(fbs, hmm, obs_seqs, nb_seqs)
-    return [(fb.γ, fb.logL[]) for fb in fbs]
-end
+# See also
 
+- [`ForwardBackwardStorage`](@ref)
+"""
 function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
-    return only(forward_backward(hmm, [obs_seq], 1))
+    storage = initialize_forward_backward(hmm, obs_seq)
+    forward_backward!(storage, hmm, obs_seq)
+    return storage.γ, storage.ξ, storage.logL[]
 end

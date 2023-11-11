@@ -11,8 +11,7 @@ To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement
 - [`eltype(hmm, obs)`](@ref)
 - [`initialization(hmm)`](@ref)
 - [`transition_matrix(hmm)`](@ref)
-- [`obs_logdensities!(logb, hmm, obs)`](@ref)
-- [`obs_sample(rng, hmm, i)`](@ref) (optional)
+- [`obs_distributions(hmm)`](@ref)
 - [`fit!(hmm, init_count, trans_count, obs_seq, state_marginals)`](@ref) (optional)
 
 # Applicable functions

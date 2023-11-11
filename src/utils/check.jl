@@ -59,12 +59,6 @@ function check_hmm_sizes(p::AbstractVector, A::AbstractMatrix, d::AbstractVector
     end
 end
 
-function check_nb_seqs(obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    if nb_seqs != length(obs_seqs)
-        throw(ArgumentError("Incoherent sizes provided: `nb_seqs != length(obs_seqs)`"))
-    end
-end
-
 function check_hmm(hmm::AbstractHMM)
     p = initialization(hmm)
     A = transition_matrix(hmm)

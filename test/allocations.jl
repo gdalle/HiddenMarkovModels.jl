@@ -11,32 +11,36 @@ function test_allocations(hmm; T)
     obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
 
     ## Forward
-    f = HMMs.initialize_forward(hmm, obs_seq)
-    HiddenMarkovModels.forward!(f, hmm, obs_seq)
-    allocs = @allocated HiddenMarkovModels.forward!(f, hmm, obs_seq)
+    f_storage = HMMs.initialize_forward(hmm, obs_seq)
+    HiddenMarkovModels.forward!(f_storage, hmm, obs_seq)
+    allocs = @allocated HiddenMarkovModels.forward!(f_storage, hmm, obs_seq)
     @test allocs == 0
 
     ## Viterbi
-    v = HMMs.initialize_viterbi(hmm, obs_seq)
-    HMMs.viterbi!(v, hmm, obs_seq)
-    allocs = @allocated HMMs.viterbi!(v, hmm, obs_seq)
+    v_storage = HMMs.initialize_viterbi(hmm, obs_seq)
+    HMMs.viterbi!(v_storage, hmm, obs_seq)
+    allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq)
     @test allocs == 0
 
     ## Forward-backward
-    fb = HMMs.initialize_forward_backward(hmm, obs_seq)
-    HMMs.forward_backward!(fb, hmm, obs_seq)
-    allocs = @allocated HMMs.forward_backward!(fb, hmm, obs_seq)
+    fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq)
+    HMMs.forward_backward!(fb_storage, hmm, obs_seq)
+    allocs = @allocated HMMs.forward_backward!(fb_storage, hmm, obs_seq)
     @test allocs == 0
 
     ## Baum-Welch
-    fbs = [HMMs.initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    bw = HMMs.initialize_baum_welch(hmm, obs_seqs, nb_seqs)
+    fb_storages = [
+        HMMs.initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)
+    ]
+    bw_storage = HMMs.initialize_baum_welch(hmm, obs_seqs, nb_seqs)
     obs_seqs_concat = reduce(vcat, obs_seqs)
-    HMMs.forward_backward!(fbs, hmm, obs_seqs, nb_seqs)
-    HMMs.update_sufficient_statistics!(bw, fbs)
-    fit!(hmm, bw, obs_seqs_concat)
-    allocs1 = @allocated HMMs.update_sufficient_statistics!(bw, fbs)
-    allocs2 = @allocated fit!(hmm, bw, obs_seqs_concat)
+    for k in eachindex(fb_storages, obs_seqs)
+        HMMs.forward_backward!(fb_storages[k], hmm, obs_seqs[k])
+    end
+    HMMs.update_sufficient_statistics!(bw_storage, fb_storages)
+    fit!(hmm, bw_storage, obs_seqs_concat)
+    allocs1 = @allocated HMMs.update_sufficient_statistics!(bw_storage, fb_storages)
+    allocs2 = @allocated fit!(hmm, bw_storage, obs_seqs_concat)
     @test allocs1 == 0
     @test allocs2 == 0
 end

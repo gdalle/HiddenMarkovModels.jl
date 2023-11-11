@@ -2,17 +2,12 @@
     HiddenMarkovModels
 
 A Julia package for HMM modeling, simulation, inference and learning.
-
-# Exports
-
-$(EXPORTS)
 """
 module HiddenMarkovModels
 
 using Base: RefValue
 using Base.Threads: @threads
-using DensityInterface:
-    DensityInterface, DensityKind, HasDensity, NoDensity, densityof, logdensityof
+using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
 using Distributions:
     Distributions,
     Categorical,
