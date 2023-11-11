@@ -49,12 +49,10 @@ include("inference/baum_welch.jl")
 include("utils/HMMTest.jl")
 
 if !isdefined(Base, :get_extension)
+    include("../ext/HiddenMarkovModelsChainRulesCoreExt.jl")
     function __init__()
         @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" include(
             "../ext/HiddenMarkovModelsHMMBaseExt.jl"
-        )
-        @require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include(
-            "../ext/HiddenMarkovModelsChainRulesCoreExt.jl"
         )
     end
 end
