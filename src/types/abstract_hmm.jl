@@ -22,7 +22,7 @@ Any HMM object which satisfies the interface can be given as input to the follow
 - [`forward(hmm, obs_seq)`](@ref)
 - [`viterbi(hmm, obs_seq)`](@ref)
 - [`forward_backward(hmm, obs_seq)`](@ref)
-- [`rand(rng, hmm, T)`](@ref) (if `obs_sample(rng, hmm, i)` is implemented)
+- [`rand(rng, hmm, T)`](@ref)
 - [`baum_welch(hmm, obs_seq)`](@ref) (if `fit!` is implemented)
 """
 abstract type AbstractHiddenMarkovModel end
