@@ -22,7 +22,6 @@ end
 function ChainRulesCore.rrule(
     rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq::Vector
 )
-    @info "Chain rule used"
     (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
     storage = HMMs.initialize_forward_backward(hmm, obs_seq)
     HMMs.forward_backward!(storage, hmm, obs_seq)

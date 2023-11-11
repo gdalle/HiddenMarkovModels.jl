@@ -117,7 +117,7 @@ function baum_welch!(
     loglikelihood_increasing::Bool,
 )
     for _ in 1:max_iterations
-        for k in eachindex(obs_seqs, fb_storages)
+        @threads for k in eachindex(obs_seqs, fb_storages)
             forward_backward!(fb_storages[k], hmm, obs_seqs[k])
         end
         update_sufficient_statistics!(bw_storage, fb_storages)
