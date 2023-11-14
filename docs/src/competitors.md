@@ -1,4 +1,4 @@
-# Alternatives - features
+# Competitors
 
 We compare features among the following Julia packages:
 

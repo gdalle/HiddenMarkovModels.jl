@@ -1,4 +1,4 @@
-module Test
+module HMMTest
 
 using Distributions
 using Distributions: PDiagMat

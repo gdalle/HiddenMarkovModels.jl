@@ -26,24 +26,32 @@ function benchmarkables_hmms(; algos, N, D, T, K, I)
     end
     benchs = Dict()
     if "logdensity" in algos
-        benchs["logdensity"] = @benchmarkable HiddenMarkovModels.logdensityof(
-            model, $obs_seqs, $K
-        ) setup = (model = rand_model_hmms(; N=$N, D=$D))
+        benchs["logdensity"] = @benchmarkable begin
+            for k in 1:($K)
+                HiddenMarkovModels.logdensityof(model, $obs_seqs[k])
+            end
+        end setup = (model = rand_model_hmms(; N=$N, D=$D))
     end
     if "viterbi" in algos
-        benchs["viterbi"] = @benchmarkable HiddenMarkovModels.viterbi(model, $obs_seqs, $K) setup = (
-            model = rand_model_hmms(; N=$N, D=$D)
-        )
+        benchs["viterbi"] = @benchmarkable begin
+            for k in 1:($K)
+                HiddenMarkovModels.viterbi(model, $obs_seqs[k])
+            end
+        end setup = (model = rand_model_hmms(; N=$N, D=$D))
     end
     if "forward_backward" in algos
-        benchs["forward_backward"] = @benchmarkable HiddenMarkovModels.forward_backward(
-            model, $obs_seqs, $K
-        ) setup = (model = rand_model_hmms(; N=$N, D=$D))
+        benchs["forward_backward"] = @benchmarkable begin
+            for k in 1:($K)
+                HiddenMarkovModels.forward_backward(model, $obs_seqs[k])
+            end
+        end setup = (model = rand_model_hmms(; N=$N, D=$D))
     end
     if "baum_welch" in algos
-        benchs["baum_welch"] = @benchmarkable HiddenMarkovModels.baum_welch(
-            model, $obs_seqs, $K; max_iterations=$I, atol=-Inf
-        ) setup = (model = rand_model_hmms(; N=$N, D=$D))
+        benchs["baum_welch"] = @benchmarkable begin
+            HiddenMarkovModels.baum_welch(
+                model, $obs_seqs, $K; max_iterations=$I, atol=-Inf
+            )
+        end setup = (model = rand_model_hmms(; N=$N, D=$D))
     end
     return benchs
 end

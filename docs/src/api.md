@@ -38,21 +38,40 @@ fit!
 ## Misc
 
 ```@docs
-check_hmm
 rand_prob_vec
 rand_trans_mat
+HiddenMarkovModels.fit_element_from_sequence!
+HiddenMarkovModels.LightDiagNormal
 ```
 
-## Internals
+## In-place algorithms (internals)
+
+### Storage types
 
 ```@docs
 HiddenMarkovModels.ForwardStorage
 HiddenMarkovModels.ViterbiStorage
 HiddenMarkovModels.ForwardBackwardStorage
 HiddenMarkovModels.BaumWelchStorage
-HiddenMarkovModels.fit_element_from_sequence!
-HiddenMarkovModels.LightDiagNormal
-HiddenMarkovModels.PermutedHMM
+```
+
+### Initializing storage
+
+```@docs
+HiddenMarkovModels.initialize_forward
+HiddenMarkovModels.initialize_viterbi
+HiddenMarkovModels.initialize_forward_backward
+HiddenMarkovModels.initialize_baum_welch
+HiddenMarkovModels.initialize_logL_evolution
+```
+
+### Modifying storage
+
+```@docs
+HiddenMarkovModels.forward!
+HiddenMarkovModels.viterbi!
+HiddenMarkovModels.forward_backward!
+HiddenMarkovModels.baum_welch!
 ```
 
 ## Notations
@@ -82,7 +101,7 @@ HiddenMarkovModels.PermutedHMM
 - `β`: scaled backward variables
 - `γ`: state marginals
 - `ξ`: transition marginals
-- `logL`: posterior loglikelihood of a sequence of observations
+- `logL`: loglikelihood of a sequence of observations
 
 ## Index
 

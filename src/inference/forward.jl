@@ -7,7 +7,7 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `αₜ` and `logL`.
+The only fields useful outside of the algorithm are `α` and `logL`, the rest does not belong to the public API.
 
 $(TYPEDFIELDS)
 """
@@ -22,6 +22,9 @@ struct ForwardStorage{R}
     α_next::Vector{R}
 end
 
+"""
+    initialize_forward(hmm, obs_seq)
+"""
 function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     N = length(hmm)
     R = eltype(hmm, obs_seq[1])
@@ -30,88 +33,66 @@ function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     logb = Vector{R}(undef, N)
     α = Vector{R}(undef, N)
     α_next = Vector{R}(undef, N)
-    f = ForwardStorage(logL, logb, α, α_next)
-    return f
+    storage = ForwardStorage(logL, logb, α, α_next)
+    return storage
 end
 
-function forward!(f::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
+"""
+    forward!(storage, hmm, obs_seq)
+"""
+function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
     p = initialization(hmm)
     A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    @unpack logL, logb, α, α_next = f
+    @unpack logL, logb, α, α_next = storage
 
-    logb .= logdensityof.(d, (obs_seq[1],))
+    obs_logdensities!(logb, hmm, obs_seq[1])
+    check_right_finite(logb)
     logm = maximum(logb)
     α .= p .* exp.(logb .- logm)
     c = inv(sum(α))
     α .*= c
+    check_finite(α)
     logL[] = -log(c) + logm
     for t in 1:(T - 1)
-        logb .= logdensityof.(d, (obs_seq[t + 1],))
+        obs_logdensities!(logb, hmm, obs_seq[t + 1])
+        check_right_finite(logb)
         logm = maximum(logb)
         mul!(α_next, A', α)
         α_next .*= exp.(logb .- logm)
         c = inv(sum(α_next))
         α_next .*= c
         α .= α_next
+        check_finite(α)
         logL[] += -log(c) + logm
-    end
-    return nothing
-end
-
-function forward!(
-    fs::Vector{<:ForwardStorage},
-    hmm::AbstractHMM,
-    obs_seqs::Vector{<:Vector},
-    nb_seqs::Integer,
-)
-    check_lengths(obs_seqs, nb_seqs)
-    @threads for k in eachindex(fs, obs_seqs)
-        forward!(fs[k], hmm, obs_seqs[k])
     end
     return nothing
 end
 
 """
     forward(hmm, obs_seq)
-    forward(hmm, obs_seqs, nb_seqs)
 
-Run the forward algorithm to infer the current state of an HMM.
+Run the forward algorithm to infer the current state of `hmm` after sequence `obs_seq`.
     
-When applied on a single sequence, this function returns a tuple `(α, logL)` where
+This function returns a tuple `(α, logL)` where
 
 - `α[i]` is the posterior probability of state `i` at the end of the sequence
 - `logL` is the loglikelihood of the sequence
-
-When applied on multiple sequences, this function returns a vector of tuples.
 """
-function forward(hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
-    check_lengths(obs_seqs, nb_seqs)
-    fs = [initialize_forward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)]
-    forward!(fs, hmm, obs_seqs, nb_seqs)
-    return [(f.α, f.logL[]) for f in fs]
-end
-
 function forward(hmm::AbstractHMM, obs_seq::Vector)
-    return only(forward(hmm, [obs_seq], 1))
+    storage = initialize_forward(hmm, obs_seq)
+    forward!(storage, hmm, obs_seq)
+    return storage.α, storage.logL[]
 end
 
 """
     logdensityof(hmm, obs_seq)
-    logdensityof(hmm, obs_seqs, nb_seqs)
 
-Run the forward algorithm to compute the posterior loglikelihood of observations for an HMM.
+Run the forward algorithm to compute the posterior loglikelihood of sequence `obs_seq` for `hmm`.
 
-Whether it is applied on one or multiple sequences, this function returns a number.
+This function returns a number.
 """
-function DensityInterface.logdensityof(
-    hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer
-)
-    logαs_and_logLs = forward(hmm, obs_seqs, nb_seqs)
-    return sum(last, logαs_and_logLs)
-end
-
 function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
-    return logdensityof(hmm, [obs_seq], 1)
+    _, logL = forward(hmm, obs_seq)
+    return logL
 end

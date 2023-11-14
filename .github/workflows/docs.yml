@@ -1,8 +1,9 @@
-name: docs-benchmark
+name: docs
 on:
   push:
-    tags: '*'
-  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
 concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
@@ -21,12 +22,6 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/julia-buildpkg@v1
-      - run: |
-          julia --threads=1 --project=benchmark -e '
-          using Pkg
-          Pkg.instantiate()
-          include("benchmark/run_benchmarks.jl")
-          include("benchmark/process_benchmarks.jl")'
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

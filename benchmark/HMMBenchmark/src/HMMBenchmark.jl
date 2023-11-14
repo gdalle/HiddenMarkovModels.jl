@@ -12,7 +12,7 @@ using BenchmarkTools
 using HiddenMarkovModels
 using SimpleUnPack
 
-export define_suite
+export define_suite, run_suite, parse_results
 
 include("hmms.jl")
 include("hmmbase.jl")

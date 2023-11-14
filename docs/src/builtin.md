@@ -1,4 +1,4 @@
-# Tutorial - built-in HMM
+# Built-in HMM
 
 ```@example tuto
 using Distributions
@@ -78,7 +78,7 @@ perm = sortperm(1:3, by=i->d_est[i].μ)
 ```
 
 ```@example tuto
-hmm_est = HiddenMarkovModels.PermutedHMM(hmm_est, perm)
+hmm_est = HiddenMarkovModels.permute(hmm_est, perm)
 ```
 
 Evaluating errors:

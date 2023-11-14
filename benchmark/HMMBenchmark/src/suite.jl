@@ -12,7 +12,7 @@ function benchmarkables_by_implem(; implem, algos, kwargs...)
     end
 end
 
-function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I)
+function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals)
     SUITE = BenchmarkGroup()
     if ("HMMBase.jl" in implems) && any(>(1), K_vals)
         @warn "HMMBase.jl doesn't support multiple observation sequences, concatenating instead."
@@ -24,7 +24,7 @@ function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I)
             SUITE[implem][algo] = BenchmarkGroup()
             SUITE[implem][algo][(1, 1, 2, 1, 1)] = bench
         end
-        for N in N_vals, D in D_vals, T in T_vals, K in K_vals
+        for (N, D, T, K, I) in zip(N_vals, D_vals, T_vals, K_vals, I_vals)
             bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K, I)
             for (algo, bench) in pairs(bench_tup)
                 SUITE[implem][algo][(N, D, T, K, I)] = bench
