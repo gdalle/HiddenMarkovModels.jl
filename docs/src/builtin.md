@@ -1,4 +1,4 @@
-# Tutorial - built-in HMM
+# Built-in HMM
 
 ```@example tuto
 using Distributions

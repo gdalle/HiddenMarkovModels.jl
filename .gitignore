@@ -13,3 +13,4 @@ docs/**/*.svg
 *.txt
 /docs/src/index.md
 .vscode/
+.benchmarkci/

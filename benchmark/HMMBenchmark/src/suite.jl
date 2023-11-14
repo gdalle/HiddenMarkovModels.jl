@@ -1,17 +1,3 @@
-using BenchmarkTools
-using CondaPkg
-using CSV
-using DataFrames
-using InteractiveUtils
-using LinearAlgebra
-using Pkg
-using Revise
-
-includet("hmms.jl")
-includet("hmmbase.jl")
-includet("hmmlearn.jl")
-includet("pomegranate.jl")
-
 function benchmarkables_by_implem(; implem, algos, kwargs...)
     if implem == "HMMs.jl"
         return benchmarkables_hmms(; algos, kwargs...)
@@ -26,7 +12,7 @@ function benchmarkables_by_implem(; implem, algos, kwargs...)
     end
 end
 
-function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I)
+function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals)
     SUITE = BenchmarkGroup()
     if ("HMMBase.jl" in implems) && any(>(1), K_vals)
         @warn "HMMBase.jl doesn't support multiple observation sequences, concatenating instead."
@@ -38,7 +24,7 @@ function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I)
             SUITE[implem][algo] = BenchmarkGroup()
             SUITE[implem][algo][(1, 1, 2, 1, 1)] = bench
         end
-        for N in N_vals, D in D_vals, T in T_vals, K in K_vals
+        for (N, D, T, K, I) in zip(N_vals, D_vals, T_vals, K_vals, I_vals)
             bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K, I)
             for (algo, bench) in pairs(bench_tup)
                 SUITE[implem][algo][(N, D, T, K, I)] = bench
@@ -79,9 +65,12 @@ function run_suite(;
 
     julia_results = minimum(raw_julia_results)
     python_results = minimum(raw_python_results)
+    return (; julia_results, python_results)
+end
 
+function parse_results(many_results...; path=nothing)
     data = DataFrame()
-    for results in (julia_results, python_results)
+    for results in many_results
         for implem in identity.(keys(results))
             for algo in identity.(keys(results[implem]))
                 for (N, D, T, K, I) in identity.(keys(results[implem][algo]))
@@ -109,13 +98,8 @@ function print_setup(; path)
             println("\n# Multithreading\n")
             println("Julia threads = $(Threads.nthreads())")
             println("OpenBLAS threads = $(BLAS.get_num_threads())")
-            println("Pytorch threads = $(torch.get_num_threads())")
             println("\n# Julia packages\n")
             Pkg.status()
-            println("\n# Python packages\n")
-        end
-        redirect_stderr(file) do
-            CondaPkg.status()
         end
     end
 end

@@ -1,10 +1,3 @@
-using Pkg
-Pkg.activate(@__DIR__)
-
-using CSV
-using DataFrames
-using Plots
-
 BENCHMARK_RESULTS_FOLDER = joinpath(@__DIR__, "results")
 DOCS_BENCHMARK_RESULTS_FOLDER = joinpath(
     @__DIR__, "..", "docs", "src", "assets", "benchmark", "results"
@@ -116,15 +109,17 @@ end
 
 ## Main
 
-for file in readdir(BENCHMARK_RESULTS_FOLDER)
-    if endswith(file, ".csv") || endswith(file, ".txt")
-        cp(
-            joinpath(BENCHMARK_RESULTS_FOLDER, file),
-            joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, file);
-            force=true,
-        )
+function process_benchmarks()
+    for file in readdir(BENCHMARK_RESULTS_FOLDER)
+        if endswith(file, ".csv") || endswith(file, ".txt")
+            cp(
+                joinpath(BENCHMARK_RESULTS_FOLDER, file),
+                joinpath(DOCS_BENCHMARK_RESULTS_FOLDER, file);
+                force=true,
+            )
+        end
     end
-end
 
-plot_benchmarks(; name="low_dim")
-plot_benchmarks(; name="high_dim")
+    plot_benchmarks(; name="low_dim")
+    return plot_benchmarks(; name="high_dim")
+end

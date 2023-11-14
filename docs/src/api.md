@@ -101,7 +101,7 @@ HiddenMarkovModels.baum_welch!
 - `β`: scaled backward variables
 - `γ`: state marginals
 - `ξ`: transition marginals
-- `logL`: posterior loglikelihood of a sequence of observations
+- `logL`: loglikelihood of a sequence of observations
 
 ## Index
 

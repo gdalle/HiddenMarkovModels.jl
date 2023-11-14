@@ -1,9 +1,3 @@
-using Pkg
-Pkg.activate(@__DIR__)
-
-using Revise
-includet("utils/suite.jl")
-
 print_setup(; path=joinpath(@__DIR__, "results", "setup.txt"))
 
 IMPLEMS_LOW_DIM = ("HMMs.jl", "HMMBase.jl", "hmmlearn")

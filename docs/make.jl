@@ -22,24 +22,18 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
-benchmarks_done = (
-    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "plots"))) > 1) &&  # plots present
-    (length(readdir(joinpath(@__DIR__, "src", "assets", "benchmark", "results"))) > 1)  # results present
-)
-
 pages = [
     "Home" => "index.md",
-    "Essentials" => ["Background" => "background.md", "API reference" => "api.md"],
+    "Essentials" => [
+        "Background" => "background.md",
+        "API reference" => "api.md",
+        "Competitors" => "competitors.md",
+    ],
     "Tutorials" => [
         "Built-in HMM" => "builtin.md",
         "Custom HMM" => "custom.md",
         "Debugging" => "debugging.md",
     ],
-    "Alternatives" => if benchmarks_done
-        ["Features" => "features.md", "Benchmarks" => "benchmarks.md"]
-    else
-        ["Features" => "features.md"]
-    end,
     "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
 ]
 
