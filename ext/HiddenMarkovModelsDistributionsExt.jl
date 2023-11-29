@@ -6,7 +6,8 @@ using Distributions:
     Distribution,
     UnivariateDistribution,
     MultivariateDistribution,
-    MatrixDistribution
+    MatrixDistribution,
+    fit
 
 function HiddenMarkovModels.fit_element_from_sequence!(
     dists::AbstractVector{D}, i::Integer, x, w

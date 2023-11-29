@@ -1,11 +1,11 @@
 using Distributions
+using Distributions: PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels.HMMTest
 using SimpleUnPack
 using Test
 
-function test_correctness(hmm, hmm_init; T)
+function compare_hmmbase(hmm, hmm_init; T)
     obs_seq = rand(hmm, T).obs_seq
     obs_mat = collect(reduce(hcat, obs_seq)')
 
@@ -27,14 +27,14 @@ function test_correctness(hmm, hmm_init; T)
 
     @testset "Viterbi" begin
         q_base = HMMBase.viterbi(hmm_base, obs_mat)
-        q = viterbi(hmm, obs_seq)
+        q, logL = viterbi(hmm, obs_seq)
         # Viterbi decoding can vary in case of (infrequent) ties
         @test mean(q .== q_base) > 0.9
     end
 
     @testset "Forward-backward" begin
         γ_base = HMMBase.posteriors(hmm_base, obs_mat)
-        γ, _, _ = forward_backward(hmm, obs_seq)
+        γ, logL = forward_backward(hmm, obs_seq)
         @test isapprox(γ, γ_base')
     end
 
@@ -49,8 +49,8 @@ function test_correctness(hmm, hmm_init; T)
         @test isapprox(
             logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
         )
-        @test isapprox(initialization(hmm_est), hmm_est_base.a)
-        @test isapprox(transition_matrix(hmm_est), hmm_est_base.A)
+        @test isapprox(hmm_est.init, hmm_est_base.a)
+        @test isapprox(hmm_est.trans, hmm_est_base.A)
 
         for (dist, dist_base) in zip(hmm.dists, hmm_base.B)
             if hasfield(typeof(dist), :μ)
@@ -65,13 +65,43 @@ end
 N, D, T = 3, 2, 100
 
 @testset "Categorical" begin
-    test_correctness(rand_categorical_hmm(N, D), rand_categorical_hmm(N, D); T)
+    p = ones(N) / N
+    A = rand_trans_mat(N)
+    d = [Categorical(rand_prob_vec(D)) for i in 1:N]
+    hmm = HMM(p, A, d)
+
+    p_init = ones(N) / N
+    A_init = rand_trans_mat(N)
+    d_init = [Categorical(rand_prob_vec(D)) for i in 1:N]
+    hmm_init = HMM(p_init, A_init, d_init)
+
+    compare_hmmbase(hmm, hmm_init; T)
 end
 
 @testset "Normal" begin
-    test_correctness(rand_gaussian_hmm_1d(N), rand_gaussian_hmm_1d(N); T)
+    p = ones(N) / N
+    A = rand_trans_mat(N)
+    d = [Normal(randn(), 1) for i in 1:N]
+    hmm = HMM(p, A, d)
+
+    p_init = ones(N) / N
+    A_init = rand_trans_mat(N)
+    d_init = [Normal(randn(), 1) for i in 1:N]
+    hmm_init = HMM(p_init, A_init, d_init)
+
+    compare_hmmbase(hmm, hmm_init; T)
 end
 
 @testset "DiagNormal" begin
-    test_correctness(rand_gaussian_hmm_2d(N, D), rand_gaussian_hmm_2d(N, D); T)
+    p = ones(N) / N
+    A = rand_trans_mat(N)
+    d = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
+    hmm = HMM(p, A, d)
+
+    p_init = ones(N) / N
+    A_init = rand_trans_mat(N)
+    d_init = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
+    hmm_init = HMM(p_init, A_init, d_init)
+
+    compare_hmmbase(hmm, hmm_init; T)
 end

@@ -75,3 +75,9 @@ function check_hmm(hmm::AbstractHMM)
     check_dists(d)
     return nothing
 end
+
+function check_nb_seqs(obs_seqs::Vector{<:Vector}, nb_seqs::Integer)
+    if nb_seqs != length(obs_seqs)
+        throw(ArgumentError("Incoherent sizes provided: `nb_seqs != length(obs_seqs)`"))
+    end
+end

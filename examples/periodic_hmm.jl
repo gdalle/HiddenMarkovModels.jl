@@ -7,10 +7,10 @@ Random.seed!(rng, 63)
 
 N = 3
 init = ones(N) / N
-trans = rand_trans_mat(N)
-dists = [Normal(i, 1) for i in 1:N]
+trans_periodic = (rand_trans_mat(N), rand_trans_mat(N))
+dists_periodic = ([Normal(i, 1) for i in 1:N], [Normal(-i, 1) for i in 1:N])
 
-hmm = HMM(init, trans, dists)
+hmm = PeriodicHMM(init, trans_periodic, dists_periodic)
 
 T = 100
 state_seq, obs_seq = rand(rng, hmm, T)

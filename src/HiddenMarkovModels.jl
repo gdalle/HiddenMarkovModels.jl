@@ -19,6 +19,7 @@ using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHiddenMarkovModel, AbstractHMM
 export HiddenMarkovModel, HMM
+export PeriodicHiddenMarkovModel, PeriodicHMM
 export rand_prob_vec, rand_trans_mat
 export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch

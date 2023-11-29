@@ -1,5 +1,5 @@
 """
-    AbstractHiddenMarkovModel 
+    AbstractHMM 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
@@ -25,14 +25,7 @@ Any HMM object which satisfies the interface can be given as input to the follow
 - [`forward_backward(hmm, obs_seq)`](@ref)
 - [`baum_welch(hmm, obs_seq)`](@ref) (if `fit!` is implemented)
 """
-abstract type AbstractHiddenMarkovModel end
-
-"""
-    AbstractHMM
-
-Alias for the type `AbstractHiddenMarkovModel`.
-"""
-const AbstractHMM = AbstractHiddenMarkovModel
+abstract type AbstractHMM end
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 

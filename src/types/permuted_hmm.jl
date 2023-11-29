@@ -15,12 +15,14 @@ struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
     perm::Vector{Int}
 end
 
-Base.length(p::PermutedHMM) = length(p.hmm)
+Base.length(permuted::PermutedHMM) = length(permuted.hmm)
 
-initialization(p::PermutedHMM) = initialization(p.hmm)[p.perm]
+initialization(permuted::PermutedHMM) = initialization(permuted.hmm)[permuted.perm]
 
-function transition_matrix(p::PermutedHMM, t::Integer)
-    return transition_matrix(p.hmm, t)[p.perm, :][:, p.perm]
+function transition_matrix(permuted::PermutedHMM, t::Integer)
+    return transition_matrix(permuted.hmm, t)[permuted.perm, :][:, permuted.perm]
 end
 
-obs_distributions(p::PermutedHMM, t::Integer) = obs_distributions(p.hmm, t)[p.perm]
+function obs_distributions(permuted::PermutedHMM, t::Integer)
+    return obs_distributions(permuted.hmm, t)[permuted.perm]
+end
