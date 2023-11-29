@@ -14,30 +14,30 @@ end
 
 function _params_and_loglikelihoods(hmm::AbstractHMM, obs_seq::Vector)
     p = initialization(hmm)
-    A = transition_matrix(hmm)
+    As = [transition_matrix(hmm, t) for t in 1:length(obs_seq)]
     logB = obs_logdensities_matrix(hmm, obs_seq)
-    return p, A, logB
+    return p, As, logB
 end
 
 function ChainRulesCore.rrule(
     rc::RuleConfig, ::typeof(logdensityof), hmm::AbstractHMM, obs_seq::Vector
 )
-    (p, A, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
+    (p, As, logB), pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq)
     storage = HMMs.initialize_forward_backward(hmm, obs_seq)
     HMMs.forward_backward!(storage, hmm, obs_seq)
-    @unpack logL, α, β, γ, c, Bβ = storage
+    @unpack logL, α, β, γ, c, B = storage
     T = length(obs_seq)
 
     function logdensityof_hmm_pullback(ΔlogL)
         Δp = ΔlogL .* Bβ[:, 1]
-        ΔA = ΔlogL .* α[:, 1] .* Bβ[:, 2]'
+        ΔAs = [ΔlogL .* α[:, 1] .* B[:, 2]' .* β[:, 2]']
         @views for t in 2:(T - 1)
-            ΔA .+= ΔlogL .* α[:, t] .* Bβ[:, t + 1]'
+            push!(ΔAs, ΔlogL .* α[:, t] .* B[:, t + 1]' .* β[:, t + 1]')
         end
         ΔlogB = ΔlogL .* γ
 
         Δlogdensityof = NoTangent()
-        _, Δhmm, Δobs_seq = pullback((Δp, ΔA, ΔlogB))
+        _, Δhmm, Δobs_seq = pullback((Δp, ΔAs, ΔlogB))
         return Δlogdensityof, Δhmm, Δobs_seq
     end
 

@@ -7,17 +7,17 @@ Basic implementation of an HMM.
 
 $(TYPEDFIELDS)
 """
-struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} <:
+struct HiddenMarkovModel{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <:
        AbstractHMM
     "initial state probabilities"
-    init::I
+    init::V
     "state transition matrix"
-    trans::T
+    trans::M
     "observation distributions (must be amenable to `logdensityof` and `rand`)"
-    dists::D
+    dists::VD
 
-    function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
-        hmm = new{I,T,D}(init, trans, dists)
+    function HiddenMarkovModel(init::V, trans::M, dists::VD) where {V,M,VD}
+        hmm = new{V,M,VD}(init, trans, dists)
         check_hmm(hmm)
         return hmm
     end
@@ -36,15 +36,13 @@ end
 
 Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
-transition_matrix(hmm::HMM) = hmm.trans
-obs_distributions(hmm::HMM) = hmm.dists
+transition_matrix(hmm::HMM, ::Integer) = hmm.trans
+obs_distributions(hmm::HMM, ::Integer) = hmm.dists
 
 function StatsAPI.fit!(
     hmm::HMM,
-    init_count::Vector,
-    trans_count::AbstractMatrix,
-    obs_seq::Vector,
-    state_marginals::Matrix,
+    fb_storages::Vector{<:ForwardBackwardStorage},
+    obs_seqs_concat,
 )
     # Initialization
     hmm.init .= init_count
@@ -57,8 +55,4 @@ function StatsAPI.fit!(
         fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
     end
     return nothing
-end
-
-function permute(hmm::AbstractHMM, perm::Vector{Int})
-    return HMM(hmm.init[perm], hmm.trans[perm, :][:, perm], hmm.dists[perm])
 end

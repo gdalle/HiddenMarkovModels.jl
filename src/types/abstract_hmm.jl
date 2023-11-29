@@ -10,19 +10,19 @@ To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement
 - [`length(hmm)`](@ref)
 - [`eltype(hmm, obs)`](@ref)
 - [`initialization(hmm)`](@ref)
-- [`transition_matrix(hmm)`](@ref)
-- [`obs_distributions(hmm)`](@ref)
+- [`transition_matrix(hmm, t)`](@ref)
+- [`obs_distributions(hmm, t)`](@ref)
 - [`fit!(hmm, init_count, trans_count, obs_seq, state_marginals)`](@ref) (optional)
 
 # Applicable functions
 
 Any HMM object which satisfies the interface can be given as input to the following functions:
 
+- [`rand(rng, hmm, T)`](@ref)
 - [`logdensityof(hmm, obs_seq)`](@ref)
 - [`forward(hmm, obs_seq)`](@ref)
 - [`viterbi(hmm, obs_seq)`](@ref)
 - [`forward_backward(hmm, obs_seq)`](@ref)
-- [`rand(rng, hmm, T)`](@ref)
 - [`baum_welch(hmm, obs_seq)`](@ref) (if `fit!` is implemented)
 """
 abstract type AbstractHiddenMarkovModel end
@@ -48,14 +48,14 @@ Base.length
 """
     eltype(hmm, obs)
 
-Return a type that can accommodate forward-backward computations on observations similar to `obs`.
+Return a type that can accommodate forward-backward computations for `hmm` on observations similar to `obs`.
 
 It is typically a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
 """
 function Base.eltype(hmm::AbstractHMM, obs)
     init_type = eltype(initialization(hmm))
-    trans_type = eltype(transition_matrix(hmm))
-    logdensity_type = typeof(logdensityof(obs_distributions(hmm)[1], obs))
+    trans_type = eltype(transition_matrix(hmm, 1))
+    logdensity_type = typeof(logdensityof(obs_distributions(hmm, 1)[1], obs))
     return promote_type(init_type, trans_type, logdensity_type)
 end
 
@@ -67,24 +67,24 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
-    transition_matrix(hmm) 
+    transition_matrix(hmm, t)
 
-Return the matrix of state transition probabilities for `hmm`.
+Return the matrix of state transition probabilities for `hmm` at time `t`.
 """
 function transition_matrix end
 
 """
-    obs_distributions(hmm)
+    obs_distributions(hmm, t)
 
-Return a vector of observation distributions, one for each state of `hmm`.
+Return a vector of observation distributions, one for each state of `hmm` at time `t`.
 
 There objects should support `rand(rng, dist)` and `DensityInterface.logdensityof(dist, obs)`.
 """
 function obs_distributions end
 
-function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs)
-    d = obs_distributions(hmm)
-    for i in eachindex(logb, d)
+function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, t::Integer, obs)
+    d = obs_distributions(hmm, t)
+    @inbounds for i in eachindex(logb, d)
         logb[i] = logdensityof(d[i], obs)
     end
 end
@@ -119,15 +119,24 @@ StatsAPI.fit!  # TODO: complete
 Simulate `hmm` for `T` time steps. 
 """
 function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
+    dummy_log_probas = fill(-Inf, length(hmm))
+
     p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    state_seq = Vector{Int}(undef, T)
-    state_seq[1] = rand(rng, Categorical(p; check_args=false))
+    state1 = rand(rng, LightCategorical(p, dummy_log_probas))
+    state_seq = Vector{typeof(state1)}(undef, T)
+    state_seq[1] = state1
+
+    d = obs_distributions(hmm, 1)
+    obs1 = rand(rng, d[state1])
+    obs_seq = Vector{typeof(obs1)}(undef, T)
+    obs_seq[1] = obs1
+
     @views for t in 2:T
-        state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
+        A = transition_matrix(hmm, t)
+        d = obs_distributions(hmm, t)
+        state_seq[t] = rand(rng, LightCategorical(A[state_seq[t - 1], :], dummy_log_probas))
+        obs_seq[t] = rand(rng, d[state_seq[t]])
     end
-    obs_seq = [rand(rng, d[state_seq[t]]) for t in 1:T]
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 

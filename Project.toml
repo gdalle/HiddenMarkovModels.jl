@@ -6,7 +6,6 @@ version = "0.4.0"
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
@@ -18,10 +17,12 @@ StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 
 [extensions]
 HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
+HiddenMarkovModelsDistributionsExt = "Distributions"
 HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
 [compat]
@@ -60,4 +61,24 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Aqua", "BenchmarkTools", "Distributions", "Documenter", "FiniteDifferences", "ForwardDiff", "HMMBase", "JET", "JuliaFormatter", "LinearAlgebra", "LogarithmicNumbers", "Pkg", "Random", "SimpleUnPack", "SparseArrays", "StaticArrays", "Statistics", "Test", "Zygote"]
+test = [
+    "Aqua",
+    "BenchmarkTools",
+    "Distributions",
+    "Documenter",
+    "FiniteDifferences",
+    "ForwardDiff",
+    "HMMBase",
+    "JET",
+    "JuliaFormatter",
+    "LinearAlgebra",
+    "LogarithmicNumbers",
+    "Pkg",
+    "Random",
+    "SimpleUnPack",
+    "SparseArrays",
+    "StaticArrays",
+    "Statistics",
+    "Test",
+    "Zygote",
+]

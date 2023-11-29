@@ -36,7 +36,7 @@ function initialize_baum_welch(
 )
     check_nb_seqs(obs_seqs, nb_seqs)
     N, T_concat = length(hmm), sum(length, obs_seqs)
-    A = transition_matrix(hmm)
+    A = transition_matrix(hmm, 1)
     R = eltype(hmm, obs_seqs[1][1])
     init_count = Vector{R}(undef, N)
     trans_count = similar(A, R)
@@ -84,7 +84,7 @@ function baum_welch_has_converged(
         progress = logL - logL_prev
         if loglikelihood_increasing && progress < 0
             error("Loglikelihood decreased in Baum-Welch")
-        elseif progress < atol
+        elseif abs(progress) < atol
             return true
         end
     end
@@ -117,7 +117,7 @@ function baum_welch!(
     loglikelihood_increasing::Bool,
 )
     for _ in 1:max_iterations
-        @threads for k in eachindex(obs_seqs, fb_storages)
+        for k in eachindex(obs_seqs, fb_storages)
             forward_backward!(fb_storages[k], hmm, obs_seqs[k])
         end
         update_sufficient_statistics!(bw_storage, fb_storages)

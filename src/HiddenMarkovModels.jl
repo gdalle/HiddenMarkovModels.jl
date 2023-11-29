@@ -8,13 +8,6 @@ module HiddenMarkovModels
 using Base: RefValue
 using Base.Threads: @threads
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
-using Distributions:
-    Distributions,
-    Categorical,
-    Distribution,
-    UnivariateDistribution,
-    MultivariateDistribution,
-    MatrixDistribution
 using DocStringExtensions
 using LinearAlgebra: Diagonal, axpy!, dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload, @setup_workload
@@ -33,43 +26,37 @@ export fit!
 export check_hmm
 
 include("types/abstract_hmm.jl")
-include("types/hmm.jl")
+include("types/permuted_hmm.jl")
 
 include("utils/linalg.jl")
 include("utils/check.jl")
 include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
+include("utils/lightcategorical.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 
-include("utils/HMMTest.jl")
+include("types/hmm.jl")
+include("types/periodic_hmm.jl")
 
 if !isdefined(Base, :get_extension)
-    include("../ext/HiddenMarkovModelsChainRulesCoreExt.jl")
     function __init__()
+        @require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include(
+            "../ext/HiddenMarkovModelsChainRulesCoreExt.jl"
+        )
+        @require Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f" include(
+            "../ext/HiddenMarkovModelsDistributionsExt.jl"
+        )
         @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" include(
             "../ext/HiddenMarkovModelsHMMBaseExt.jl"
         )
     end
 end
 
-@compile_workload begin
-    N, D, T = 3, 2, 100
-    p = rand_prob_vec(N)
-    A = rand_trans_mat(N)
-    dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
-    hmm = HMM(p, A, dists)
-    obs_seq = rand(hmm, T).obs_seq
-
-    logdensityof(hmm, obs_seq)
-    forward(hmm, obs_seq)
-    viterbi(hmm, obs_seq)
-    forward_backward(hmm, obs_seq)
-    baum_welch(hmm, obs_seq; max_iterations=2, atol=-Inf)
-end
+# include("precompile.jl")
 
 end

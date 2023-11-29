@@ -22,6 +22,12 @@ function check_positive(a)
     end
 end
 
+function check_nonnegative(a)
+    if any(<(zero(eltype(a))), mynonzeros(a))
+        throw(OverflowError("Some values are negative"))
+    end
+end
+
 function check_prob_vec(p::AbstractVector)
     check_finite(p)
     if !valid_prob_vec(p)
@@ -61,8 +67,8 @@ end
 
 function check_hmm(hmm::AbstractHMM)
     p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
+    A = transition_matrix(hmm, 1)
+    d = obs_distributions(hmm, 1)
     check_hmm_sizes(p, A, d)
     check_prob_vec(p)
     check_trans_mat(A)

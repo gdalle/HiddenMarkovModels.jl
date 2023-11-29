@@ -12,7 +12,7 @@ The only fields useful outside of the algorithm are `α` and `logL`, the rest do
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
-    "total loglikelihood"
+    "total loglikelihood of the observation sequence"
     logL::RefValue{R}
     "observation loglikelihoods `logbₜ[i] = ℙ(Y[t] | X[t]=i)`"
     logb::Vector{R}
@@ -43,10 +43,9 @@ end
 function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
     p = initialization(hmm)
-    A = transition_matrix(hmm)
     @unpack logL, logb, α, α_next = storage
 
-    obs_logdensities!(logb, hmm, obs_seq[1])
+    obs_logdensities!(logb, hmm, 1, obs_seq[1])
     check_right_finite(logb)
     logm = maximum(logb)
     α .= p .* exp.(logb .- logm)
@@ -55,7 +54,8 @@ function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     check_finite(α)
     logL[] = -log(c) + logm
     for t in 1:(T - 1)
-        obs_logdensities!(logb, hmm, obs_seq[t + 1])
+        A = transition_matrix(hmm, t)
+        obs_logdensities!(logb, hmm, t + 1, obs_seq[t + 1])
         check_right_finite(logb)
         logm = maximum(logb)
         mul!(α_next, A', α)
@@ -82,7 +82,7 @@ This function returns a tuple `(α, logL)` where
 function forward(hmm::AbstractHMM, obs_seq::Vector)
     storage = initialize_forward(hmm, obs_seq)
     forward!(storage, hmm, obs_seq)
-    return storage.α, storage.logL[]
+    return (α=storage.α, logL=storage.logL[])
 end
 
 """
