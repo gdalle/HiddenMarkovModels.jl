@@ -12,9 +12,7 @@ The only fields useful outside of the algorithm are `α` and `logL`, the rest do
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
-    "total loglikelihood of the observation sequence"
-    logL::RefValue{R}
-    "observation loglikelihoods `logbₜ[i] = ℙ(Y[t] | X[t]=i)`"
+    "observation loglikelihoods `logb[i] = ℙ(Y[t] | X[t]=i)`"
     logb::Vector{R}
     "scaled forward messsages for a given time step"
     α::Vector{R}
@@ -28,12 +26,10 @@ end
 function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     N = length(hmm)
     R = eltype(hmm, obs_seq[1])
-
-    logL = RefValue{R}(zero(R))
     logb = Vector{R}(undef, N)
     α = Vector{R}(undef, N)
     α_next = Vector{R}(undef, N)
-    storage = ForwardStorage(logL, logb, α, α_next)
+    storage = ForwardStorage(logb, α, α_next)
     return storage
 end
 
@@ -42,31 +38,30 @@ end
 """
 function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
-    p = initialization(hmm)
-    @unpack logL, logb, α, α_next = storage
+    @unpack logb, α, α_next = storage
 
+    init = initialization(hmm)
     obs_logdensities!(logb, hmm, 1, obs_seq[1])
-    check_right_finite(logb)
     logm = maximum(logb)
-    α .= p .* exp.(logb .- logm)
+    α .= init .* exp.(logb .- logm)
     c = inv(sum(α))
     α .*= c
-    check_finite(α)
-    logL[] = -log(c) + logm
+    logL = -log(c) + logm
+
     for t in 1:(T - 1)
-        A = transition_matrix(hmm, t)
+        trans = transition_matrix(hmm, t)
         obs_logdensities!(logb, hmm, t + 1, obs_seq[t + 1])
-        check_right_finite(logb)
         logm = maximum(logb)
-        mul!(α_next, A', α)
+        mul!(α_next, trans', α)
         α_next .*= exp.(logb .- logm)
         c = inv(sum(α_next))
         α_next .*= c
         α .= α_next
-        check_finite(α)
-        logL[] += -log(c) + logm
+        logL += -log(c) + logm
     end
-    return nothing
+
+    check_finite(α)
+    return logL
 end
 
 """
@@ -81,18 +76,6 @@ This function returns a tuple `(α, logL)` where
 """
 function forward(hmm::AbstractHMM, obs_seq::Vector)
     storage = initialize_forward(hmm, obs_seq)
-    forward!(storage, hmm, obs_seq)
-    return (α=storage.α, logL=storage.logL[])
-end
-
-"""
-    logdensityof(hmm, obs_seq)
-
-Run the forward algorithm to compute the posterior loglikelihood of sequence `obs_seq` for `hmm`.
-
-This function returns a number.
-"""
-function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
-    _, logL = forward(hmm, obs_seq)
-    return logL
+    logL = forward!(storage, hmm, obs_seq)
+    return (α=storage.α, logL=logL)
 end

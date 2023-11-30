@@ -1,6 +1,7 @@
 using Documenter
 using DocumenterCitations
 using HiddenMarkovModels
+using Literate
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style=:authoryear)
 
@@ -27,13 +28,9 @@ pages = [
     "Essentials" => [
         "Background" => "background.md",
         "API reference" => "api.md",
-        "Competitors" => "competitors.md",
+        "Alternatives" => "alternatives.md",
     ],
-    "Tutorials" => [
-        "Built-in HMM" => "builtin.md",
-        "Custom HMM" => "custom.md",
-        "Debugging" => "debugging.md",
-    ],
+    "Tutorials" => ["Debugging" => "debugging.md"],
     "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
 ]
 

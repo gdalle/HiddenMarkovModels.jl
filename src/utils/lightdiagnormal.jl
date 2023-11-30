@@ -12,11 +12,11 @@ $(TYPEDFIELDS)
 struct LightDiagNormal{
     T1,T2,T3,V1<:AbstractVector{T1},V2<:AbstractVector{T2},V3<:AbstractVector{T3}
 }
-    "vector of means"
+    "means"
     μ::V1
-    "vector of standard deviations"
+    "standard deviations"
     σ::V2
-    "vector of log standard deviations"
+    "log standard deviations"
     logσ::V3
 end
 
@@ -38,7 +38,7 @@ function Base.rand(rng::AbstractRNG, dist::LightDiagNormal{T1,T2}) where {T1,T2}
     return dist.σ .* randn(rng, T, length(dist)) .+ dist.μ
 end
 
-function DensityInterface.logdensityof(dist::LightDiagNormal, x::Number)
+function DensityInterface.logdensityof(dist::LightDiagNormal, x)
     a = -sum(abs2, (x[i] - dist.μ[i]) / dist.σ[i] for i in eachindex(x, dist.μ, dist.σ))
     b = -sum(dist.logσ)
     logd = (a / 2) + b
@@ -55,7 +55,7 @@ function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     end
     dist.μ ./= w_tot
     dist.σ ./= w_tot
-    dist.σ .-= abs2(dist.μ)
+    dist.σ .-= abs2.(dist.μ)
     dist.σ .= sqrt.(dist.σ)
     dist.logσ .= log.(dist.σ)
     check_positive(dist.σ)

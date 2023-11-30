@@ -12,36 +12,28 @@ using Test
 
     if VERSION >= v"1.9"
         @testset "Code quality" begin
-            Aqua.test_all(HiddenMarkovModels; ambiguities=false)
+            Aqua.test_all(HiddenMarkovModels; deps_compat=(check_extras=false,))
         end
 
         @testset "Code linting" begin
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 
-        @testset "Type stability" begin
-            include("type_stability.jl")
+        @testset "Types and allocations" begin
+            include("types_allocations.jl")
         end
+    end
 
-        @testset "Allocations" begin
-            include("allocations.jl")
-        end
+    @testset "Distributions" begin
+        include("distributions.jl")
     end
 
     @testset "Correctness" begin
         include("correctness.jl")
     end
 
-    @testset "Array types" begin
-        include("arrays.jl")
-    end
-
     @testset "Autodiff" begin
         include("autodiff.jl")
-    end
-
-    @testset "DNA" begin
-        include("dna.jl")
     end
 
     @testset "Doctests" begin

@@ -7,10 +7,9 @@ HiddenMarkovModels
 ## Types
 
 ```@docs
-AbstractHiddenMarkovModel
-HiddenMarkovModel
 AbstractHMM
 HMM
+PermutedHMM
 ```
 
 ## Basics
@@ -42,6 +41,7 @@ rand_prob_vec
 rand_trans_mat
 HiddenMarkovModels.fit_element_from_sequence!
 HiddenMarkovModels.LightDiagNormal
+HiddenMarkovModels.LightCategorical
 ```
 
 ## In-place algorithms (internals)
@@ -52,7 +52,6 @@ HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.ForwardStorage
 HiddenMarkovModels.ViterbiStorage
 HiddenMarkovModels.ForwardBackwardStorage
-HiddenMarkovModels.BaumWelchStorage
 ```
 
 ### Initializing storage
@@ -61,7 +60,6 @@ HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.initialize_forward
 HiddenMarkovModels.initialize_viterbi
 HiddenMarkovModels.initialize_forward_backward
-HiddenMarkovModels.initialize_baum_welch
 HiddenMarkovModels.initialize_logL_evolution
 ```
 
@@ -79,19 +77,18 @@ HiddenMarkovModels.baum_welch!
 ### Integers
 
 - `N`: number of states
-- `D`: dimension of the observations
 - `T`: trajectory length
-- `K`: number of trajectories
 
 ### Models and simulations
 
-- `p` or `init`: initialization (vector of state probabilities)
-- `A` or `trans`: transition_matrix (matrix of transition probabilities)
-- `d` or `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
+- `init`: initialization (vector of state probabilities)
+- `trans`: transition_matrix (matrix of transition probabilities)
+- `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
 - `state_seq`: a sequence of states (vector of integers)
 - `obs_seq`: a sequence of observations (vector of individual observations)
 - `obs_seqs`: several sequences of observations
 - `nb_seqs`: number of observation sequences
+- `logL`: loglikelihood
 
 ### Forward backward
 
@@ -101,7 +98,6 @@ HiddenMarkovModels.baum_welch!
 - `β`: scaled backward variables
 - `γ`: state marginals
 - `ξ`: transition marginals
-- `logL`: loglikelihood of a sequence of observations
 
 ## Index
 

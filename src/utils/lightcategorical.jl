@@ -10,9 +10,9 @@ This is not part of the public API and is expected to change.
 $(TYPEDFIELDS)
 """
 struct LightCategorical{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
-    "vector of class probabilities"
+    "class probabilities"
     p::V1
-    "vector of log class probabilities"
+    "log class probabilities"
     logp::V2
 end
 
@@ -48,7 +48,7 @@ function StatsAPI.fit!(dist::LightCategorical{T1}, x, w) where {T1}
     w_tot = sum(w)
     dist.p .= zero(T1)
     for (xᵢ, wᵢ) in zip(x, w)
-        dist.p[xᵢ] .+= wᵢ
+        dist.p[xᵢ] += wᵢ
     end
     dist.p ./= w_tot
     dist.logp .= log.(dist.p)

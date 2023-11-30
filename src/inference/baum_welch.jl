@@ -1,12 +1,11 @@
 abstract type AbstractBaumWelchStorage end
 
 """
-    initialize_logL_evolution(hmm, obs_seqs, nb_seqs; max_iterations)
+    initialize_logL_evolution(hmm, obs_seqs; max_iterations)
 """
 function initialize_logL_evolution(
-    hmm::AbstractHMM, obs_seqs::Vector{<:Vector}, nb_seqs::Integer; max_iterations::Integer
+    hmm::AbstractHMM, obs_seqs::Vector{<:Vector}; max_iterations::Integer
 )
-    check_nb_seqs(obs_seqs, nb_seqs)
     R = eltype(hmm, obs_seqs[1][1])
     logL_evolution = R[]
     sizehint!(logL_evolution, max_iterations)
@@ -37,19 +36,20 @@ end
 """
 function baum_welch!(
     hmm::AbstractHMM,
-    fb_storages::Vector{<:ForwardBackwardStorage},
+    fb_storages::Vector{<:ForwardBackwardStorage{R}},
     bw_storage::AbstractBaumWelchStorage,
     logL_evolution::Vector,
     obs_seqs::Vector{<:Vector};
     atol::Real,
     max_iterations::Integer,
     loglikelihood_increasing::Bool,
-)
+) where {R}
     for _ in 1:max_iterations
+        logL = zero(R)
         for k in eachindex(obs_seqs, fb_storages)
-            forward_backward!(fb_storages[k], hmm, obs_seqs[k])
+            logL += forward_backward!(fb_storages[k], hmm, obs_seqs[k])
         end
-        push!(logL_evolution, sum(fb.logL[] for fb in fb_storages))
+        push!(logL_evolution, logL)
         fit!(hmm, bw_storage, fb_storages, obs_seqs)
         if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
             break
@@ -59,10 +59,10 @@ function baum_welch!(
 end
 
 """
-    baum_welch(hmm_init, obs_seq; kwargs...)
-    baum_welch(hmm_init, obs_seqs, nb_seqs; kwargs...)
+    baum_welch(hmm_guess, obs_seq; kwargs...)
+    baum_welch(hmm_guess, obs_seqs, nb_seqs; kwargs...)
 
-Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_init`.
+Apply the Baum-Welch algorithm to estimate the parameters of an HMM starting from `hmm_guess`.
 
 Return a tuple `(hmm_est, logL_evolution)`.
 
@@ -73,7 +73,7 @@ Return a tuple `(hmm_est, logL_evolution)`.
 - `loglikelihood_increasing`: whether to throw an error if the loglikelihood decreases
 """
 function baum_welch(
-    hmm_init::AbstractHMM,
+    hmm_guess::AbstractHMM,
     obs_seqs::Vector{<:Vector},
     nb_seqs::Integer;
     atol=1e-5,
@@ -81,12 +81,12 @@ function baum_welch(
     loglikelihood_increasing=true,
 )
     check_nb_seqs(obs_seqs, nb_seqs)
-    hmm = deepcopy(hmm_init)
+    hmm = deepcopy(hmm_guess)
     fb_storages = [
         initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)
     ]
     bw_storage = initialize_baum_welch(hmm, fb_storages, obs_seqs)
-    logL_evolution = initialize_logL_evolution(hmm, obs_seqs, nb_seqs; max_iterations)
+    logL_evolution = initialize_logL_evolution(hmm, obs_seqs; max_iterations)
     baum_welch!(
         hmm,
         fb_storages,
@@ -101,13 +101,13 @@ function baum_welch(
 end
 
 function baum_welch(
-    hmm_init::AbstractHMM,
+    hmm_guess::AbstractHMM,
     obs_seq::Vector;
     atol=1e-5,
     max_iterations=100,
     loglikelihood_increasing=true,
 )
     return baum_welch(
-        hmm_init, [obs_seq], 1; atol, max_iterations, loglikelihood_increasing
+        hmm_guess, [obs_seq], 1; atol, max_iterations, loglikelihood_increasing
     )
 end

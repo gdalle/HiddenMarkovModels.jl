@@ -17,14 +17,11 @@ using SimpleUnPack: @unpack
 using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
-export AbstractHiddenMarkovModel, AbstractHMM
-export HiddenMarkovModel, HMM
-export PeriodicHiddenMarkovModel, PeriodicHMM
+export AbstractHMM, HMM, PermutedHMM
 export rand_prob_vec, rand_trans_mat
 export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit!
-export check_hmm
 
 include("types/abstract_hmm.jl")
 include("types/permuted_hmm.jl")
@@ -40,9 +37,9 @@ include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
+include("inference/logdensity.jl")
 
 include("types/hmm.jl")
-include("types/periodic_hmm.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()
