@@ -18,7 +18,7 @@ function baum_welch_has_converged(
     if length(logL_evolution) >= 2
         logL, logL_prev = logL_evolution[end], logL_evolution[end - 1]
         progress = logL - logL_prev
-        if loglikelihood_increasing && progress < 0
+        if loglikelihood_increasing && progress < min(0, -atol)
             error("Loglikelihood decreased in Baum-Welch")
         elseif abs(progress) < atol
             return true

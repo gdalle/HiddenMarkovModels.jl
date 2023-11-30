@@ -80,7 +80,8 @@ function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, t::Integer, o
     @inbounds for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
-    return check_right_finite(logb)
+    check_right_finite(logb)
+    return nothing
 end
 
 """
@@ -105,17 +106,20 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     state_seq = Vector{typeof(state1)}(undef, T)
     state_seq[1] = state1
 
-    dists = obs_distributions(hmm, 1)
-    obs1 = rand(rng, dists[state1])
+    @views for t in 1:(T - 1)
+        trans = transition_matrix(hmm, t)
+        state_seq[t + 1] = rand(
+            rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
+        )
+    end
+
+    dists1 = obs_distributions(hmm, 1)
+    obs1 = rand(rng, dists1[state1])
     obs_seq = Vector{typeof(obs1)}(undef, T)
     obs_seq[1] = obs1
 
-    @views for t in 2:T
-        trans = transition_matrix(hmm, t)
+    for t in 2:T
         dists = obs_distributions(hmm, t)
-        state_seq[t] = rand(
-            rng, LightCategorical(trans[state_seq[t - 1], :], dummy_log_probas)
-        )
         obs_seq[t] = rand(rng, dists[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)

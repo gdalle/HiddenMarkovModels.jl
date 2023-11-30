@@ -34,7 +34,7 @@ function Base.rand(rng::AbstractRNG, dist::LightCategorical{T1}) where {T1}
     s = zero(T1)
     for k in eachindex(dist.p)
         s += dist.p[k]
-        if u < s
+        if u <= s
             return k
         end
     end

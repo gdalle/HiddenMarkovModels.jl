@@ -23,15 +23,42 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
+examples_jl_path = joinpath(dirname(@__DIR__), "examples")
+examples_md_path = joinpath(@__DIR__, "src", "examples")
+
+for file in readdir(examples_md_path)
+    if endswith(file, ".md")
+        rm(joinpath(examples_md_path, file))
+    end
+end
+
+for file in readdir(examples_jl_path)
+    Literate.markdown(joinpath(examples_jl_path, file), examples_md_path)
+end
+
+function literate_title(path)
+    l = first(readlines(path))
+    return l[3:end]
+end
+
 pages = [
-    "Home" => "index.md",
     "Essentials" => [
+        "Home" => "index.md",
         "Background" => "background.md",
-        "API reference" => "api.md",
         "Alternatives" => "alternatives.md",
     ],
-    "Tutorials" => ["Debugging" => "debugging.md"],
-    "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
+    "Tutorials" => [
+        "Basics" => joinpath("examples", "basics.md"),
+        "Distributions" => joinpath("examples", "distributions.md"),
+        "Controlled" => joinpath("examples", "controlled.md"),
+        "Periodic" => joinpath("examples", "periodic.md"),
+    ],
+    "API reference" => "api.md",
+    "Advanced" => [
+        "Debugging" => "debugging.md",
+        "Formulas" => "formulas.md",
+        "Roadmap" => "roadmap.md",
+    ],
 ]
 
 fmt = Documenter.HTML(;

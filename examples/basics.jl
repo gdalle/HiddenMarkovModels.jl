@@ -1,4 +1,4 @@
-# # Built-in HMM
+# # Basics
 
 # ## Setup
 
@@ -6,7 +6,9 @@
 
 using Distributions
 using HiddenMarkovModels
+#md using Plots
 using Random
+using Test  #src
 
 # Random seed
 
@@ -18,7 +20,7 @@ Random.seed!(rng, 63)
 N = 2
 init = rand_prob_vec(N)
 trans = rand_trans_mat(N)
-dists = [Normal(i, 0.5) for i in 1:N]
+dists = [Normal(i, 1) for i in 1:N]
 hmm = HMM(init, trans, dists)
 
 # ## Simulation
@@ -44,20 +46,26 @@ forward_backward(hmm, obs_seq)
 
 # ## Learning from several sequences
 
-K = 3
-obs_seqs = [rand(rng, hmm, k * T).obs_seq for k in 1:K]
+nb_seqs = 3
+obs_seqs = [rand(rng, hmm, k * T).obs_seq for k in 1:nb_seqs]
 
 # Baum-Welch needs an initial guess
 
 init_guess = ones(N) / N
 trans_guess = ones(N, N) / N
-dists_guess = [Normal(i, 1) for i in 1:N]
+dists_guess = [Normal(i + randn() / 10, 1) for i in 1:N]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
 #-
 
-hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs, length(obs_seqs))
+hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs, nb_seqs)
+
+#md plot(logL_evolution)
+
+#-
 
 first(logL_evolution), last(logL_evolution)
+
+#-
 
 cat(hmm_est.trans, hmm.trans; dims=3)

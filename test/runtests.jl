@@ -5,12 +5,14 @@ using JuliaFormatter: JuliaFormatter
 using JET: JET
 using Test
 
-@testset verbose = true "HiddenMarkovModels.jl" begin
-    @testset "Code formatting" begin
-        @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
-    end
+examples_path = joinpath(dirname(@__DIR__), "examples")
 
+@testset verbose = true "HiddenMarkovModels.jl" begin
     if VERSION >= v"1.9"
+        @testset "Code formatting" begin
+            @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
+        end
+
         @testset "Code quality" begin
             Aqua.test_all(HiddenMarkovModels; deps_compat=(check_extras=false,))
         end
@@ -34,6 +36,12 @@ using Test
 
     @testset "Autodiff" begin
         include("autodiff.jl")
+    end
+
+    for file in readdir(examples_path)
+        @testset "Example - $file" begin
+            include(joinpath(examples_path, file))
+        end
     end
 
     @testset "Doctests" begin

@@ -12,5 +12,6 @@ docs/**/*.svg
 *.csv
 *.txt
 /docs/src/index.md
+/docs/src/examples/*.md
 .vscode/
 .benchmarkci/

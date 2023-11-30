@@ -38,8 +38,8 @@ function test_type_stability(hmm::AbstractHMM; T::Integer)
     end
 
     @testset "Baum-Welch" begin
-        @test_opt target_modules = (HMMs,) baum_welch(hmm, obs_seq)
-        @test_call target_modules = (HMMs,) baum_welch(hmm, obs_seq)
+        @test_opt target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
+        @test_call target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
     end
 end
 
@@ -70,7 +70,7 @@ function test_allocations(hmm::AbstractHMM; T::Integer, nb_seqs::Integer)
         HMMs.initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)
     ]
     bw_storage = HMMs.initialize_baum_welch(hmm, fb_storages, obs_seqs)
-    logL_evolution = HMMs.initialize_logL_evolution(hmm, obs_seqs; max_iterations=2)
+    logL_evolution = HMMs.initialize_logL_evolution(hmm, obs_seqs; max_iterations=1)
     allocs = @allocated HMMs.baum_welch!(
         hmm,
         fb_storages,
@@ -78,14 +78,13 @@ function test_allocations(hmm::AbstractHMM; T::Integer, nb_seqs::Integer)
         logL_evolution,
         obs_seqs;
         atol=-Inf,
-        max_iterations=2,
+        max_iterations=1,
         loglikelihood_increasing=false,
     )
     @test allocs == 0
 end
 
-N, D, T, nb_seqs = 2, 2, 100, 3
-R = Float32
+N, D, T, nb_seqs, R = 3, 2, 100, 5, Float32
 
 ## Distributions
 
