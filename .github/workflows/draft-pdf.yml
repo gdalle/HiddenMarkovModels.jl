@@ -2,7 +2,6 @@ name: JOSS paper compilation
 on:
   push:
     branches:
-      - main
       - joss*
 jobs:
   paper:
