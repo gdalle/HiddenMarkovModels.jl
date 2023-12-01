@@ -1,5 +1,5 @@
 @compile_workload begin
-    N, D, T = 3, 2, 100
+    N, D, T = 3, 2, 10
     init = rand_prob_vec(N)
     trans = rand_trans_mat(N)
     dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]

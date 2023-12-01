@@ -12,7 +12,7 @@ function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
 end
 
 function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seqs::MultiSeq)
-    return sum(logdensity(hmm, obs_seqs[k]) for k in eachindex(obs_seqs))
+    return sum(logdensityof(hmm, obs_seqs[k]) for k in eachindex(obs_seqs))
 end
 
 """

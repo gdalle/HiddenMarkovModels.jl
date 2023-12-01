@@ -44,13 +44,13 @@ function test_allocations(hmm::AbstractHMM; T::Integer)
     f_storage = HMMs.initialize_forward(hmm, obs_seq)
     allocs = @allocated HiddenMarkovModels.forward!(f_storage, hmm, obs_seq)
     @test allocs == 0
-    
+
     ## Viterbi
     viterbi(hmm, obs_seq)  # compile
     v_storage = HMMs.initialize_viterbi(hmm, obs_seq)
     allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq)
     @test allocs == 0
-    
+
     ## Forward-backward
     forward_backward(hmm, obs_seq)  # compile
     fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq)
@@ -88,7 +88,7 @@ end
 @testset "DiagNormal" begin
     init = rand_prob_vec(R, N)
     trans = rand_trans_mat(R, N)
-    dists = [MvNormal(randn(R, D), 1) for i in 1:N]
+    dists = [MvNormal(randn(R, D), I) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
 end

@@ -44,6 +44,7 @@ include("inference/logdensity.jl")
 include("inference/chainrules.jl")
 
 include("types/hmm.jl")
+include("types/periodic_hmm.jl")
 
 if !isdefined(Base, :get_extension)
     function __init__()
@@ -56,6 +57,6 @@ if !isdefined(Base, :get_extension)
     end
 end
 
-# include("precompile.jl")
+include("precompile.jl")
 
 end

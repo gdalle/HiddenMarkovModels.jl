@@ -1,7 +1,7 @@
 using Distributions
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels: LightDiagNormal, LightCategorical, mynnz
+using HiddenMarkovModels: LightDiagNormal, LightCategorical, mynnz, PeriodicHMM, period
 using LinearAlgebra
 using Random
 using SimpleUnPack
@@ -20,32 +20,39 @@ function max_diff_small(hmm1, hmm2; atol, test_init=false)
         end
     end
 
-    trans1 = transition_matrix(hmm1, 1)
-    trans2 = transition_matrix(hmm2, 1)
-    if mynnz(trans1) != mynnz(trans2)
-        @warn "Wrong number of nonzeros in transition matrix" mynnz(trans1) mynnz(trans2)
-        return false
-    end
-    if maximum(abs, trans1 - trans2) > atol
-        @warn "Error in transition matrix" trans1 trans2
-        return false
+    for t in 1:period(hmm1)
+        trans1 = transition_matrix(hmm1, t)
+        trans2 = transition_matrix(hmm2, t)
+        if mynnz(trans1) != mynnz(trans2)
+            @warn "Wrong number of nonzeros in transition matrix" t mynnz(trans1) mynnz(
+                trans2
+            )
+            return false
+        end
+        if maximum(abs, trans1 - trans2) > atol
+            @warn "Error in transition matrix" trans1 trans2
+            return false
+        end
     end
 
-    dists1 = obs_distributions(hmm1, 1)
-    dists2 = obs_distributions(hmm2, 1)
-    for (dist1, dist2) in zip(dists1, dists2)
-        if hasfield(typeof(dist1), :μ)
-            if maximum(abs, dist1.μ - dist2.μ) > atol
-                @warn "Error in observation distribution" dist1.μ dist2.μ
-                return false
-            end
-        elseif hasfield(typeof(dist1), :p)
-            if maximum(abs, dist1.p - dist2.p) > atol
-                @warn "Error in observation distribution" dist1.p dist2.p
-                return false
+    for t in 1:period(hmm1)
+        dists1 = obs_distributions(hmm1, t)
+        dists2 = obs_distributions(hmm2, t)
+        for (dist1, dist2) in zip(dists1, dists2)
+            if hasfield(typeof(dist1), :μ)
+                if maximum(abs, dist1.μ - dist2.μ) > atol
+                    @warn "Error in observation distribution" t dist1.μ dist2.μ
+                    return false
+                end
+            elseif hasfield(typeof(dist1), :p)
+                if maximum(abs, dist1.p - dist2.p) > atol
+                    @warn "Error in observation distribution" t dist1.p dist2.p
+                    return false
+                end
             end
         end
     end
+
     return true
 end
 
@@ -152,8 +159,8 @@ end
     trans_guess = [0.7 0.3; 0.3 0.7]
 
     D = 3
-    dists = [MvNormal(-ones(D), 1), MvNormal(+ones(D), 1)]
-    dists_guess = [MvNormal(-ones(D) / 2, 1), MvNormal(+ones(D) / 2, 1)]
+    dists = [MvNormal(-ones(D), I), MvNormal(+ones(D), I)]
+    dists_guess = [MvNormal(-ones(D) / 2, I), MvNormal(+ones(D) / 2, I)]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
@@ -221,4 +228,22 @@ end
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
     test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
+end
+
+# Periodic
+
+@testset "Normal periodic" begin
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
+
+    trans_periodic = ([0.8 0.2; 0.2 0.8], [0.6 0.4; 0.4 0.6])
+    trans_periodic_guess = ([0.7 0.3; 0.3 0.7], [0.5 0.5; 0.5 0.5])
+
+    dists_periodic = ([Normal(-1), Normal(+1)], [Normal(-2), Normal(+2)])
+    dists_periodic_guess = ([Normal(-0.7), Normal(+0.7)], [Normal(-1.5), Normal(+1.5)])
+
+    hmm = PeriodicHMM(init, trans_periodic, dists_periodic)
+    hmm_guess = PeriodicHMM(init_guess, trans_periodic_guess, dists_periodic_guess)
+
+    test_correctness_baum_welch(hmm, hmm_guess; T=1000, nb_seqs=20, atol=0.05)
 end

@@ -7,7 +7,7 @@ Default behavior:
 
     fit!(dists[i], x, w)
 
-Specializatoin for Distributions.jl (in the package extension)
+Specialization for Distributions.jl (in the package extension)
 
     dists[i] = fit(eltype(dists), x, w)
 

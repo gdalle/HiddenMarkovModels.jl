@@ -98,7 +98,7 @@ StatsAPI.fit!  # TODO: complete
 
 Simulate `hmm` for `T` time steps. 
 """
-function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     dummy_log_probas = fill(-Inf, length(hmm))
 
     init = initialization(hmm)
@@ -125,4 +125,4 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-Base.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)
+Random.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)

@@ -8,116 +8,57 @@ end
 
 #-
 
+period(hmm::HMM) = 1
 period(hmm::PeriodicHMM) = length(hmm.trans_periodic)
 
-Base.length(phmm::PeriodicHMM) = length(phmm.init)
-HMMs.initialization(phmm::PeriodicHMM) = phmm.init
+Base.length(hmm::PeriodicHMM) = length(hmm.init)
+initialization(hmm::PeriodicHMM) = hmm.init
 
-function HMMs.transition_matrix(phmm::PeriodicHMM, t::Integer)
-    return phmm.trans_periodic[(t - 1) % period(hmm) + 1]
+function transition_matrix(hmm::PeriodicHMM, t::Integer)
+    return hmm.trans_periodic[(t - 1) % period(hmm) + 1]
 end
 
-function HMMs.obs_distributions(phmm::PeriodicHMM, t::Integer)
-    return phmm.dists_periodic[(t - 1) % period(hmm) + 1]
+function obs_distributions(hmm::PeriodicHMM, t::Integer)
+    return hmm.dists_periodic[(t - 1) % period(hmm) + 1]
 end
 
 ## Fitting
 
-function fit_states!(hmm::PeriodicHMM, fb_storages::Vector{<:HMMs.ForwardBackwardStorage})
+function StatsAPI.fit!(hmm::PeriodicHMM, bw_storage::BaumWelchStorage, obs_seqs::MultiSeq)
+    @unpack fb_storages, obs_seqs_concat, state_marginals_concat, seq_limits = bw_storage
     L = period(hmm)
-    hmm.init .= 0
+    # States
+    hmm.init .= zero(eltype(hmm.init))
     for l in 1:L
-        hmm.trans_periodic[l] .= 0
+        hmm.trans_periodic[l] .= zero(eltype(hmm.trans_periodic[l]))
     end
     for k in eachindex(fb_storages)
         @unpack γ, ξ = fb_storages[k]
         hmm.init .+= view(γ, :, 1)
         for t in eachindex(ξ)
             l = (t - 1) % L + 1
-            hmm.trans_periodic[l] .+= ξ[t]
+            mynonzeros(hmm.trans_periodic[l]) .+= mynonzeros(ξ[t])
         end
     end
-    hmm.init ./= sum(hmm.init)
+    sum_to_one!(hmm.init)
     for l in 1:L
-        hmm.trans_periodic[l] ./= sum(hmm.trans_periodic[l]; dims=2)
+        foreach(sum_to_one!, eachrow(hmm.trans_periodic[l]))
     end
-    return nothing
-end
-
-#-
-
-function fit_observations!(
-    hmm::PeriodicHMM,
-    fb_storages::Vector{<:HMMs.ForwardBackwardStorage},
-    obs_seqs::Vector{<:Vector},
-)
-    L = period(hmm)
+    # Observations
     for l in 1:L
+        indices_l = reduce(
+            vcat, (seq_limits[k] + l):L:seq_limits[k + 1] for k in eachindex(obs_seqs)
+        )  # TODO: only allocating line if I'm right
+        obs_seq_periodic = view(obs_seqs_concat, indices_l)
+        state_marginals_periodic = view(state_marginals_concat, :, indices_l)
         for i in 1:length(hmm)
-            obs_seq_periodic = reduce(
-                vcat, obs_seqs[k][l:L:end] for k in eachindex(obs_seqs)
+            fit_element_from_sequence!(
+                hmm.dists_periodic[l],
+                i,
+                obs_seq_periodic,
+                view(state_marginals_periodic, i, :),
             )
-            state_marginals_periodic = reduce(
-                vcat, fb_storages[k].γ[i, l:L:end] for k in eachindex(fb_storages)
-            )
-            D = typeof(hmm.dists_periodic[l][i])
-            hmm.dists_periodic[l][i] = fit(D, obs_seq_periodic, state_marginals_periodic)
         end
     end
     return nothing
 end
-
-#-
-
-function StatsAPI.fit!(
-    hmm::PeriodicHMM,
-    ::BaumWelchStoragePeriodicHMM,
-    fb_storages::Vector{<:HMMs.ForwardBackwardStorage},
-    obs_seqs::Vector{<:Vector},
-)
-    fit_states!(hmm, fb_storages)
-    fit_observations!(hmm, fb_storages, obs_seqs)
-    return nothing
-end
-
-# ## Example
-
-N = 2
-T = 1000
-
-init = ones(N) / N;
-trans_periodic = (
-    [0.9 0.1; 0.1 0.9], #
-    [0.8 0.2; 0.2 0.8], #
-    [0.7 0.3; 0.3 0.7],
-);
-dists_periodic = (
-    [Normal(0), Normal(4)], #
-    [Normal(2), Normal(6)], #
-    [Normal(4), Normal(8)],
-);
-
-hmm = PeriodicHMM(init, trans_periodic, dists_periodic);
-
-#-
-
-state_seq, obs_seq = rand(hmm, T);
-hmm_est, logL_evolution = baum_welch(hmm, obs_seq);
-
-#md plot(logL_evolution)
-
-#-
-
-cat(hmm_est.init, hmm.init; dims=3)
-
-#-
-
-cat(hmm_est.trans_periodic[1], hmm.trans_periodic[1]; dims=3)
-cat(hmm_est.trans_periodic[2], hmm.trans_periodic[2]; dims=3)
-cat(hmm_est.trans_periodic[3], hmm.trans_periodic[3]; dims=3)
-
-#-
-
-cat(hmm_est.dists_periodic[1], hmm.dists_periodic[1]; dims=3)
-cat(hmm_est.dists_periodic[2], hmm.dists_periodic[2]; dims=3)
-cat(hmm_est.dists_periodic[3], hmm.dists_periodic[3]; dims=3)

@@ -67,3 +67,4 @@ first(logL_evolution), last(logL_evolution)
 #-
 
 cat(hmm_est.trans, hmm.trans; dims=3)
+@test hmm_est.trans ≈ hmm.trans atol = 1e-1  #src

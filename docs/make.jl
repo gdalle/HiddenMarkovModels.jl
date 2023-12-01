@@ -51,7 +51,6 @@ pages = [
         "Basics" => joinpath("examples", "basics.md"),
         "Distributions" => joinpath("examples", "distributions.md"),
         "Controlled" => joinpath("examples", "controlled.md"),
-        "Periodic" => joinpath("examples", "periodic.md"),
     ],
     "API reference" => "api.md",
     "Advanced" => [
