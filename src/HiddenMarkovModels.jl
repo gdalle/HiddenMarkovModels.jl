@@ -19,7 +19,6 @@ using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHMM, HMM, PermutedHMM
-export rand_prob_vec, rand_trans_mat
 export initialization, transition_matrix, obs_distributions
 export logdensityof, viterbi, forward, forward_backward, baum_welch
 export fit!

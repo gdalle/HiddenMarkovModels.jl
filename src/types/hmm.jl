@@ -22,8 +22,8 @@ end
 
 Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
-transition_matrix(hmm::HMM, ::Integer) = hmm.trans
-obs_distributions(hmm::HMM, ::Integer) = hmm.dists
+transition_matrix(hmm::HMM) = hmm.trans
+obs_distributions(hmm::HMM) = hmm.dists
 
 ## Fitting
 

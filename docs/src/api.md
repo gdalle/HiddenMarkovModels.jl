@@ -21,6 +21,7 @@ eltype
 initialization
 transition_matrix
 obs_distributions
+fit!
 ```
 
 ## Inference
@@ -31,20 +32,13 @@ forward
 viterbi
 forward_backward
 baum_welch
-fit!
+MultiSeq
 ```
 
-## Misc
+## Internals
 
-```@docs
-rand_prob_vec
-rand_trans_mat
-HiddenMarkovModels.fit_element_from_sequence!
-HiddenMarkovModels.LightDiagNormal
-HiddenMarkovModels.LightCategorical
-```
-
-## In-place algorithms (internals)
+These objects are not yet stabilized and may change at any time.
+Do not consider them to be part of the API subject to semantic versioning.
 
 ### Storage types
 
@@ -71,6 +65,18 @@ HiddenMarkovModels.forward!
 HiddenMarkovModels.viterbi!
 HiddenMarkovModels.forward_backward!
 HiddenMarkovModels.baum_welch!
+```
+
+## Misc
+
+```@docs
+HiddenMarkovModels.rand_prob_vec
+HiddenMarkovModels.rand_trans_mat
+HiddenMarkovModels.project_prob_vec
+HiddenMarkovModels.project_trans_mat
+HiddenMarkovModels.fit_element_from_sequence!
+HiddenMarkovModels.LightDiagNormal
+HiddenMarkovModels.LightCategorical
 ```
 
 ## Notations

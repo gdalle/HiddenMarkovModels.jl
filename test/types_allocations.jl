@@ -1,6 +1,6 @@
 using Distributions
 using HiddenMarkovModels
-using HiddenMarkovModels: LightDiagNormal, LightCategorical
+using HiddenMarkovModels: LightDiagNormal, LightCategorical, rand_prob_vec, rand_trans_mat
 import HiddenMarkovModels as HMMs
 using JET
 using LinearAlgebra

@@ -2,6 +2,7 @@ using Distributions
 using FiniteDifferences: FiniteDifferences, central_fdm
 using ForwardDiff: ForwardDiff
 using HiddenMarkovModels
+using HiddenMarkovModels: rand_prob_vec, rand_trans_mat
 using SimpleUnPack
 using Test
 using Zygote: Zygote

@@ -15,6 +15,9 @@ struct BaumWelchStorage{O,R,M} <: AbstractBaumWelchStorage
     logL_evolution::Vector{R}
 end
 
+"""
+    initialize_baum_welch(hmm, MultiSeq(obs_seqs); max_iterations)
+"""
 function initialize_baum_welch(hmm::AbstractHMM, obs_seqs::MultiSeq; max_iterations=0)
     O = typeof(obs_seqs[1][1])
     R = eltype(hmm, obs_seqs[1][1])

@@ -7,6 +7,8 @@ using Distributions: Normal, DiagNormal, PDiagMat
 using HiddenMarkovModels
 using HiddenMarkovModels:
     LightDiagNormal,
+    rand_prob_vec,
+    rand_trans_mat,
     initialize_viterbi,
     viterbi!,
     initialize_forward,

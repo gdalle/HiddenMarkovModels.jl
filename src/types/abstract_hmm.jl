@@ -60,20 +60,26 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
+    transition_matrix(hmm)
     transition_matrix(hmm, t)
 
-Return the matrix of state transition probabilities for `hmm` at time `t`.
+Return the matrix of state transition probabilities for `hmm` (at time `t`).
 """
-function transition_matrix end
+transition_matrix(hmm::AbstractHMM, t::Integer) = transition_matrix(hmm)
 
 """
+    obs_distributions(hmm)
     obs_distributions(hmm, t)
 
-Return a vector of observation distributions, one for each state of `hmm` at time `t`.
+Return a vector of observation distributions, one for each state of `hmm` (at time `t`).
 
-There objects should support `rand(rng, dist)` and `DensityInterface.logdensityof(dist, obs)`.
+There objects should support
+
+- `rand(rng, dist)`
+- `DensityInterface.logdensityof(dist, obs)`
+- `StatsAPI.fit!(dist, obs_seq, weight_seq)`
 """
-function obs_distributions end
+obs_distributions(hmm::AbstractHMM, t::Integer) = obs_distributions(hmm)
 
 function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, t::Integer, obs)
     dists = obs_distributions(hmm, t)
