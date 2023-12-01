@@ -12,6 +12,7 @@ The only fields useful outside of the algorithm are `α` and `logL`, the rest do
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
+    logL::RefValue{R}
     "observation loglikelihoods `logb[i] = ℙ(Y[t] | X[t]=i)`"
     logb::Vector{R}
     "scaled forward messsages for a given time step"
@@ -22,23 +23,35 @@ end
 
 """
     initialize_forward(hmm, obs_seq)
+    initialize_forward(hmm, MultiSeq(obs_seqs))
 """
 function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     N = length(hmm)
     R = eltype(hmm, obs_seq[1])
+    logL = RefValue{R}()
     logb = Vector{R}(undef, N)
     α = Vector{R}(undef, N)
     α_next = Vector{R}(undef, N)
-    storage = ForwardStorage(logb, α, α_next)
+    storage = ForwardStorage(logL, logb, α, α_next)
     return storage
+end
+
+function initialize_forward(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    R = eltype(hmm, obs_seqs[1][1])
+    storages = Vector{ForwardStorage{R}}(undef, length(obs_seqs))
+    for k in eachindex(obs_seqs, storages)
+        storages[k] = initialize_forward(hmm, obs_seqs[k])
+    end
+    return storages
 end
 
 """
     forward!(storage, hmm, obs_seq)
+    forward!(storages, hmm, MultiSeq(obs_seqs))
 """
 function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     T = length(obs_seq)
-    @unpack logb, α, α_next = storage
+    @unpack logL, logb, α, α_next = storage
 
     init = initialization(hmm)
     obs_logdensities!(logb, hmm, 1, obs_seq[1])
@@ -46,7 +59,7 @@ function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     α .= init .* exp.(logb .- logm)
     c = inv(sum(α))
     α .*= c
-    logL = -log(c) + logm
+    logL[] = -log(c) + logm
 
     for t in 1:(T - 1)
         trans = transition_matrix(hmm, t)
@@ -57,15 +70,22 @@ function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
         c = inv(sum(α_next))
         α_next .*= c
         α .= α_next
-        logL += -log(c) + logm
+        logL[] += -log(c) + logm
     end
 
     check_finite(α)
-    return logL
+    return nothing
+end
+
+function forward!(storages::Vector{<:ForwardStorage}, hmm::AbstractHMM, obs_seqs::MultiSeq)
+    for k in eachindex(storages, obs_seqs)
+        forward!(storages[k], hmm, obs_seqs[k])
+    end
 end
 
 """
     forward(hmm, obs_seq)
+    forward(hmm, MultiSeq(obs_seqs))
 
 Run the forward algorithm to infer the current state of `hmm` after sequence `obs_seq`.
     
@@ -74,8 +94,10 @@ This function returns a tuple `(α, logL)` where
 - `α[i]` is the posterior probability of state `i` at the end of the sequence
 - `logL` is the loglikelihood of the sequence
 """
-function forward(hmm::AbstractHMM, obs_seq::Vector)
-    storage = initialize_forward(hmm, obs_seq)
-    logL = forward!(storage, hmm, obs_seq)
-    return (α=storage.α, logL=logL)
+function forward(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    storages = initialize_forward(hmm, obs_seqs)
+    forward!(storages, hmm, obs_seqs)
+    return [(α=storages[k].α, logL=storages[k].logL[]) for k in eachindex(storages)]
 end
+
+forward(hmm::AbstractHMM, obs_seq::Vector) = only(forward(hmm, MultiSeq([obs_seq])))

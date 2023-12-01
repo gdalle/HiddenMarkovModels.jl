@@ -12,6 +12,7 @@ The only fields useful outside of the algorithm are `γ`, `ξ`, the rest does no
 $(TYPEDFIELDS)
 """
 struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
+    logL::RefValue{R}
     "scaled forward messsages `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
     α::Matrix{R}
     "scaled backward messsages `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
@@ -34,6 +35,7 @@ end
 
 """
     initialize_forward_backward(hmm, obs_seq)
+    initialize_forward_backward(hmm, MultiSeq(obs_seqs))
 """
 function initialize_forward_backward(
     hmm::AbstractHMM, obs_seq::Vector; transition_marginals=true
@@ -43,6 +45,7 @@ function initialize_forward_backward(
     R = eltype(hmm, obs_seq[1])
     M = typeof(similar(trans, R))
 
+    logL = RefValue{R}()
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     c = Vector{R}(undef, T)
@@ -57,11 +60,24 @@ function initialize_forward_backward(
     logm = Vector{R}(undef, T)
     B = Matrix{R}(undef, N, T)
     scratch = Vector{R}(undef, N)
-    return ForwardBackwardStorage{R,M}(α, β, c, γ, ξ, logB, logm, B, scratch)
+    return ForwardBackwardStorage{R,M}(logL, α, β, c, γ, ξ, logB, logm, B, scratch)
+end
+
+function initialize_forward_backward(
+    hmm::AbstractHMM, obs_seqs::MultiSeq; transition_marginals=true
+)
+    R = eltype(hmm, obs_seqs[1][1])
+    M = typeof(similar(transition_matrix(hmm, 1), R))
+    storages = Vector{ForwardBackwardStorage{R,M}}(undef, length(obs_seqs))
+    for k in eachindex(storages, obs_seqs)
+        storages[k] = initialize_forward_backward(hmm, obs_seqs[k]; transition_marginals)
+    end
+    return storages
 end
 
 """
     forward_backward!(storage, hmm, obs_seq)
+    forward_backward!(storage, hmm, MultiSeq(obs_seqs))
 """
 function forward_backward!(
     storage::ForwardBackwardStorage,
@@ -70,7 +86,7 @@ function forward_backward!(
     transition_marginals::Bool=true,
 )
     T = length(obs_seq)
-    @unpack α, β, c, γ, ξ, logB, logm, B, scratch = storage
+    @unpack logL, α, β, c, γ, ξ, logB, logm, B, scratch = storage
 
     # Observation loglikelihoods then likelihoods
     @views for t in 1:T
@@ -112,8 +128,19 @@ function forward_backward!(
     check_finite(γ)
 
     # Loglikelihood
-    logL = -sum(log, c) + sum(logm)
-    return logL
+    logL[] = -sum(log, c) + sum(logm)
+    return nothing
+end
+
+function forward_backward!(
+    storages::Vector{<:ForwardBackwardStorage},
+    hmm::AbstractHMM,
+    obs_seqs::MultiSeq;
+    transition_marginals::Bool=true,
+)
+    for k in eachindex(storages, obs_seqs)
+        forward_backward!(storages[k], hmm, obs_seqs[k]; transition_marginals)
+    end
 end
 
 """
@@ -130,8 +157,12 @@ This function returns a tuple `(γ, logL)` where
 
 - [`ForwardBackwardStorage`](@ref)
 """
+function forward_backward(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    storages = initialize_forward_backward(hmm, obs_seqs; transition_marginals=false)
+    forward_backward!(storages, hmm, obs_seqs; transition_marginals=false)
+    return [(γ=storages[k].γ, logL=storages[k].logL[]) for k in eachindex(storages)]
+end
+
 function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
-    storage = initialize_forward_backward(hmm, obs_seq; transition_marginals=false)
-    logL = forward_backward!(storage, hmm, obs_seq; transition_marginals=false)
-    return (γ=storage.γ, logL=logL)
+    return only(forward_backward(hmm, MultiSeq([obs_seq])))
 end

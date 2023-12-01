@@ -17,10 +17,9 @@ Random.seed!(rng, 63)
 
 # ## Model creation
 
-N = 2
-init = rand_prob_vec(N)
-trans = rand_trans_mat(N)
-dists = [Normal(i, 1) for i in 1:N]
+init = [0.4, 0.6]
+trans = [0.7 0.3; 0.2 0.8]
+dists = [Normal(-1, 0.3), Normal(1, 0.3)]
 hmm = HMM(init, trans, dists)
 
 # ## Simulation
@@ -46,19 +45,18 @@ forward_backward(hmm, obs_seq)
 
 # ## Learning from several sequences
 
-nb_seqs = 3
-obs_seqs = [rand(rng, hmm, k * T).obs_seq for k in 1:nb_seqs]
+obs_seqs = [rand(rng, hmm, k * 100).obs_seq for k in 1:3]
 
 # Baum-Welch needs an initial guess
 
-init_guess = ones(N) / N
-trans_guess = ones(N, N) / N
-dists_guess = [Normal(i + randn() / 10, 1) for i in 1:N]
+init_guess = [0.5, 0.5]
+trans_guess = [0.5 0.5; 0.5 0.5]
+dists_guess = [Normal(-0.5, 1), Normal(0.5, 1)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
 #-
 
-hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs, nb_seqs)
+hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs))
 
 #md plot(logL_evolution)
 

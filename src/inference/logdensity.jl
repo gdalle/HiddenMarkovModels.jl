@@ -1,5 +1,6 @@
 """
     logdensityof(hmm, obs_seq)
+    logdensityof(hmm, MultiSeq(obs_seqs))
 
 Run the forward algorithm to compute the posterior loglikelihood of sequence `obs_seq` for `hmm`.
 
@@ -8,6 +9,10 @@ This function returns a number.
 function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seq::Vector)
     _, logL = forward(hmm, obs_seq)
     return logL
+end
+
+function DensityInterface.logdensityof(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    return sum(logdensity(hmm, obs_seqs[k]) for k in eachindex(obs_seqs))
 end
 
 """

@@ -1,3 +1,9 @@
+module HMMBenchmarkHMMBaseExt
+
+using BenchmarkTools
+using Distributions
+using HMMBase
+using SparseArrays
 
 function rand_params_hmmbase(; N, D)
     p = ones(N) / N
@@ -54,4 +60,6 @@ function benchmarkables_hmmbase(; algos, N, D, T, K, I)
         end setup = (model = rand_model_hmmbase(; N=$N, D=$D))
     end
     return benchs
+end
+
 end

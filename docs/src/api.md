@@ -52,6 +52,7 @@ HiddenMarkovModels.LightCategorical
 HiddenMarkovModels.ForwardStorage
 HiddenMarkovModels.ViterbiStorage
 HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.BaumWelchStorage
 ```
 
 ### Initializing storage
@@ -60,7 +61,7 @@ HiddenMarkovModels.ForwardBackwardStorage
 HiddenMarkovModels.initialize_forward
 HiddenMarkovModels.initialize_viterbi
 HiddenMarkovModels.initialize_forward_backward
-HiddenMarkovModels.initialize_logL_evolution
+HiddenMarkovModels.initialize_baum_welch
 ```
 
 ### Modifying storage

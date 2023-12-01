@@ -1,84 +1,46 @@
-function benchmarkables_by_implem(; implem, algos, kwargs...)
-    if implem == "HMMs.jl"
-        return benchmarkables_hmms(; algos, kwargs...)
-    elseif implem == "HMMBase.jl"
-        return benchmarkables_hmmbase(; algos, kwargs...)
-    elseif implem == "hmmlearn"
-        return benchmarkables_hmmlearn(; algos, kwargs...)
-    elseif implem == "pomegranate"
-        return benchmarkables_pomegranate(; algos, kwargs...)
-    else
-        throw(ArgumentError("Unknown implementation"))
-    end
-end
-
-function define_suite(; implems, algos, N_vals, D_vals, T_vals, K_vals, I_vals)
+function define_suite(; implems, configurations, algos)
     SUITE = BenchmarkGroup()
-    if ("HMMBase.jl" in implems) && any(>(1), K_vals)
-        @warn "HMMBase.jl doesn't support multiple observation sequences, concatenating instead."
-    end
     for implem in implems
         SUITE[implem] = BenchmarkGroup()
-        bench_tup = benchmarkables_by_implem(; implem, algos, N=1, D=1, T=2, K=1, I=1)
-        for (algo, bench) in pairs(bench_tup)
-            SUITE[implem][algo] = BenchmarkGroup()
-            SUITE[implem][algo][(1, 1, 2, 1, 1)] = bench
-        end
-        for (N, D, T, K, I) in zip(N_vals, D_vals, T_vals, K_vals, I_vals)
-            bench_tup = benchmarkables_by_implem(; implem, algos, N, D, T, K, I)
+        for configuration in configurations
+            SUITE[implem][to_tuple(configuration)] = BenchmarkGroup()
+            bench_tup = benchmarkables_by_implem(; implem, configuration, algos)
             for (algo, bench) in pairs(bench_tup)
-                SUITE[implem][algo][(N, D, T, K, I)] = bench
+                SUITE[implem][to_tuple(configuration)][algo] = bench
             end
         end
     end
     return SUITE
 end
 
-julia_implems(implems) = filter(i -> contains(i, ".jl"), implems)
-python_implems(implems) = filter(i -> !contains(i, ".jl"), implems)
-
-function run_suite(;
-    implems, algos, N_vals, D_vals, T_vals, K_vals, I, path=nothing, kwargs...
-)
-    julia_suite = define_suite(;
-        implems=julia_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I
-    )
-    python_suite = define_suite(;
-        implems=python_implems(implems), algos, N_vals, D_vals, T_vals, K_vals, I
-    )
-
-    default_openblas_threads = BLAS.get_num_threads()
-
-    @info "Running Python benchmarks with OPENBLAS_NUM_THREADS=$default_openblas_threads"
-    raw_python_results = BenchmarkTools.run(python_suite; verbose=true, evals=1, kwargs...)
-
-    @info "Running Julia benchmarks with OPENBLAS_NUM_THREADS=1"
-    BLAS.set_num_threads(1)
-    raw_julia_results = nothing
-    try
-        raw_julia_results = BenchmarkTools.run(
-            julia_suite; verbose=true, evals=1, kwargs...
-        )
-    finally
-        BLAS.set_num_threads(default_openblas_threads)
+function benchmarkables_by_implem(; implem, configuration, algos)
+    if implem == "HiddenMarkovModels.jl"
+        return benchmarkables_hiddenmarkovmodels(; configuration, algos)
+    elseif implem == "HMMBase.jl"
+        return benchmarkables_hmmbase(; configuration, algos)
+    elseif implem == "hmmlearn"
+        return benchmarkables_hmmlearn(; configuration, algos)
+    elseif implem == "pomegranate"
+        return benchmarkables_pomegranate(; configuration, algos)
+    else
+        throw(ArgumentError("Unknown implementation"))
     end
-
-    julia_results = minimum(raw_julia_results)
-    python_results = minimum(raw_python_results)
-    return (; julia_results, python_results)
 end
 
-function parse_results(many_results...; path=nothing)
+function parse_results(results; path=nothing)
     data = DataFrame()
-    for results in many_results
-        for implem in identity.(keys(results))
-            for algo in identity.(keys(results[implem]))
-                for (N, D, T, K, I) in identity.(keys(results[implem][algo]))
-                    perf = results[implem][algo][(N, D, T, K, I)]
-                    @unpack time, gctime, memory, allocs = perf
-                    row = (; implem, algo, N, D, T, K, I, time, gctime, memory, allocs)
-                    push!(data, row)
-                end
+    for implem in identity.(keys(results))
+        for configuration_tup in identity.(keys(results[implem]))
+            configuration = Configuration(configuration_tup...)
+            for algo in identity.(keys(results[implem][configuration_tup]))
+                perf = results[implem][configuration_tup][algo]
+                @unpack time, gctime, memory, allocs = perf
+                row = merge(
+                    (; implem, algo),
+                    to_namedtuple(configuration),
+                    (; time, gctime, memory, allocs),
+                )
+                push!(data, row)
             end
         end
     end

@@ -7,41 +7,41 @@ using Test
 using Zygote: Zygote
 
 N = 5
-T = 100
+T = 10
 
-p = rand_prob_vec(N)
-A = rand_trans_mat(N)
-μ = rand(N)
-d = [Normal(μ[i], 1.0) for i in 1:N]
-hmm = HMM(p, A, d)
+init = rand_prob_vec(N)
+trans = rand_trans_mat(N)
+means = rand(N)
+dists = [Normal(means[i], 1.0) for i in 1:N]
+hmm = HMM(init, trans, dists)
 
 obs_seq = rand(hmm, T).obs_seq;
 
-function f_init(_p)
-    hmm = HMM(_p, A, d)
-    return logdensityof(hmm, obs_seq)
+function f_init(_init)
+    new_hmm = HMM(_init, trans, dists)
+    return logdensityof(new_hmm, obs_seq)
 end
 
-g1 = ForwardDiff.gradient(f_init, p)
-g2 = Zygote.gradient(f_init, p)[1]
+g1 = ForwardDiff.gradient(f_init, init)
+g2 = Zygote.gradient(f_init, init)[1]
 @test isapprox(g1, g2)
 
-function f_trans(_A)
-    hmm = HMM(p, _A, d)
-    return logdensityof(hmm, obs_seq)
+function f_trans(_trans)
+    new_hmm = HMM(init, _trans, dists)
+    return logdensityof(new_hmm, obs_seq)
 end
 
-g1 = ForwardDiff.gradient(f_trans, A)
-g2 = Zygote.gradient(f_trans, A)[1]
+g1 = ForwardDiff.gradient(f_trans, trans)
+g2 = Zygote.gradient(f_trans, trans)[1]
 @test isapprox(g1, g2)
 
-function f_d(_μ)
-    hmm = HMM(p, A, [Normal(_μ[i], 1.0) for i in 1:N])
-    return logdensityof(hmm, obs_seq)
+function f_means(_means)
+    new_hmm = HMM(init, trans, [Normal(_means[i], 1.0) for i in 1:N])
+    return logdensityof(new_hmm, obs_seq)
 end
 
-g0 = FiniteDifferences.grad(central_fdm(5, 1), f_d, μ)[1]
-g1 = ForwardDiff.gradient(f_d, μ)
-g2 = Zygote.gradient(f_d, μ)[1]
+g0 = FiniteDifferences.grad(central_fdm(5, 1), f_means, means)[1]
+g1 = ForwardDiff.gradient(f_means, means)
+g2 = Zygote.gradient(f_means, means)[1]
 @test isapprox(g0, g1)
 @test isapprox(g0, g2)

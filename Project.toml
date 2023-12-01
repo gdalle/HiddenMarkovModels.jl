@@ -16,12 +16,10 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
 [weakdeps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 
 [extensions]
-HiddenMarkovModelsChainRulesCoreExt = "ChainRulesCore"
 HiddenMarkovModelsDistributionsExt = "Distributions"
 HiddenMarkovModelsHMMBaseExt = "HMMBase"
 
@@ -64,25 +62,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = [
-    "Aqua",
-    "BenchmarkTools",
-    "Combinatorics",
-    "Distributions",
-    "Documenter",
-    "FiniteDifferences",
-    "ForwardDiff",
-    "HMMBase",
-    "JET",
-    "JuliaFormatter",
-    "LinearAlgebra",
-    "LogarithmicNumbers",
-    "Pkg",
-    "Random",
-    "SimpleUnPack",
-    "SparseArrays",
-    "StaticArrays",
-    "Statistics",
-    "Test",
-    "Zygote",
-]
+test = ["Aqua", "BenchmarkTools", "Combinatorics", "Distributions", "Documenter", "FiniteDifferences", "ForwardDiff", "HMMBase", "JET", "JuliaFormatter", "LinearAlgebra", "LogarithmicNumbers", "Pkg", "Random", "SimpleUnPack", "SparseArrays", "StaticArrays", "Statistics", "Test", "Zygote"]

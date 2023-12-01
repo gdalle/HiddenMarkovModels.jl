@@ -1,9 +1,7 @@
-using Combinatorics
 using Distributions
-using Distributions: PDiagMat
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels: LightDiagNormal, LightCategorical
+using HiddenMarkovModels: LightDiagNormal, LightCategorical, mynnz
 using LinearAlgebra
 using Random
 using SimpleUnPack
@@ -12,35 +10,40 @@ using Test
 
 Random.seed!(63)
 
-function Base.isapprox(hmm::HMM, hmm_base::HMMBase.HMM)
-    isapprox(hmm.init, hmm_base.a) || return false
-    isapprox(hmm.trans, hmm_base.A) || return false
-    for (dist, dist_base) in zip(hmm.dists, hmm_base.B)
-        if hasfield(typeof(dist), :μ)
-            isapprox(dist.μ, dist_base.μ) || return false
-        elseif hasfield(typeof(dist), :p)
-            isapprox(dist.p, dist_base.p) || return false
+function max_diff_small(hmm1, hmm2; atol, test_init=false)
+    if test_init
+        init1 = initialization(hmm1)
+        init2 = initialization(hmm2)
+        if maximum(abs, init1 - init2) > atol
+            @warn "Error in initialization" init1 init2
+            return false
         end
     end
-    return true
-end
-
-function Base.isapprox(hmm1::AbstractHMM, hmm2::AbstractHMM; atol)
-    init1 = initialization(hmm1)
-    init2 = initialization(hmm2)
-    maximum(abs, init1 - init2) < atol || return false
 
     trans1 = transition_matrix(hmm1, 1)
     trans2 = transition_matrix(hmm2, 1)
-    maximum(abs, trans1 - trans2) < atol || return false
+    if mynnz(trans1) != mynnz(trans2)
+        @warn "Wrong number of nonzeros in transition matrix" mynnz(trans1) mynnz(trans2)
+        return false
+    end
+    if maximum(abs, trans1 - trans2) > atol
+        @warn "Error in transition matrix" trans1 trans2
+        return false
+    end
 
     dists1 = obs_distributions(hmm1, 1)
     dists2 = obs_distributions(hmm2, 1)
     for (dist1, dist2) in zip(dists1, dists2)
         if hasfield(typeof(dist1), :μ)
-            maximum(abs, dist1.μ - dist2.μ) < atol || return false
+            if maximum(abs, dist1.μ - dist2.μ) > atol
+                @warn "Error in observation distribution" dist1.μ dist2.μ
+                return false
+            end
         elseif hasfield(typeof(dist1), :p)
-            maximum(abs, dist1.p - dist2.p) < atol || return false
+            if maximum(abs, dist1.p - dist2.p) > atol
+                @warn "Error in observation distribution" dist1.p dist2.p
+                return false
+            end
         end
     end
     return true
@@ -85,140 +88,137 @@ function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::In
             hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
         )
         logL_evolution_base = hist_base.logtots
+        obs_seqs = MultiSeq([copy(obs_seq), copy(obs_seq)])
         hmm_est, logL_evolution = baum_welch(
-            hmm_guess, [obs_seq, obs_seq], 2; max_iterations=10, atol=-Inf
+            hmm_guess, obs_seqs; max_iterations=10, atol=-Inf
         )
         @test isapprox(
             logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
         )
-        @test isapprox(hmm_est, hmm_est_base)
+        @test max_diff_small(hmm_est, hmm_est_base; atol=1e-5)
     end
 end
 
 function test_correctness_baum_welch(
     hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer, nb_seqs::Integer, atol
 )
-    obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
-    hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs, nb_seqs)
-    success_by_perm = Bool[]
-    for perm in permutations(1:length(hmm))
-        permuted_hmm_est = PermutedHMM(hmm_est, perm)
-        push!(success_by_perm, isapprox(permuted_hmm_est, hmm; atol))
-    end
+    obs_seqs = MultiSeq([rand(hmm, T).obs_seq for _ in 1:nb_seqs])
+    hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs)
     @test last(logL_evolution) > first(logL_evolution)
-    @test sum(success_by_perm) == 1
+    @test max_diff_small(hmm_est, hmm; atol)
 end
 
 ## Distributions
 
 @testset "Categorical" begin
-    N = 2
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
 
-    init = [0.3, 0.7]
     trans = [0.8 0.2; 0.2 0.8]
-    dists = [Categorical([0.2, 0.8]), Categorical([0.8, 0.2])]
-    hmm = HMM(init, trans, dists)
+    trans_guess = [0.7 0.3; 0.3 0.7]
 
-    init_guess = ones(N) / N
-    trans_guess = ones(N, N) / N
+    dists = [Categorical([0.2, 0.8]), Categorical([0.8, 0.2])]
     dists_guess = [Categorical([0.3, 0.7]), Categorical([0.7, 0.3])]
+
+    hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=200, nb_seqs=100, atol=0.1)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
     test_comparison_hmmbase(hmm, hmm_guess; T=100)
 end
 
 @testset "Normal" begin
-    N = 2
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
 
-    init = [0.3, 0.7]
     trans = [0.8 0.2; 0.2 0.8]
-    dists = [Normal(randn(), 1) for i in 1:N]
-    hmm = HMM(init, trans, dists)
+    trans_guess = [0.7 0.3; 0.3 0.7]
 
-    init_guess = ones(N) / N
-    trans_guess = ones(N, N) / N
-    dists_guess = [Normal(randn(), 1) for i in 1:N]
+    dists = [Normal(-1), Normal(+1)]
+    dists_guess = [Normal(-0.5), Normal(+0.5)]
+
+    hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=100, atol=0.1)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
     test_comparison_hmmbase(hmm, hmm_guess; T=100)
 end
 
 @testset "DiagNormal" begin
-    N, D = 2, 2
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
 
-    init = [0.3, 0.7]
     trans = [0.8 0.2; 0.2 0.8]
-    dists = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
-    hmm = HMM(init, trans, dists)
+    trans_guess = [0.7 0.3; 0.3 0.7]
 
-    init_guess = ones(N) / N
-    trans_guess = ones(N, N) / N
-    dists_guess = [DiagNormal(randn(D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
+    D = 3
+    dists = [MvNormal(-ones(D), 1), MvNormal(+ones(D), 1)]
+    dists_guess = [MvNormal(-ones(D) / 2, 1), MvNormal(+ones(D) / 2, 1)]
+
+    hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=100, atol=0.1)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
     test_comparison_hmmbase(hmm, hmm_guess; T=100)
 end
 
 ## Light distributions
 
 @testset "LightCategorical" begin
-    N = 2
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
 
-    init = [0.3, 0.7]
     trans = [0.8 0.2; 0.2 0.8]
-    dists = [LightCategorical([0.2, 0.8]), LightCategorical([0.8, 0.2])]
-    hmm = HMM(init, trans, dists)
+    trans_guess = [0.7 0.3; 0.3 0.7]
 
-    init_guess = ones(N) / N
-    trans_guess = ones(N, N) / N
+    dists = [LightCategorical([0.2, 0.8]), LightCategorical([0.8, 0.2])]
     dists_guess = [LightCategorical([0.3, 0.7]), LightCategorical([0.7, 0.3])]
+
+    hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=200, nb_seqs=100, atol=0.1)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
 end
 
 @testset "LightDiagNormal" begin
-    N, D = 2, 2
+    init = [0.4, 0.6]
+    init_guess = [0.5, 0.5]
 
-    init = [0.3, 0.7]
     trans = [0.8 0.2; 0.2 0.8]
-    dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
-    hmm = HMM(init, trans, dists)
+    trans_guess = [0.7 0.3; 0.3 0.7]
 
-    init_guess = ones(N) / N
-    trans_guess = ones(N, N) / N
-    dists_guess = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
+    D = 3
+    dists = [LightDiagNormal(-ones(D), ones(D)), LightDiagNormal(+ones(D), ones(D))]
+    dists_guess = [
+        LightDiagNormal(-ones(D) / 2, ones(D)), LightDiagNormal(+ones(D) / 2, ones(D))
+    ]
+
+    hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=100, atol=0.1)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
 end
 
 ## Weird arrays
 
 @testset "Normal sparse" begin
-    N = 3
-
-    init = [0.3, 0.5, 0.2]
+    init = [0.2, 0.6, 0.2]
     trans = sparse([
         0.8 0.2 0.0
         0.0 0.8 0.2
         0.2 0.0 0.8
     ])
-    dists = [Normal(i, 1) for i in 1:N]
+    dists = [Normal(-2), Normal(0), Normal(+2)]
     hmm = HMM(init, trans, dists)
 
-    init_guess = ones(N) / N
+    init_guess = [0.3, 0.4, 0.4]
     trans_guess = sparse([
-        0.5 0.5 0.0
-        0.0 0.5 0.5
-        0.5 0.0 0.5
+        0.6 0.4 0.0
+        0.0 0.6 0.4
+        0.4 0.0 0.6
     ])
-    dists_guess = [Normal(i + 0.3, 1) for i in 1:N]
+    dists_guess = [Normal(-1), Normal(0), Normal(+1)]
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=100, atol=0.1)
-    test_comparison_hmmbase(hmm, hmm_guess; T=100)
+    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
 end

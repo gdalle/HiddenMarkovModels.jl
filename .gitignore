@@ -5,7 +5,6 @@
 /Manifest.toml
 /docs/build/
 /docs/Manifest.toml
-/benchmark/Manifest.toml
 /benchmark/HMMBenchmark/Manifest.toml
 
 scratchpad.jl
@@ -17,6 +16,7 @@ scratchpad.jl
 *.csv
 *.txt
 .benchmarkci/
+/benchmark/*.json
 
 /docs/src/index.md
 /docs/src/examples/*.md

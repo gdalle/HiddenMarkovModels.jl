@@ -1,23 +1,14 @@
-# # Periodic HMM
-
-using Distributions
-using HiddenMarkovModels
-import HiddenMarkovModels as HMMs
-#md using Plots
-using SimpleUnPack
-using StatsAPI
-
 # ## Structure
 
-struct PeriodicHMM{L,V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHMM
+struct PeriodicHMM{V,VM,VVD} <: AbstractHMM
     init::V
-    trans_periodic::NTuple{L,M}
-    dists_periodic::NTuple{L,VD}
+    trans_periodic::VM
+    dists_periodic::VVD
 end
 
 #-
 
-period(::PeriodicHMM{L}) where {L} = L
+period(hmm::PeriodicHMM) = length(hmm.trans_periodic)
 
 Base.length(phmm::PeriodicHMM) = length(phmm.init)
 HMMs.initialization(phmm::PeriodicHMM) = phmm.init
@@ -31,14 +22,6 @@ function HMMs.obs_distributions(phmm::PeriodicHMM, t::Integer)
 end
 
 ## Fitting
-
-struct BaumWelchStoragePeriodicHMM <: HMMs.AbstractBaumWelchStorage end
-
-function HMMs.initialize_baum_welch(::PeriodicHMM, fb_storages, obs_seqs)
-    return BaumWelchStoragePeriodicHMM()
-end
-
-#-
 
 function fit_states!(hmm::PeriodicHMM, fb_storages::Vector{<:HMMs.ForwardBackwardStorage})
     L = period(hmm)

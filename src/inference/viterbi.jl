@@ -12,6 +12,7 @@ The only field useful outside of the algorithm is `q`, the rest does not belong 
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
+    logL::RefValue{R}
     "observation loglikelihoods at a given time step"
     logb::Vector{R}
     "highest path score when accounting for the first `t` observations and ending at a given state"
@@ -28,25 +29,37 @@ end
 
 """
     initialize_viterbi(hmm, obs_seq)
+    initialize_viterbi(hmm, MultiSeq(obs_seqs))
 """
 function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     T, N = length(obs_seq), length(hmm)
     R = eltype(hmm, obs_seq[1])
+    logL = RefValue{R}()
     logb = Vector{R}(undef, N)
     ϕ = Vector{R}(undef, N)
     ϕ_prev = Vector{R}(undef, N)
     ψ = Matrix{Int}(undef, N, T)
     q = Vector{Int}(undef, T)
     scratch = Vector{R}(undef, N)
-    return ViterbiStorage(logb, ϕ, ϕ_prev, ψ, q, scratch)
+    return ViterbiStorage(logL, logb, ϕ, ϕ_prev, ψ, q, scratch)
+end
+
+function initialize_viterbi(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    R = eltype(hmm, obs_seqs[1][1])
+    storages = Vector{ViterbiStorage{R}}(undef, length(obs_seqs))
+    for k in eachindex(storages, obs_seqs)
+        storages[k] = initialize_viterbi(hmm, obs_seqs[k])
+    end
+    return storages
 end
 
 """
     viterbi!(storage, hmm, obs_seq)
+    viterbi!(storage, hmm, MultiSeq(obs_seqs))
 """
 function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     N, T = length(hmm), length(obs_seq)
-    @unpack logb, ϕ, ϕ_prev, ψ, q, scratch = storage
+    @unpack logL, logb, ϕ, ϕ_prev, ψ, q, scratch = storage
     init = initialization(hmm)
     obs_logdensities!(logb, hmm, 1, obs_seq[1])
     ϕ .= log.(init) .+ logb
@@ -67,19 +80,28 @@ function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     for t in (T - 1):-1:1
         q[t] = ψ[q[t + 1], t + 1]
     end
-    logL = ϕ[q[T]]
-    return logL
+    logL[] = ϕ[q[T]]
+    return nothing
+end
+
+function viterbi!(storages::Vector{<:ViterbiStorage}, hmm::AbstractHMM, obs_seqs::MultiSeq)
+    for k in eachindex(storages, obs_seqs)
+        viterbi!(storages[k], hmm, obs_seqs[k])
+    end
 end
 
 """
     viterbi(hmm, obs_seq)
+    viterbi(hmm, MultiSeq(obs_seq))
 
 Apply the Viterbi algorithm to infer the most likely state sequence corresponding to `obs_seq` for `hmm`.
 
 This function returns a tuple `(q, logL)` where `q` is a vector of integers giving the most likely state sequence, while `logL` is the loglikelihood of that sequence.
 """
-function viterbi(hmm::AbstractHMM, obs_seq::Vector)
-    storage = initialize_viterbi(hmm, obs_seq)
-    logL = viterbi!(storage, hmm, obs_seq)
-    return (q=storage.q, logL=logL)
+function viterbi(hmm::AbstractHMM, obs_seqs::MultiSeq)
+    storages = initialize_viterbi(hmm, obs_seqs)
+    viterbi!(storages, hmm, obs_seqs)
+    return [(q=storages[k].q, logL=storages[k].logL[]) for k in eachindex(storages)]
 end
+
+viterbi(hmm::AbstractHMM, obs_seq::Vector) = only(viterbi(hmm, MultiSeq([obs_seq])))

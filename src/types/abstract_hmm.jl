@@ -102,8 +102,8 @@ function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     dummy_log_probas = fill(-Inf, length(hmm))
 
     init = initialization(hmm)
+    state_seq = Vector{Int}(undef, T)
     state1 = rand(rng, LightCategorical(init, dummy_log_probas))
-    state_seq = Vector{typeof(state1)}(undef, T)
     state_seq[1] = state1
 
     @views for t in 1:(T - 1)

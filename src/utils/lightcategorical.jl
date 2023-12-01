@@ -32,12 +32,15 @@ Base.length(dist::LightCategorical) = length(dist.p)
 function Base.rand(rng::AbstractRNG, dist::LightCategorical{T1}) where {T1}
     u = rand(rng)
     s = zero(T1)
+    x = 0
     for k in eachindex(dist.p)
         s += dist.p[k]
         if u <= s
-            return k
+            x = k
+            return x
         end
     end
+    return x
 end
 
 function DensityInterface.logdensityof(dist::LightCategorical, k::Integer)

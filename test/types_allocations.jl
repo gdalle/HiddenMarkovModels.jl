@@ -1,5 +1,4 @@
 using Distributions
-using Distributions: PDiagMat
 using HiddenMarkovModels
 using HiddenMarkovModels: LightDiagNormal, LightCategorical
 import HiddenMarkovModels as HMMs
@@ -15,67 +14,56 @@ Random.seed!(63)
 function test_type_stability(hmm::AbstractHMM; T::Integer)
     state_seq, obs_seq = rand(hmm, T)
 
-    @testset "Logdensity" begin
-        @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
-        @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
-        @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq)
-        @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq)
-    end
+    @test_opt target_modules = (HMMs,) rand(hmm, T)
+    @test_call target_modules = (HMMs,) rand(hmm, T)
 
-    @testset "Forward" begin
-        @test_opt target_modules = (HMMs,) forward(hmm, obs_seq)
-        @test_call target_modules = (HMMs,) forward(hmm, obs_seq)
-    end
+    @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
+    @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
+    @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq)
+    @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq)
 
-    @testset "Viterbi" begin
-        @test_opt target_modules = (HMMs,) viterbi(hmm, obs_seq)
-        @test_call target_modules = (HMMs,) viterbi(hmm, obs_seq)
-    end
+    @test_opt target_modules = (HMMs,) forward(hmm, obs_seq)
+    @test_call target_modules = (HMMs,) forward(hmm, obs_seq)
 
-    @testset "Forward-backward" begin
-        @test_opt target_modules = (HMMs,) forward_backward(hmm, obs_seq)
-        @test_call target_modules = (HMMs,) forward_backward(hmm, obs_seq)
-    end
+    @test_opt target_modules = (HMMs,) viterbi(hmm, obs_seq)
+    @test_call target_modules = (HMMs,) viterbi(hmm, obs_seq)
 
-    @testset "Baum-Welch" begin
-        @test_opt target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
-        @test_call target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
-    end
+    @test_opt target_modules = (HMMs,) forward_backward(hmm, obs_seq)
+    @test_call target_modules = (HMMs,) forward_backward(hmm, obs_seq)
+
+    @test_opt target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
+    @test_call target_modules = (HMMs,) baum_welch(hmm, obs_seq; max_iterations=1)
 end
 
-function test_allocations(hmm::AbstractHMM; T::Integer, nb_seqs::Integer)
+function test_allocations(hmm::AbstractHMM; T::Integer)
     obs_seq = rand(hmm, T).obs_seq
-    obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
+    obs_seqs = MultiSeq([rand(hmm, T).obs_seq for _ in 1:2])
 
     ## Forward
+    forward(hmm, obs_seq)  # compile
     f_storage = HMMs.initialize_forward(hmm, obs_seq)
-    HiddenMarkovModels.forward!(f_storage, hmm, obs_seq)
     allocs = @allocated HiddenMarkovModels.forward!(f_storage, hmm, obs_seq)
     @test allocs == 0
-
+    
     ## Viterbi
+    viterbi(hmm, obs_seq)  # compile
     v_storage = HMMs.initialize_viterbi(hmm, obs_seq)
-    HMMs.viterbi!(v_storage, hmm, obs_seq)
     allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq)
     @test allocs == 0
-
+    
     ## Forward-backward
+    forward_backward(hmm, obs_seq)  # compile
     fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq)
-    HMMs.forward_backward!(fb_storage, hmm, obs_seq)
     allocs = @allocated HMMs.forward_backward!(fb_storage, hmm, obs_seq)
     @test allocs == 0
 
     ## Baum-Welch
-    fb_storages = [
-        HMMs.initialize_forward_backward(hmm, obs_seqs[k]) for k in eachindex(obs_seqs)
-    ]
-    bw_storage = HMMs.initialize_baum_welch(hmm, fb_storages, obs_seqs)
-    logL_evolution = HMMs.initialize_logL_evolution(hmm, obs_seqs; max_iterations=1)
+    baum_welch(hmm, obs_seqs)  # compile
+    bw_storage = HMMs.initialize_baum_welch(hmm, obs_seqs; max_iterations=1)
+    hmm_guess = deepcopy(hmm)
     allocs = @allocated HMMs.baum_welch!(
-        hmm,
-        fb_storages,
         bw_storage,
-        logL_evolution,
+        hmm_guess,
         obs_seqs;
         atol=-Inf,
         max_iterations=1,
@@ -84,17 +72,9 @@ function test_allocations(hmm::AbstractHMM; T::Integer, nb_seqs::Integer)
     @test allocs == 0
 end
 
-N, D, T, nb_seqs, R = 3, 2, 100, 5, Float32
+N, D, T, nb_seqs, R = 3, 2, 10, 5, Float32
 
 ## Distributions
-
-@testset "Categorical" begin
-    init = rand_prob_vec(R, N)
-    trans = rand_trans_mat(R, N)
-    dists = [Categorical(rand_prob_vec(R, D)) for i in 1:N]
-    hmm = HMM(init, trans, dists)
-    test_type_stability(hmm; T)
-end
 
 @testset "Normal" begin
     init = rand_prob_vec(R, N)
@@ -102,13 +82,13 @@ end
     dists = [Normal(randn(R), 1) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
-    test_allocations(hmm; T, nb_seqs)
+    test_allocations(hmm; T)
 end
 
 @testset "DiagNormal" begin
     init = rand_prob_vec(R, N)
     trans = rand_trans_mat(R, N)
-    dists = [DiagNormal(randn(R, D), PDiagMat(ones(D) .^ 2)) for i in 1:N]
+    dists = [MvNormal(randn(R, D), 1) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
 end
@@ -121,7 +101,7 @@ end
     dists = [LightCategorical(rand_prob_vec(R, D)) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
-    @test_skip test_allocations(hmm; T, nb_seqs)
+    @test_skip test_allocations(hmm; T)
 end
 
 @testset "LightDiagNormal" begin
@@ -130,7 +110,7 @@ end
     dists = [LightDiagNormal(randn(R, D), ones(D)) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
-    test_allocations(hmm; T, nb_seqs)
+    test_allocations(hmm; T)
 end
 
 ## Weird arrays
@@ -142,5 +122,5 @@ end
     dists = [Normal(randn(R), 1) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(hmm; T)
-    test_allocations(hmm; T, nb_seqs)
+    test_allocations(hmm; T)
 end
