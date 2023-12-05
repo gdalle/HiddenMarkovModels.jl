@@ -9,9 +9,9 @@ Amenable to `length` and `getindex` only.
 
 $(TYPEDFIELDS)
 """
-struct MultiSeq{O} <: AbstractVector{Vector{O}}
+struct MultiSeq{O,V<:AbstractVector{O}} <: AbstractVector{V}
     "underlying sequences"
-    seqs::Vector{Vector{O}}
+    seqs::Vector{V}
 end
 
 sequences(m::MultiSeq) = m.seqs
@@ -19,7 +19,6 @@ sequences(m::MultiSeq) = m.seqs
 # Mandatory
 Base.size(m::MultiSeq) = size(sequences(m))
 Base.getindex(m::MultiSeq, k::Integer) = sequences(m)[k]
-Base.eachindex(m::MultiSeq, a::AbstractArray) = eachindex(sequences(m), a)
 
 # Optional
 Base.IndexStyle(::Type{<:MultiSeq}) = IndexLinear()

@@ -31,9 +31,11 @@ end
     initialize_viterbi(hmm, obs_seq)
     initialize_viterbi(hmm, MultiSeq(obs_seqs))
 """
-function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
-    T, N = length(obs_seq), length(hmm)
-    R = eltype(hmm, obs_seq[1])
+function initialize_viterbi(
+    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+)
+    N, T = length(hmm), length(eachindex(obs_seq, control_seq))
+    R = eltype(hmm, obs_seq[1], control_seq[1])
     logL = RefValue{R}()
     logb = Vector{R}(undef, N)
     ϕ = Vector{R}(undef, N)
@@ -44,11 +46,13 @@ function initialize_viterbi(hmm::AbstractHMM, obs_seq::Vector)
     return ViterbiStorage(logL, logb, ϕ, ϕ_prev, ψ, q, scratch)
 end
 
-function initialize_viterbi(hmm::AbstractHMM, obs_seqs::MultiSeq)
-    R = eltype(hmm, obs_seqs[1][1])
+function initialize_viterbi(
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq == no_controls(obs_seqs)
+)
+    R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
     storages = Vector{ViterbiStorage{R}}(undef, length(obs_seqs))
-    for k in eachindex(storages, obs_seqs)
-        storages[k] = initialize_viterbi(hmm, obs_seqs[k])
+    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
+        storages[k] = initialize_viterbi(hmm, obs_seqs[k], control_seqs[k])
     end
     return storages
 end
@@ -57,16 +61,21 @@ end
     viterbi!(storage, hmm, obs_seq)
     viterbi!(storage, hmm, MultiSeq(obs_seqs))
 """
-function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
-    N, T = length(hmm), length(obs_seq)
+function viterbi!(
+    storage::ViterbiStorage,
+    hmm::AbstractHMM,
+    obs_seq::Vector,
+    control_seq::AbstractVector=no_controls(obs_seq),
+)
+    N, T = length(hmm), length(eachindex(obs_seq, control_seq))
     @unpack logL, logb, ϕ, ϕ_prev, ψ, q, scratch = storage
     init = initialization(hmm)
-    obs_logdensities!(logb, hmm, 1, obs_seq[1])
+    obs_logdensities!(logb, hmm, obs_seq[1], control_seq[1])
     ϕ .= log.(init) .+ logb
     ϕ_prev .= ϕ
     for t in 2:T
-        trans = transition_matrix(hmm, t - 1)
-        obs_logdensities!(logb, hmm, t, obs_seq[t])
+        trans = transition_matrix(hmm, control_seq[t - 1])
+        obs_logdensities!(logb, hmm, obs_seq[t], control_seq[t])
         for j in 1:N
             @views scratch .= ϕ_prev .+ log.(trans[:, j])
             i_max = argmax(scratch)
@@ -84,9 +93,14 @@ function viterbi!(storage::ViterbiStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
-function viterbi!(storages::Vector{<:ViterbiStorage}, hmm::AbstractHMM, obs_seqs::MultiSeq)
-    for k in eachindex(storages, obs_seqs)
-        viterbi!(storages[k], hmm, obs_seqs[k])
+function viterbi!(
+    storages::Vector{<:ViterbiStorage},
+    hmm::AbstractHMM,
+    obs_seqs::MultiSeq,
+    control_seqs::MultiSeq=no_controls(obs_seqs),
+)
+    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seq))
+        viterbi!(storages[k], hmm, obs_seqs[k], control_seqs[k])
     end
 end
 
@@ -98,10 +112,16 @@ Apply the Viterbi algorithm to infer the most likely state sequence correspondin
 
 This function returns a tuple `(q, logL)` where `q` is a vector of integers giving the most likely state sequence, while `logL` is the loglikelihood of that sequence.
 """
-function viterbi(hmm::AbstractHMM, obs_seqs::MultiSeq)
-    storages = initialize_viterbi(hmm, obs_seqs)
-    viterbi!(storages, hmm, obs_seqs)
-    return [(q=storages[k].q, logL=storages[k].logL[]) for k in eachindex(storages)]
+function viterbi(
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq=no_controls(obs_seqs)
+)
+    storages = initialize_viterbi(hmm, obs_seqs, control_seqs)
+    viterbi!(storages, hmm, obs_seqs, control_seqs)
+    return storages
 end
 
-viterbi(hmm::AbstractHMM, obs_seq::Vector) = only(viterbi(hmm, MultiSeq([obs_seq])))
+function viterbi(
+    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+)
+    return only(viterbi(hmm, MultiSeq([obs_seq]), MultiSeq([control_seq])))
+end

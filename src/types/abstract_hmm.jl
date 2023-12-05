@@ -10,18 +10,18 @@ To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement
 - [`length(hmm)`](@ref)
 - [`eltype(hmm, obs)`](@ref)
 - [`initialization(hmm)`](@ref)
-- [`transition_matrix(hmm, t)`](@ref)
-- [`obs_distributions(hmm, t)`](@ref)
+- [`transition_matrix(hmm, control)`](@ref)
+- [`obs_distributions(hmm, control)`](@ref)
 
 # Applicable functions
 
 Any HMM object which satisfies the interface can be given as input to the following functions:
 
-- [`rand(rng, hmm, T)`](@ref)
-- [`logdensityof(hmm, obs_seq)`](@ref)
-- [`forward(hmm, obs_seq)`](@ref)
-- [`viterbi(hmm, obs_seq)`](@ref)
-- [`forward_backward(hmm, obs_seq)`](@ref)
+- [`rand(rng, hmm, control_seq)`](@ref)
+- [`logdensityof(hmm, obs_seq, control_seq)`](@ref)
+- [`forward(hmm, obs_seq, control_seq)`](@ref)
+- [`viterbi(hmm, obs_seq, control_seq)`](@ref)
+- [`forward_backward(hmm, obs_seq, control_seq)`](@ref)
 
 # Fitting
 """
@@ -39,16 +39,17 @@ Return the number of states of `hmm`.
 Base.length
 
 """
-    eltype(hmm, obs)
+    eltype(hmm, obs, control)
 
 Return a type that can accommodate forward-backward computations for `hmm` on observations similar to `obs`.
 
 It is typically a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
 """
-function Base.eltype(hmm::AbstractHMM, obs)
+function Base.eltype(hmm::AbstractHMM, obs, control)
     init_type = eltype(initialization(hmm))
-    trans_type = eltype(transition_matrix(hmm, 1))
-    logdensity_type = typeof(logdensityof(obs_distributions(hmm, 1)[1], obs))
+    trans_type = eltype(transition_matrix(hmm, control))
+    dist = obs_distributions(hmm, control)[1]
+    logdensity_type = typeof(logdensityof(dist, obs))
     return promote_type(init_type, trans_type, logdensity_type)
 end
 
@@ -60,16 +61,14 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
-    transition_matrix(hmm)
-    transition_matrix(hmm, t)
+    transition_matrix(hmm, control)
 
 Return the matrix of state transition probabilities for `hmm` (at time `t`).
 """
-transition_matrix(hmm::AbstractHMM, t::Integer) = transition_matrix(hmm)
+transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
 
 """
-    obs_distributions(hmm)
-    obs_distributions(hmm, t)
+    obs_distributions(hmm, control)
 
 Return a vector of observation distributions, one for each state of `hmm` (at time `t`).
 
@@ -79,10 +78,10 @@ There objects should support
 - `DensityInterface.logdensityof(dist, obs)`
 - `StatsAPI.fit!(dist, obs_seq, weight_seq)`
 """
-obs_distributions(hmm::AbstractHMM, t::Integer) = obs_distributions(hmm)
+obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
-function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, t::Integer, obs)
-    dists = obs_distributions(hmm, t)
+function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
+    dists = obs_distributions(hmm, control)
     @inbounds for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
@@ -101,10 +100,12 @@ StatsAPI.fit!  # TODO: complete
 
 """
     rand([rng,] hmm, T)
+    rand([rng,] hmm, control_seq)
 
 Simulate `hmm` for `T` time steps. 
 """
-function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
+    T = length(control_seq)
     dummy_log_probas = fill(-Inf, length(hmm))
 
     init = initialization(hmm)
@@ -113,22 +114,32 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
     state_seq[1] = state1
 
     @views for t in 1:(T - 1)
-        trans = transition_matrix(hmm, t)
+        trans = transition_matrix(hmm, control_seq[t])
         state_seq[t + 1] = rand(
             rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
         )
     end
 
-    dists1 = obs_distributions(hmm, 1)
+    dists1 = obs_distributions(hmm, control_seq[1])
     obs1 = rand(rng, dists1[state1])
     obs_seq = Vector{typeof(obs1)}(undef, T)
     obs_seq[1] = obs1
 
     for t in 2:T
-        dists = obs_distributions(hmm, t)
+        dists = obs_distributions(hmm, control_seq[t])
         obs_seq[t] = rand(rng, dists[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-Random.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)
+function Random.rand(hmm::AbstractHMM, control_seq::AbstractVector)
+    return rand(default_rng(), hmm, control_seq)
+end
+
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
+    return rand(rng, hmm, no_controls(T))
+end
+
+function Random.rand(hmm::AbstractHMM, T::Integer)
+    return rand(hmm, no_controls(T))
+end

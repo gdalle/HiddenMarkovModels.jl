@@ -10,6 +10,7 @@ using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore, NoTangent, RuleConfig, rrule_via_ad
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
 using DocStringExtensions
+using FillArrays: Fill
 using LinearAlgebra: Diagonal, axpy!, dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
@@ -34,6 +35,7 @@ include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
 include("utils/multiseq.jl")
+include("utils/control.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")

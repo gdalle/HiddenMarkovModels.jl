@@ -25,9 +25,11 @@ end
     initialize_forward(hmm, obs_seq)
     initialize_forward(hmm, MultiSeq(obs_seqs))
 """
-function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
+function initialize_forward(
+    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+)
     N = length(hmm)
-    R = eltype(hmm, obs_seq[1])
+    R = eltype(hmm, obs_seq[1], control_seq[1])
     logL = RefValue{R}()
     logb = Vector{R}(undef, N)
     α = Vector{R}(undef, N)
@@ -36,11 +38,13 @@ function initialize_forward(hmm::AbstractHMM, obs_seq::Vector)
     return storage
 end
 
-function initialize_forward(hmm::AbstractHMM, obs_seqs::MultiSeq)
-    R = eltype(hmm, obs_seqs[1][1])
+function initialize_forward(
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq=no_controls(obs_seqs)
+)
+    R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
     storages = Vector{ForwardStorage{R}}(undef, length(obs_seqs))
-    for k in eachindex(obs_seqs, storages)
-        storages[k] = initialize_forward(hmm, obs_seqs[k])
+    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
+        storages[k] = initialize_forward(hmm, obs_seqs[k], control_seqs[k])
     end
     return storages
 end
@@ -49,12 +53,14 @@ end
     forward!(storage, hmm, obs_seq)
     forward!(storages, hmm, MultiSeq(obs_seqs))
 """
-function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
+function forward!(
+    storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector
+)
     T = length(obs_seq)
     @unpack logL, logb, α, α_next = storage
 
     init = initialization(hmm)
-    obs_logdensities!(logb, hmm, 1, obs_seq[1])
+    obs_logdensities!(logb, hmm, obs_seq[1], control_seq[1])
     logm = maximum(logb)
     α .= init .* exp.(logb .- logm)
     c = inv(sum(α))
@@ -62,8 +68,8 @@ function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     logL[] = -log(c) + logm
 
     for t in 1:(T - 1)
-        trans = transition_matrix(hmm, t)
-        obs_logdensities!(logb, hmm, t + 1, obs_seq[t + 1])
+        trans = transition_matrix(hmm, control_seq[t])
+        obs_logdensities!(logb, hmm, obs_seq[t + 1], control_seq[t + 1])
         logm = maximum(logb)
         mul!(α_next, trans', α)
         α_next .*= exp.(logb .- logm)
@@ -77,9 +83,14 @@ function forward!(storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector)
     return nothing
 end
 
-function forward!(storages::Vector{<:ForwardStorage}, hmm::AbstractHMM, obs_seqs::MultiSeq)
-    for k in eachindex(storages, obs_seqs)
-        forward!(storages[k], hmm, obs_seqs[k])
+function forward!(
+    storages::Vector{<:ForwardStorage},
+    hmm::AbstractHMM,
+    obs_seqs::MultiSeq,
+    control_seqs::MultiSeq,
+)
+    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
+        forward!(storages[k], hmm, obs_seqs[k], control_seqs[k])
     end
 end
 
@@ -94,10 +105,12 @@ This function returns a tuple `(α, logL)` where
 - `α[i]` is the posterior probability of state `i` at the end of the sequence
 - `logL` is the loglikelihood of the sequence
 """
-function forward(hmm::AbstractHMM, obs_seqs::MultiSeq)
-    storages = initialize_forward(hmm, obs_seqs)
-    forward!(storages, hmm, obs_seqs)
-    return [(α=storages[k].α, logL=storages[k].logL[]) for k in eachindex(storages)]
+function forward(
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seq::MultiSeq=no_controls(obs_seqs)
+)
+    storages = initialize_forward(hmm, obs_seqs, control_seqs)
+    forward!(storages, hmm, obs_seqs, control_seqs)
+    return storages
 end
 
 forward(hmm::AbstractHMM, obs_seq::Vector) = only(forward(hmm, MultiSeq([obs_seq])))

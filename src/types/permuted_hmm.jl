@@ -19,10 +19,10 @@ Base.length(permuted::PermutedHMM) = length(permuted.hmm)
 
 initialization(permuted::PermutedHMM) = initialization(permuted.hmm)[permuted.perm]
 
-function transition_matrix(permuted::PermutedHMM, t::Integer)
-    return transition_matrix(permuted.hmm, t)[permuted.perm, :][:, permuted.perm]
+function transition_matrix(permuted::PermutedHMM, control)
+    return transition_matrix(permuted.hmm, control)[permuted.perm, :][:, permuted.perm]
 end
 
-function obs_distributions(permuted::PermutedHMM, t::Integer)
-    return obs_distributions(permuted.hmm, t)[permuted.perm]
+function obs_distributions(permuted::PermutedHMM, control)
+    return obs_distributions(permuted.hmm, control)[permuted.perm]
 end
