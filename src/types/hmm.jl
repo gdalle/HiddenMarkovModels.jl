@@ -27,7 +27,7 @@ obs_distributions(hmm::HMM) = hmm.dists
 
 ## Fitting
 
-function StatsAPI.fit!(hmm::HMM, bw_storage::BaumWelchStorage, obs_seqs::MultiSeq)
+function StatsAPI.fit!(hmm::HMM, bw_storage::BaumWelchStorage, args...)
     @unpack fb_storages, obs_seqs_concat, state_marginals_concat = bw_storage
     # Fit states
     hmm.init .= zero(eltype(hmm.init))

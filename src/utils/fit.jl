@@ -7,13 +7,11 @@ Default behavior:
 
     fit!(dists[i], x, w)
 
-Specialization for Distributions.jl (in the package extension)
+Override for Distributions.jl (in the package extension)
 
     dists[i] = fit(eltype(dists), x, w)
-
-If this is not possible, please override `fit_element_from_sequence!` directly.
 """
-function fit_element_from_sequence!(dists, i, x, w)
+function fit_element_from_sequence!(dists::AbstractVector, i::Integer, x, w)
     fit!(dists[i], x, w)
     return nothing
 end

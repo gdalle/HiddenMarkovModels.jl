@@ -1,7 +1,8 @@
 using Distributions
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels: LightDiagNormal, LightCategorical, mynnz, PeriodicHMM, period
+using HiddenMarkovModels:
+    LightDiagNormal, LightCategorical, logdensityof_with_states, similar_hmms
 using LinearAlgebra
 using Random
 using SimpleUnPack
@@ -9,52 +10,6 @@ using SparseArrays
 using Test
 
 Random.seed!(63)
-
-function max_diff_small(hmm1, hmm2; atol, test_init=false)
-    if test_init
-        init1 = initialization(hmm1)
-        init2 = initialization(hmm2)
-        if maximum(abs, init1 - init2) > atol
-            @warn "Error in initialization" init1 init2
-            return false
-        end
-    end
-
-    for t in 1:period(hmm1)
-        trans1 = transition_matrix(hmm1, t)
-        trans2 = transition_matrix(hmm2, t)
-        if mynnz(trans1) != mynnz(trans2)
-            @warn "Wrong number of nonzeros in transition matrix" t mynnz(trans1) mynnz(
-                trans2
-            )
-            return false
-        end
-        if maximum(abs, trans1 - trans2) > atol
-            @warn "Error in transition matrix" trans1 trans2
-            return false
-        end
-    end
-
-    for t in 1:period(hmm1)
-        dists1 = obs_distributions(hmm1, t)
-        dists2 = obs_distributions(hmm2, t)
-        for (dist1, dist2) in zip(dists1, dists2)
-            if hasfield(typeof(dist1), :μ)
-                if maximum(abs, dist1.μ - dist2.μ) > atol
-                    @warn "Error in observation distribution" t dist1.μ dist2.μ
-                    return false
-                end
-            elseif hasfield(typeof(dist1), :p)
-                if maximum(abs, dist1.p - dist2.p) > atol
-                    @warn "Error in observation distribution" t dist1.p dist2.p
-                    return false
-                end
-            end
-        end
-    end
-
-    return true
-end
 
 function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer)
     state_seq, obs_seq = rand(hmm, T)
@@ -79,7 +34,8 @@ function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::In
     @testset "Viterbi" begin
         q_base = HMMBase.viterbi(hmm_base, obs_mat)
         q, logL = viterbi(hmm, obs_seq)
-        @test logL ≈ logdensityof(hmm, obs_seq, q)
+        @test logL ≈ logdensityof_with_states(hmm, obs_seq, q)
+        @test logL >= logdensityof_with_states(hmm, obs_seq, state_seq)
         # Viterbi decoding can vary in case of (infrequent) ties
         @test mean(q .== q_base) > 0.9
     end
@@ -102,7 +58,7 @@ function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::In
         @test isapprox(
             logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
         )
-        @test max_diff_small(hmm_est, hmm_est_base; atol=1e-5)
+        @test similar_hmms(hmm_est, HMM(hmm_est_base); atol=1e-5)
     end
 end
 
@@ -112,7 +68,7 @@ function test_correctness_baum_welch(
     obs_seqs = MultiSeq([rand(hmm, T).obs_seq for _ in 1:nb_seqs])
     hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs)
     @test last(logL_evolution) > first(logL_evolution)
-    @test max_diff_small(hmm_est, hmm; atol)
+    @test similar_hmms(hmm_est, hmm; atol)
 end
 
 ## Distributions
@@ -231,19 +187,3 @@ end
 end
 
 # Periodic
-
-@testset "Normal periodic" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
-
-    trans_periodic = ([0.8 0.2; 0.2 0.8], [0.6 0.4; 0.4 0.6])
-    trans_periodic_guess = ([0.7 0.3; 0.3 0.7], [0.5 0.5; 0.5 0.5])
-
-    dists_periodic = ([Normal(-1), Normal(+1)], [Normal(-2), Normal(+2)])
-    dists_periodic_guess = ([Normal(-0.7), Normal(+0.7)], [Normal(-1.5), Normal(+1.5)])
-
-    hmm = PeriodicHMM(init, trans_periodic, dists_periodic)
-    hmm_guess = PeriodicHMM(init_guess, trans_periodic_guess, dists_periodic_guess)
-
-    test_correctness_baum_welch(hmm, hmm_guess; T=1000, nb_seqs=20, atol=0.05)
-end

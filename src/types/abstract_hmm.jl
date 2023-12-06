@@ -7,8 +7,6 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement the following methods:
 
-- [`length(hmm)`](@ref)
-- [`eltype(hmm, obs)`](@ref)
 - [`initialization(hmm)`](@ref)
 - [`transition_matrix(hmm, control)`](@ref)
 - [`obs_distributions(hmm, control)`](@ref)
@@ -36,7 +34,7 @@ abstract type AbstractHMM end
 
 Return the number of states of `hmm`.
 """
-Base.length
+Base.length(hmm::AbstractHMM) = length(initialization(hmm))
 
 """
     eltype(hmm, obs, control)
@@ -65,7 +63,7 @@ function initialization end
 
 Return the matrix of state transition probabilities for `hmm` (at time `t`).
 """
-transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
+transition_matrix(hmm::AbstractHMM, control::Nothing) = transition_matrix(hmm)
 
 """
     obs_distributions(hmm, control)
@@ -78,7 +76,7 @@ There objects should support
 - `DensityInterface.logdensityof(dist, obs)`
 - `StatsAPI.fit!(dist, obs_seq, weight_seq)`
 """
-obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
+obs_distributions(hmm::AbstractHMM, control::Nothing) = obs_distributions(hmm)
 
 function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
     dists = obs_distributions(hmm, control)

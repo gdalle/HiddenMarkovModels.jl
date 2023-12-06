@@ -32,7 +32,7 @@ end
     initialize_viterbi(hmm, MultiSeq(obs_seqs))
 """
 function initialize_viterbi(
-    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+    hmm::AbstractHMM, obs_seq::AbstractVector, control_seq::AbstractVector
 )
     N, T = length(hmm), length(eachindex(obs_seq, control_seq))
     R = eltype(hmm, obs_seq[1], control_seq[1])
@@ -46,9 +46,7 @@ function initialize_viterbi(
     return ViterbiStorage(logL, logb, ϕ, ϕ_prev, ψ, q, scratch)
 end
 
-function initialize_viterbi(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq == no_controls(obs_seqs)
-)
+function initialize_viterbi(hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq)
     R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
     storages = Vector{ViterbiStorage{R}}(undef, length(obs_seqs))
     for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
@@ -64,8 +62,8 @@ end
 function viterbi!(
     storage::ViterbiStorage,
     hmm::AbstractHMM,
-    obs_seq::Vector,
-    control_seq::AbstractVector=no_controls(obs_seq),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector,
 )
     N, T = length(hmm), length(eachindex(obs_seq, control_seq))
     @unpack logL, logb, ϕ, ϕ_prev, ψ, q, scratch = storage
@@ -97,9 +95,9 @@ function viterbi!(
     storages::Vector{<:ViterbiStorage},
     hmm::AbstractHMM,
     obs_seqs::MultiSeq,
-    control_seqs::MultiSeq=no_controls(obs_seqs),
+    control_seqs::MultiSeq,
 )
-    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seq))
+    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
         viterbi!(storages[k], hmm, obs_seqs[k], control_seqs[k])
     end
 end
@@ -117,11 +115,15 @@ function viterbi(
 )
     storages = initialize_viterbi(hmm, obs_seqs, control_seqs)
     viterbi!(storages, hmm, obs_seqs, control_seqs)
-    return storages
+    return map(result, storages)
 end
 
 function viterbi(
-    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+    hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=no_controls(obs_seq),
 )
     return only(viterbi(hmm, MultiSeq([obs_seq]), MultiSeq([control_seq])))
 end
+
+result(storage::ViterbiStorage) = (storage.q, storage.logL[])

@@ -4,7 +4,6 @@ using DensityInterface
 using Distributions
 using HiddenMarkovModels
 using Random: Random, AbstractRNG
-#md using Plots
 using StatsAPI
 using Test  #src
 
@@ -41,10 +40,6 @@ hmm = HMM(init, trans, dists)
 
 T = 100
 state_seq, obs_seq = rand(hmm, T)
-
-#-
-
-#md scatter(reduce(vcat, t .+ obs_seq[t] for t in 1:T), state_seq .+ 0.02 * rand(T))
 
 #-
 

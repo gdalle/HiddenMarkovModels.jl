@@ -15,7 +15,7 @@ function ChainRulesCore.rrule(
     rc::RuleConfig,
     ::typeof(logdensityof),
     hmm::AbstractHMM,
-    obs_seq::Vector,
+    obs_seq::AbstractVector,
     control_seq::AbstractVector=no_controls(obs_seq),
 )
     _, pullback = rrule_via_ad(rc, _params_and_loglikelihoods, hmm, obs_seq, control_seq)

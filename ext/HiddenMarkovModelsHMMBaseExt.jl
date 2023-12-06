@@ -17,16 +17,4 @@ function HMMBase.HMM(hmm::HiddenMarkovModels.HMM)
     return HMMBase.HMM(a, A, B)
 end
 
-function HiddenMarkovModels.initialization(hmm_base::HMMBase.HMM)
-    return hmm_base.a
-end
-
-function HiddenMarkovModels.transition_matrix(hmm_base::HMMBase.HMM, ::Integer)
-    return hmm_base.A
-end
-
-function HiddenMarkovModels.obs_distributions(hmm_base::HMMBase.HMM, ::Integer)
-    return hmm_base.B
-end
-
 end

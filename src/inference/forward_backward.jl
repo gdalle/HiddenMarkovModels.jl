@@ -39,8 +39,8 @@ end
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,
-    obs_seq::Vector,
-    control_seq::AbstractVector=no_controls(obs_seq);
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     transition_marginals=true,
 )
     N, T = length(hmm), length(eachindex(obs_seq, control_seq))
@@ -67,10 +67,10 @@ function initialize_forward_backward(
 end
 
 function initialize_forward_backward(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seq::MultiSeq; transition_marginals=true
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq; transition_marginals=true
 )
-    R = eltype(hmm, obs_seqs[1][1], control_seq::MultiSeq)
-    M = typeof(similar(transition_matrix(hmm, 1), R))
+    R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
+    M = typeof(similar(transition_matrix(hmm, control_seqs[1][1]), R))
     storages = Vector{ForwardBackwardStorage{R,M}}(undef, length(obs_seqs))
     for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
         storages[k] = initialize_forward_backward(
@@ -87,8 +87,8 @@ end
 function forward_backward!(
     storage::ForwardBackwardStorage,
     hmm::AbstractHMM,
-    obs_seq::Vector,
-    control_seq::AbstractVector=no_controls(obs_seq);
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     transition_marginals::Bool=true,
 )
     T = length(eachindex(obs_seq, control_seq))
@@ -142,7 +142,7 @@ function forward_backward!(
     storages::Vector{<:ForwardBackwardStorage},
     hmm::AbstractHMM,
     obs_seqs::MultiSeq,
-    control_seqs::MultiSeq=no_controls(obs_seqs);
+    control_seqs::MultiSeq;
     transition_marginals::Bool=true,
 )
     for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
@@ -173,9 +173,15 @@ function forward_backward(
         hmm, obs_seqs, control_seqs; transition_marginals=false
     )
     forward_backward!(storages, hmm, obs_seqs, control_seqs; transition_marginals=false)
-    return storages
+    return map(result, storages)
 end
 
-function forward_backward(hmm::AbstractHMM, obs_seq::Vector)
-    return only(forward_backward(hmm, MultiSeq([obs_seq])))
+function forward_backward(
+    hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=no_controls(obs_seq),
+)
+    return only(forward_backward(hmm, MultiSeq([obs_seq]), MultiSeq([control_seq])))
 end
+
+result(storage::ForwardBackwardStorage) = (storage.γ, storage.logL[])

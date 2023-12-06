@@ -6,7 +6,6 @@
 
 using Distributions
 using HiddenMarkovModels
-#md using Plots
 using Random
 using Test  #src
 
@@ -57,8 +56,6 @@ hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 #-
 
 hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs))
-
-#md plot(logL_evolution)
 
 #-
 

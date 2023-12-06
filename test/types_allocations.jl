@@ -17,8 +17,6 @@ function test_type_stability(hmm::AbstractHMM; T::Integer)
     @test_opt target_modules = (HMMs,) rand(hmm, T)
     @test_call target_modules = (HMMs,) rand(hmm, T)
 
-    @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
-    @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq, state_seq)
     @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq)
     @test_call target_modules = (HMMs,) logdensityof(hmm, obs_seq)
 

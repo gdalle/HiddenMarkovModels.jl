@@ -26,7 +26,7 @@ end
     initialize_forward(hmm, MultiSeq(obs_seqs))
 """
 function initialize_forward(
-    hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector=no_controls(obs_seq)
+    hmm::AbstractHMM, obs_seq::AbstractVector, control_seq::AbstractVector
 )
     N = length(hmm)
     R = eltype(hmm, obs_seq[1], control_seq[1])
@@ -38,9 +38,7 @@ function initialize_forward(
     return storage
 end
 
-function initialize_forward(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq=no_controls(obs_seqs)
-)
+function initialize_forward(hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq)
     R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
     storages = Vector{ForwardStorage{R}}(undef, length(obs_seqs))
     for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
@@ -54,7 +52,10 @@ end
     forward!(storages, hmm, MultiSeq(obs_seqs))
 """
 function forward!(
-    storage::ForwardStorage, hmm::AbstractHMM, obs_seq::Vector, control_seq::AbstractVector
+    storage::ForwardStorage,
+    hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector,
 )
     T = length(obs_seq)
     @unpack logL, logb, α, α_next = storage
@@ -106,11 +107,19 @@ This function returns a tuple `(α, logL)` where
 - `logL` is the loglikelihood of the sequence
 """
 function forward(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seq::MultiSeq=no_controls(obs_seqs)
+    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq=no_controls(obs_seqs)
 )
     storages = initialize_forward(hmm, obs_seqs, control_seqs)
     forward!(storages, hmm, obs_seqs, control_seqs)
-    return storages
+    return map(result, storages)
 end
 
-forward(hmm::AbstractHMM, obs_seq::Vector) = only(forward(hmm, MultiSeq([obs_seq])))
+function forward(
+    hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=no_controls(obs_seq),
+)
+    return only(forward(hmm, MultiSeq([obs_seq]), MultiSeq([control_seq])))
+end
+
+result(storage::ForwardStorage) = (storage.α, storage.logL[])

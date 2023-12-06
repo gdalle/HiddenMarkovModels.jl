@@ -67,8 +67,8 @@ end
 
 function check_hmm(hmm::AbstractHMM)
     init = initialization(hmm)
-    trans = transition_matrix(hmm, 1)
-    dists = obs_distributions(hmm, 1)
+    trans = transition_matrix(hmm)
+    dists = obs_distributions(hmm)
     check_hmm_sizes(init, trans, dists)
     check_prob_vec(init)
     check_trans_mat(trans)
