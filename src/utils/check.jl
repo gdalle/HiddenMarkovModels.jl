@@ -65,10 +65,10 @@ function check_hmm_sizes(init::AbstractVector, trans::AbstractMatrix, dists::Abs
     end
 end
 
-function check_hmm(hmm::AbstractHMM)
+function check_hmm(hmm::AbstractHMM; control)
     init = initialization(hmm)
-    trans = transition_matrix(hmm)
-    dists = obs_distributions(hmm)
+    trans = transition_matrix(hmm, control)
+    dists = obs_distributions(hmm, control)
     check_hmm_sizes(init, trans, dists)
     check_prob_vec(init)
     check_trans_mat(trans)

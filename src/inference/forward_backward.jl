@@ -1,10 +1,6 @@
 """
 $(TYPEDEF)
 
-Store forward-backward quantities with element type `R`.
-
-This storage is relative to a single sequence.
-
 # Fields
 
 Only the fields with a description are part of the public API.
@@ -12,114 +8,107 @@ Only the fields with a description are part of the public API.
 $(TYPEDFIELDS)
 """
 struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
-    "loglikelihood of the sequence of observations"
-    logL::RefValue{R}
-    α::Matrix{R}
-    β::Matrix{R}
-    c::Vector{R}
     "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
     "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
     ξ::Vector{M}
+    "loglikelihood of the observation sequence"
+    logL::RefValue{R}
+    α::Matrix{R}
+    β::Matrix{R}
+    c::Vector{R}
     logB::Matrix{R}
     logm::Vector{R}
     B::Matrix{R}
     scratch::Vector{R}
 end
 
+Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
+
 """
-    initialize_forward_backward(hmm, obs_seq, control_seq)
-    initialize_forward_backward(hmm, MultiSeq(obs_seqs), MultiSeq(control_seqs))
+$(SIGNATURES)
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector,
+    seq_ends::AbstractVector{Int},
     transition_marginals=true,
 )
-    N, T = length(hmm), length(eachindex(obs_seq, control_seq))
+    N, T = length(hmm), length(obs_seq)
     trans = transition_matrix(hmm, control_seq[1])
     R = eltype(hmm, obs_seq[1], control_seq[1])
     M = typeof(similar(trans, R))
 
+    γ = Matrix{R}(undef, N, T)
+    ξ = Vector{M}(undef, T)
+    if transition_marginals
+        for t in 1:T
+            ξ[t] = similar(transition_matrix(hmm, control_seq[t]), R)
+        end
+    end
     logL = RefValue{R}()
     α = Matrix{R}(undef, N, T)
     β = Matrix{R}(undef, N, T)
     c = Vector{R}(undef, T)
-    γ = Matrix{R}(undef, N, T)
-    ξ = Vector{M}(undef, T - 1)
-    if transition_marginals
-        for t in 1:(T - 1)
-            ξ[t] = similar(transition_matrix(hmm, control_seq[t]), R)
-        end
-    end
     logB = Matrix{R}(undef, N, T)
     logm = Vector{R}(undef, T)
     B = Matrix{R}(undef, N, T)
     scratch = Vector{R}(undef, N)
-    return ForwardBackwardStorage{R,M}(logL, α, β, c, γ, ξ, logB, logm, B, scratch)
-end
-
-function initialize_forward_backward(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq; transition_marginals=true
-)
-    R = eltype(hmm, obs_seqs[1][1], control_seqs[1][1])
-    M = typeof(similar(transition_matrix(hmm, control_seqs[1][1]), R))
-    storages = Vector{ForwardBackwardStorage{R,M}}(undef, length(obs_seqs))
-    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
-        storages[k] = initialize_forward_backward(
-            hmm, obs_seqs[k], control_seqs[k]; transition_marginals
-        )
-    end
-    return storages
+    return ForwardBackwardStorage{R,M}(γ, ξ, logL, α, β, c, logB, logm, B, scratch)
 end
 
 """
-    forward_backward!(storage, hmm, obs_seq)
-    forward_backward!(storage, hmm, MultiSeq(obs_seqs))
+$(SIGNATURES)
 """
 function forward_backward!(
-    storage::ForwardBackwardStorage,
+    storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector,
+    seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
-)
-    T = length(eachindex(obs_seq, control_seq))
+) where {R}
     @unpack logL, α, β, c, γ, ξ, logB, logm, B, scratch = storage
 
-    # Observation loglikelihoods then likelihoods
-    @views for t in 1:T
+    @views for t in eachindex(obs_seq, control_seq)
         obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
     end
     maximum!(logm', logB)
     B .= exp.(logB .- logm')
 
-    # Forward
-    @views begin
-        init = initialization(hmm)
-        α[:, 1] .= init .* B[:, 1]
-        c[1] = inv(sum(α[:, 1]))
-        lmul!(c[1], α[:, 1])
-    end
-    @views for t in 1:(T - 1)
-        trans = transition_matrix(hmm, control_seq[t])
-        mul!(α[:, t + 1], trans', α[:, t])
-        α[:, t + 1] .*= B[:, t + 1]
-        c[t + 1] = inv(sum(α[:, t + 1]))
-        lmul!(c[t + 1], α[:, t + 1])
-    end
+    for k in eachindex(seq_ends)
+        t1, t2 = seq_limits(seq_ends, k)
 
-    # Backward and transition marginals
-    β[:, T] .= c[T]
-    @views for t in (T - 1):-1:1
-        trans = transition_matrix(hmm, control_seq[t])
-        scratch .= B[:, t + 1] .* β[:, t + 1]  # Bβ
-        mul!(β[:, t], trans, scratch)
-        lmul!(c[t], β[:, t])
+        # Forward
+        @views begin
+            init = initialization(hmm)
+            α[:, t1] .= init .* B[:, t1]
+            c[t1] = inv(sum(α[:, t1]))
+            lmul!(c[t1], α[:, t1])
+        end
+        @views for t in t1:(t2 - 1)
+            trans = transition_matrix(hmm, control_seq[t])
+            mul!(α[:, t + 1], trans', α[:, t])
+            α[:, t + 1] .*= B[:, t + 1]
+            c[t + 1] = inv(sum(α[:, t + 1]))
+            lmul!(c[t + 1], α[:, t + 1])
+        end
+
+        # Backward and transition marginals
+        β[:, t2] .= c[t2]
         if transition_marginals
-            # transition marginals using Bβ
-            mul_rows_cols!(ξ[t], view(α, :, t), trans, scratch)
+            ξ[t2] .= zero(R)
+        end
+        @views for t in (t2 - 1):-1:t1
+            trans = transition_matrix(hmm, control_seq[t])
+            scratch .= B[:, t + 1] .* β[:, t + 1]  # Bβ
+            mul!(β[:, t], trans, scratch)
+            lmul!(c[t], β[:, t])
+            if transition_marginals
+                # transition marginals using Bβ
+                mul_rows_cols!(ξ[t], view(α, :, t), trans, scratch)
+            end
         end
     end
 
@@ -132,50 +121,25 @@ function forward_backward!(
     return nothing
 end
 
-function forward_backward!(
-    storages::Vector{<:ForwardBackwardStorage},
-    hmm::AbstractHMM,
-    obs_seqs::MultiSeq,
-    control_seqs::MultiSeq;
-    transition_marginals::Bool=true,
-)
-    for k in eachindex(storages, sequences(obs_seqs), sequences(control_seqs))
-        forward_backward!(
-            storages[k], hmm, obs_seqs[k], control_seqs[k]; transition_marginals
-        )
-    end
-end
-
 """
-    forward_backward(hmm, obs_seq)
+$(SIGNATURES)
 
-Run the forward-backward algorithm to infer the posterior state and transition marginals of `hmm` on the sequence `obs_seq`.
+Apply the forward-backward algorithm to infer the posterior state and transition marginals during sequence `obs_seq` for `hmm`.
 
-This function returns a tuple `(γ, logL)` where
+Return a tuple `(γ, logL)` defined in [`ForwardBackwardStorage`](@ref).
 
-- `γ` is a matrix containing the posterior state marginals `γ[i,t]` 
-- `logL` is the loglikelihood of the sequence
-
-# See also
-
-- [`ForwardBackwardStorage`](@ref)
+$(DESCRIBE_CONTROL_STARTS)
 """
 function forward_backward(
-    hmm::AbstractHMM, obs_seqs::MultiSeq, control_seqs::MultiSeq=no_controls(obs_seqs)
+    hmm::AbstractHMM,
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    seq_ends::AbstractVector{Int}=[length(obs_seq)],
 )
-    storages = initialize_forward_backward(
-        hmm, obs_seqs, control_seqs; transition_marginals=false
+    transition_marginals = false
+    storage = initialize_forward_backward(
+        hmm, obs_seq; control_seq, seq_ends, transition_marginals
     )
-    forward_backward!(storages, hmm, obs_seqs, control_seqs; transition_marginals=false)
-    return map(result, storages)
+    forward_backward!(storage, hmm, obs_seq; control_seq, seq_ends, transition_marginals)
+    return storage.γ, storage.logL[]
 end
-
-function forward_backward(
-    hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector=no_controls(obs_seq),
-)
-    return only(forward_backward(hmm, MultiSeq([obs_seq]), MultiSeq([control_seq])))
-end
-
-result(storage::ForwardBackwardStorage) = (storage.γ, storage.logL[])

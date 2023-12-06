@@ -51,7 +51,7 @@ rand_prob_vec(N::Integer) = rand_prob_vec(default_rng(), N)
 rand_trans_mat(N::Integer) = rand_trans_mat(default_rng(), N)
 
 """
-    project_prob_vec(v)
+$(SIGNATURES)
 
 Compute the Euclidean projection of a vector `v` on the probability simplex.
 
@@ -69,7 +69,7 @@ function project_prob_vec(v::AbstractVector{R}) where {R}
 end
 
 """
-    project_trans_mat(M)
+$(SIGNATURES)
 
 Compute the row-wise Euclidean projection of a matrix `M` on the space of transition matrices.
 """

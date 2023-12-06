@@ -1,5 +1,5 @@
 function similar_hmms(
-    hmm1::AbstractHMM, hmm2::AbstractHMM, controls=[nothing]; atol, test_init=false
+    hmm1::AbstractHMM, hmm2::AbstractHMM; control_seq=[nothing], atol=1e-5, test_init=false
 )
     if test_init
         init1 = initialization(hmm1)
@@ -10,7 +10,7 @@ function similar_hmms(
         end
     end
 
-    for control in controls
+    for control in control_seq
         trans1 = transition_matrix(hmm1, control)
         trans2 = transition_matrix(hmm2, control)
         if maximum(abs, trans1 - trans2) > atol
@@ -19,7 +19,7 @@ function similar_hmms(
         end
     end
 
-    for control in controls
+    for control in control_seq
         dists1 = obs_distributions(hmm1, control)
         dists2 = obs_distributions(hmm2, control)
         for (dist1, dist2) in zip(dists1, dists2)

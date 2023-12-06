@@ -26,15 +26,21 @@ obs_distributions(hmm::HMM) = hmm.dists
 
 ## Fitting
 
-function StatsAPI.fit!(hmm::HMM, bw_storage::BaumWelchStorage, args...)
-    @unpack fb_storages, obs_seqs_concat, state_marginals_concat = bw_storage
+function StatsAPI.fit!(
+    hmm::HMM,
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector,
+    seq_ends::AbstractVector{Int},
+    fb_storage::ForwardBackwardStorage,
+)
+    @unpack γ, ξ = fb_storage
     # Fit states
     hmm.init .= zero(eltype(hmm.init))
     hmm.trans .= zero(eltype(hmm.trans))
-    for k in eachindex(fb_storages)
-        @unpack γ, ξ = fb_storages[k]
-        hmm.init .+= view(γ, :, 1)
-        for t in eachindex(ξ)
+    for k in eachindex(seq_ends)
+        t1, t2 = seq_limits(seq_ends, k)
+        hmm.init .+= view(γ, :, t1)
+        for t in t1:(t2 - 1)
             mynonzeros(hmm.trans) .+= mynonzeros(ξ[t])
         end
     end
@@ -42,11 +48,9 @@ function StatsAPI.fit!(hmm::HMM, bw_storage::BaumWelchStorage, args...)
     foreach(sum_to_one!, eachrow(hmm.trans))
     # Fit observations
     for i in 1:length(hmm)
-        fit_element_from_sequence!(
-            hmm.dists, i, obs_seqs_concat, view(state_marginals_concat, i, :)
-        )
+        fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
     # Safety check
-    check_hmm(hmm)
+    check_hmm(hmm; control=control_seq[1])
     return nothing
 end

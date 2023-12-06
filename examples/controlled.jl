@@ -16,7 +16,7 @@ Random.seed!(rng, 63)
 
 #-
 
-struct ControlledGaussianHMM{T<:Number} <: AbstractHMM
+struct ControlledGaussianHMM{T} <: AbstractHMM
     init::Vector{T}
     trans::Matrix{T}
     dist_coeffs::Vector{Vector{T}}
@@ -51,50 +51,41 @@ state_seq, obs_seq = rand(rng, hmm, control_seq);
 
 #-
 
-viterbi(hmm, obs_seq, control_seq)
-forward(hmm, obs_seq, control_seq)
-logdensityof(hmm, obs_seq, control_seq)
-forward_backward(hmm, obs_seq, control_seq);
+viterbi(hmm, obs_seq; control_seq)
+forward(hmm, obs_seq; control_seq)
+logdensityof(hmm, obs_seq; control_seq)
+forward_backward(hmm, obs_seq; control_seq);
 
 #-
 
-function fit_states!(
-    hmm::ControlledGaussianHMM{T}, bw_storage::HMMs.BaumWelchStorage
+function StatsAPI.fit!(
+    hmm::ControlledGaussianHMM{T},
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector,
+    seq_ends::AbstractVector{Int},
+    fb_storage::HMMs.ForwardBackwardStorage,
 ) where {T}
-    @unpack fb_storages, obs_seqs_concat, state_marginals_concat, seq_limits = bw_storage
-    K, N = length(fb_storages), length(hmm)
+    @unpack γ, ξ = fb_storage
+    N = length(hmm)
+
     hmm.init .= zero(T)
     hmm.trans .= zero(T)
-    for k in 1:K
-        @unpack γ, ξ = fb_storages[k]
-        @views hmm.init .+= γ[:, 1]
-        hmm.trans .+= sum(ξ)
+    for k in eachindex(seq_ends)
+        t1, t2 = HMMs.seq_limits(seq_ends, k)
+        hmm.init .+= γ[:, t1]
+        @views hmm.trans .+= sum(ξ[t1:t2])
     end
     hmm.init ./= sum(hmm.init)
-    for i in 1:N
-        @views hmm.trans[i, :] ./= sum(hmm.trans[i, :])
+    for row in eachrow(hmm.trans)
+        row ./= sum(row)
     end
-end
 
-function fit_observations!(hmm::ControlledGaussianHMM, bw_storage::HMMs.BaumWelchStorage)
-    @unpack fb_storages,
-    obs_seqs_concat, control_seqs_concat, state_marginals_concat,
-    seq_limits, = bw_storage
-    N = length(hmm)
-    X = transpose(stack(control_seqs_concat))
-    y = stack(obs_seqs_concat)
+    X = transpose(stack(control_seq))
+    y = stack(obs_seq)
     for i in 1:N
-        W = sqrt.(Diagonal(view(state_marginals_concat, i, :)))
+        W = sqrt.(Diagonal(view(γ, i, :)))
         hmm.dist_coeffs[i] = (W * X) \ (W * y)
     end
-end
-
-function StatsAPI.fit!(
-    hmm::ControlledGaussianHMM, bw_storage::HMMs.BaumWelchStorage, args...
-)
-    fit_states!(hmm, bw_storage)
-    fit_observations!(hmm, bw_storage)
-    return nothing
 end
 
 #-
@@ -109,5 +100,13 @@ hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess)
 control_seqs = [[randn(rng, 3) for t in 1:rand(T:(2T))] for k in 1:100];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
-hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs), MultiSeq(control_seqs))
-@test HMMs.similar_hmms(hmm_est, hmm, [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; atol=0.1)  #src
+obs_seq_concat = reduce(vcat, obs_seqs);
+control_seq_concat = reduce(vcat, control_seqs);
+seq_ends = cumsum(length.(obs_seqs));
+
+hmm_est, logL_evolution = baum_welch(
+    hmm_guess, obs_seq_concat; control_seq=control_seq_concat, seq_ends
+)
+@test HMMs.similar_hmms(  #src
+    hmm_est, hmm; control_seq=[[1, 0, 0], [0, 1, 0], [0, 0, 1]], atol=0.1  #src
+)  #src

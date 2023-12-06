@@ -74,7 +74,7 @@ HiddenMarkovModels.rand_prob_vec
 HiddenMarkovModels.rand_trans_mat
 HiddenMarkovModels.project_prob_vec
 HiddenMarkovModels.project_trans_mat
-HiddenMarkovModels.fit_element_from_sequence!
+HiddenMarkovModels.fit_in_sequence!
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.LightCategorical
 ```

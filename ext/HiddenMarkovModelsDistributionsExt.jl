@@ -9,7 +9,7 @@ using Distributions:
     MatrixDistribution,
     fit
 
-function HiddenMarkovModels.fit_element_from_sequence!(
+function HiddenMarkovModels.fit_in_sequence!(
     dists::AbstractVector{D}, i::Integer, x, w
 ) where {D<:Distribution}
     dists[i] = fit_from_sequence(D, x, w)

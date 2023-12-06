@@ -135,9 +135,9 @@ function Random.rand(hmm::AbstractHMM, control_seq::AbstractVector)
 end
 
 function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    return rand(rng, hmm, no_controls(T))
+    return rand(rng, hmm, Fill(nothing, T))
 end
 
 function Random.rand(hmm::AbstractHMM, T::Integer)
-    return rand(hmm, no_controls(T))
+    return rand(hmm, Fill(nothing, T))
 end

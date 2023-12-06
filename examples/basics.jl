@@ -47,8 +47,11 @@ hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
 #-
 
-obs_seqs = [rand(rng, hmm, rand(T:2T)).obs_seq for k in 1:100];
-hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs))
+obs_seqs = [rand(rng, hmm, rand(T:(2T))).obs_seq for k in 1:100];
+obs_seq_concat = reduce(vcat, obs_seqs)
+seq_ends = cumsum(length.(obs_seqs))
+
+hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq_concat; seq_ends=seq_ends)
 
 #-
 
@@ -57,4 +60,4 @@ first(logL_evolution), last(logL_evolution)
 #-
 
 cat(hmm_est.trans, hmm.trans; dims=3)
-@test hmm_est.trans ≈ hmm.trans atol = 1e-1  #src
+@test similar_hmms(hmm_est, hmm_trans; atol=1e-1)  #src

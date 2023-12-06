@@ -1,8 +1,7 @@
 using Distributions
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels:
-    LightDiagNormal, LightCategorical, logdensityof_with_states, similar_hmms
+using HiddenMarkovModels: LightDiagNormal, LightCategorical, similar_hmms
 using LinearAlgebra
 using Random
 using SimpleUnPack
@@ -15,35 +14,41 @@ function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::In
     state_seq, obs_seq = rand(hmm, T)
     obs_mat = collect(reduce(hcat, obs_seq)')
 
+    obs_seq_concat = vcat(obs_seq, obs_seq)
+    seq_ends = [length(obs_seq), 2 * length(obs_seq)]
+
     hmm_base = HMMBase.HMM(deepcopy(hmm))
     hmm_guess_base = HMMBase.HMM(deepcopy(hmm_guess))
 
     @testset "Logdensity" begin
         logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
-        logL = logdensityof(hmm, obs_seq)
-        @test logL ≈ logL_base
+        logL = logdensityof(hmm, obs_seq_concat; seq_ends)
+        @test logL ≈ 2logL_base
     end
 
     @testset "Forward" begin
         α_base, logL_base = HMMBase.forward(hmm_base, obs_mat)
-        α, logL = forward(hmm, obs_seq)
+        α, logL = forward(hmm, obs_seq_concat; seq_ends)
         @test isapprox(α, α_base[end, :])
-        @test logL ≈ logL_base
+        @test logL ≈ 2 * logL_base
     end
 
     @testset "Viterbi" begin
         q_base = HMMBase.viterbi(hmm_base, obs_mat)
-        q, logL = viterbi(hmm, obs_seq)
-        @test logL ≈ logdensityof_with_states(hmm, obs_seq, q)
-        @test logL >= logdensityof_with_states(hmm, obs_seq, state_seq)
+        q, logL = viterbi(hmm, obs_seq_concat; seq_ends)
+        @test logL ≈ 2 * logdensityof(hmm, obs_seq, q[1:T])
+        @test logL >= 2 * logdensityof(hmm, obs_seq, state_seq)
         # Viterbi decoding can vary in case of (infrequent) ties
-        @test mean(q .== q_base) > 0.9
+        @test mean(q[1:T] .== q_base) > 0.9
+        @test mean(q[(T + 1):(2T)] .== q_base) > 0.9
     end
 
     @testset "Forward-backward" begin
         γ_base = HMMBase.posteriors(hmm_base, obs_mat)
-        γ, logL = forward_backward(hmm, obs_seq)
-        @test isapprox(γ, γ_base')
+        γ, logL = forward_backward(hmm, obs_seq_concat; seq_ends)
+        @test isapprox(γ[:, 1:T], γ_base')
+        @test isapprox(γ[:, (T + 1):(2T)], γ_base')
+        @test logL ≈ logdensityof(hmm, obs_seq_concat; seq_ends)
     end
 
     @testset "Baum-Welch" begin
@@ -51,9 +56,8 @@ function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::In
             hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
         )
         logL_evolution_base = hist_base.logtots
-        obs_seqs = MultiSeq([copy(obs_seq), copy(obs_seq)])
         hmm_est, logL_evolution = baum_welch(
-            hmm_guess, obs_seqs; max_iterations=10, atol=-Inf
+            hmm_guess, obs_seq_concat; seq_ends, max_iterations=10, atol=-Inf
         )
         @test isapprox(
             logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
@@ -65,8 +69,10 @@ end
 function test_correctness_baum_welch(
     hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer, nb_seqs::Integer, atol
 )
-    obs_seqs = MultiSeq([rand(hmm, T).obs_seq for _ in 1:nb_seqs])
-    hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs)
+    obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
+    obs_seqs_concat = reduce(vcat, obs_seqs)
+    seq_ends = cumsum(length.(obs_seqs))
+    hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs_concat; seq_ends)
     @test last(logL_evolution) > first(logL_evolution)
     @test similar_hmms(hmm_est, hmm; atol)
 end
@@ -185,5 +191,3 @@ end
 
     test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
 end
-
-# Periodic

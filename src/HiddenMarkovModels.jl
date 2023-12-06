@@ -19,14 +19,17 @@ using SimpleUnPack: @unpack
 using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
-export AbstractHMM, HMM, PermutedHMM
+export AbstractHMM, HMM
 export initialization, transition_matrix, obs_distributions
-export logdensityof, viterbi, forward, forward_backward, baum_welch
-export fit!
-export MultiSeq
+export fit!, logdensityof
+export viterbi, forward, forward_backward, baum_welch
+
+const DESCRIBE_CONTROL_STARTS = """
+- `control_seq`: a control sequence with the same length as `obs_seq`
+- `ends`: the indices at which each subsequence inside `obs_seq` and `control_seq` finishes, useful in the case of multiple sequences
+"""
 
 include("types/abstract_hmm.jl")
-include("types/permuted_hmm.jl")
 
 include("utils/linalg.jl")
 include("utils/check.jl")
@@ -34,16 +37,15 @@ include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
-include("utils/multiseq.jl")
-include("utils/control.jl")
 include("utils/test.jl")
+include("utils/limits.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 include("inference/logdensity.jl")
-include("inference/chainrules.jl")
+# include("inference/chainrules.jl")
 
 include("types/hmm.jl")
 

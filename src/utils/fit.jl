@@ -1,5 +1,5 @@
 """
-    fit_element_from_sequence!(dists, i, x, w)
+$(SIGNATURES)
 
 Modify the `i`-th element of `dists` by fitting it to an observation sequence `x` with associated weight sequence `w`.
 
@@ -11,7 +11,7 @@ Override for Distributions.jl (in the package extension)
 
     dists[i] = fit(eltype(dists), x, w)
 """
-function fit_element_from_sequence!(dists::AbstractVector, i::Integer, x, w)
+function fit_in_sequence!(dists::AbstractVector, i::Integer, x, w)
     fit!(dists[i], x, w)
     return nothing
 end
