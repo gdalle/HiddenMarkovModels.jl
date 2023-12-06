@@ -55,8 +55,8 @@ function check_dists(d::AbstractVector)
     return true
 end
 
-function check_hmm_sizes(p::AbstractVector, A::AbstractMatrix, d::AbstractVector)
-    if !(size(A) == (length(p), length(p)) == (length(d), length(d)))
+function check_hmm_sizes(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
+    if !(size(trans) == (length(init), length(init)) == (length(dists), length(dists)))
         throw(
             DimensionMismatch(
                 "Initialization, transition matrix and observation distributions have incompatible sizes.",

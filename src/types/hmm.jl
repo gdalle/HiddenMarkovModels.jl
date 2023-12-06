@@ -12,7 +12,7 @@ struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHM
     init::V
     "state transition matrix"
     trans::M
-    "observation distributions (must be amenable to `logdensityof` and `rand`)"
+    "observation distributions"
     dists::VD
 end
 
@@ -20,7 +20,6 @@ function Base.copy(hmm::HMM)
     return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
 end
 
-Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists

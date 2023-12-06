@@ -7,35 +7,29 @@ This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `γ`, `ξ`, the rest does not belong to the public API.
+Only the fields with a description are part of the public API.
 
 $(TYPEDFIELDS)
 """
 struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
+    "loglikelihood of the sequence of observations"
     logL::RefValue{R}
-    "scaled forward messsages `α[i,t]` proportional to `ℙ(Y[1:t], X[t]=i)` (up to a function of `t`)"
     α::Matrix{R}
-    "scaled backward messsages `β[i,t]` proportional to `ℙ(Y[t+1:T] | X[t]=i)` (up to a function of `t`)"
     β::Matrix{R}
-    "forward message inverse normalizations `c[t] = 1 / sum(α[:,t])`"
     c::Vector{R}
     "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
     γ::Matrix{R}
     "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
     ξ::Vector{M}
-    "observation loglikelihoods `logB[i,t] = ℙ(Y[t] | X[t]=i)`"
     logB::Matrix{R}
-    "maximum of the observation loglikelihoods `logm[t] = maximum(logB[:, t])`"
     logm::Vector{R}
-    "numerically stabilized observation likelihoods `B[i,t] = exp(logB[i,t] - logm[t])`"
     B::Matrix{R}
-    "scratch storage space"
     scratch::Vector{R}
 end
 
 """
-    initialize_forward_backward(hmm, obs_seq)
-    initialize_forward_backward(hmm, MultiSeq(obs_seqs))
+    initialize_forward_backward(hmm, obs_seq, control_seq)
+    initialize_forward_backward(hmm, MultiSeq(obs_seqs), MultiSeq(control_seqs))
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,

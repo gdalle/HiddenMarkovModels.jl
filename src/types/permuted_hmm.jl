@@ -15,8 +15,6 @@ struct PermutedHMM{H<:AbstractHMM} <: AbstractHMM
     perm::Vector{Int}
 end
 
-Base.length(permuted::PermutedHMM) = length(permuted.hmm)
-
 initialization(permuted::PermutedHMM) = initialization(permuted.hmm)[permuted.perm]
 
 function transition_matrix(permuted::PermutedHMM, control)

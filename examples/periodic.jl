@@ -3,9 +3,15 @@
 using Distributions
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
+using Random
 using SimpleUnPack
 using StatsAPI
 using Test  #src
+
+#-
+
+rng = Random.default_rng()
+Random.seed!(rng, 63)
 
 #-
 struct PeriodicHMM{L,T<:Number,D} <: AbstractHMM
@@ -16,16 +22,18 @@ end
 
 #-
 
+period(::PeriodicHMM{L}) where {L} = L
+
 function HMMs.initialization(hmm::PeriodicHMM)
     return hmm.init
 end
 
-function HMMs.transition_matrix(hmm::PeriodicHMM{L}, t::Integer) where {L}
-    return hmm.trans_periodic[(t - 1) % L + 1]
+function HMMs.transition_matrix(hmm::PeriodicHMM, t::Integer)
+    return hmm.trans_periodic[(t - 1) % period(hmm) + 1]
 end
 
-function HMMs.obs_distributions(hmm::PeriodicHMM{L}, t::Integer) where {L}
-    return hmm.dists_periodic[(t - 1) % L + 1]
+function HMMs.obs_distributions(hmm::PeriodicHMM, t::Integer)
+    return hmm.dists_periodic[(t - 1) % period(hmm) + 1]
 end
 
 #-
@@ -39,7 +47,7 @@ hmm = PeriodicHMM(init, trans_periodic, dists_periodic)
 
 T = 100
 control_seq = 1:T
-state_seq, obs_seq = rand(hmm, control_seq)
+state_seq, obs_seq = rand(rng, hmm, control_seq)
 
 #-
 
@@ -105,8 +113,8 @@ hmm_guess = PeriodicHMM(init_guess, trans_periodic_guess, dists_periodic_guess)
 
 #-
 
-control_seqs = [1:rand(T:(2T)) for k in 1:10]
-obs_seqs = [rand(hmm, control_seq).obs_seq for control_seq in control_seqs];
+control_seqs = [1:rand(rng, T:(2T)) for k in 1:100];
+obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 #-
 

@@ -20,8 +20,6 @@ Any HMM object which satisfies the interface can be given as input to the follow
 - [`forward(hmm, obs_seq, control_seq)`](@ref)
 - [`viterbi(hmm, obs_seq, control_seq)`](@ref)
 - [`forward_backward(hmm, obs_seq, control_seq)`](@ref)
-
-# Fitting
 """
 abstract type AbstractHMM end
 
@@ -61,14 +59,14 @@ function initialization end
 """
     transition_matrix(hmm, control)
 
-Return the matrix of state transition probabilities for `hmm` (at time `t`).
+Return the matrix of state transition probabilities for `hmm` when `control` is applied.
 """
 transition_matrix(hmm::AbstractHMM, control::Nothing) = transition_matrix(hmm)
 
 """
     obs_distributions(hmm, control)
 
-Return a vector of observation distributions, one for each state of `hmm` (at time `t`).
+Return a vector of observation distributions, one for each state of `hmm`  when `control` is applied.
 
 There objects should support
 
@@ -100,7 +98,9 @@ StatsAPI.fit!  # TODO: complete
     rand([rng,] hmm, T)
     rand([rng,] hmm, control_seq)
 
-Simulate `hmm` for `T` time steps. 
+Simulate `hmm` for `T` time steps / when the sequence `control_seq` is applied.
+    
+Return a named tuple `(; state_seq, obs_seq)`.
 """
 function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
     T = length(control_seq)

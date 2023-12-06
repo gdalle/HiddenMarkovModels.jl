@@ -1,12 +1,18 @@
 # # Controlled HMM
 
+using Distributions
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using LinearAlgebra
-using Distributions
+using Random
 using SimpleUnPack
 using StatsAPI
 using Test  #src
+
+#-
+
+rng = Random.default_rng()
+Random.seed!(rng, 63)
 
 #-
 
@@ -40,8 +46,8 @@ hmm = ControlledGaussianHMM(init, trans, dist_coeffs)
 #-
 
 T = 100
-control_seq = [randn(3) for t in 1:T];
-state_seq, obs_seq = rand(hmm, control_seq);
+control_seq = [randn(rng, 3) for t in 1:T];
+state_seq, obs_seq = rand(rng, hmm, control_seq);
 
 #-
 
@@ -100,8 +106,8 @@ hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess)
 
 #-
 
-control_seqs = [[rand(3) for t in 1:rand(T:(2T))] for k in 1:100];
-obs_seqs = [rand(hmm, control_seq).obs_seq for control_seq in control_seqs];
+control_seqs = [[randn(rng, 3) for t in 1:rand(T:(2T))] for k in 1:100];
+obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs), MultiSeq(control_seqs))
 @test HMMs.similar_hmms(hmm_est, hmm, [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; atol=0.1)  #src

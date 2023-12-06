@@ -9,6 +9,11 @@ using Test  #src
 
 #-
 
+rng = Random.default_rng()
+Random.seed!(rng, 63)
+
+#-
+
 mutable struct PoissonProcess{R}
     λ::R
 end

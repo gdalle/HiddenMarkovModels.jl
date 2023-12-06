@@ -24,19 +24,19 @@ state_seq, obs_seq = rand(rng, hmm, T)
 
 #-
 
-viterbi(hmm, obs_seq)
+best_state_seq, _ = viterbi(hmm, obs_seq)
 
 #-
 
-logdensityof(hmm, obs_seq)
+logL = logdensityof(hmm, obs_seq)
 
 #-
 
-forward(hmm, obs_seq)
+last_state_marginals, _ = forward(hmm, obs_seq)
 
 #-
 
-forward_backward(hmm, obs_seq)
+state_marginals, _ = forward_backward(hmm, obs_seq)
 
 #-
 
@@ -47,7 +47,7 @@ hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
 #-
 
-obs_seqs = [rand(rng, hmm, rand(T:2T)).obs_seq for k in 1:10]
+obs_seqs = [rand(rng, hmm, rand(T:2T)).obs_seq for k in 1:100];
 hmm_est, logL_evolution = baum_welch(hmm_guess, MultiSeq(obs_seqs))
 
 #-

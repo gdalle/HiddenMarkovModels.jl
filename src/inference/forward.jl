@@ -1,23 +1,20 @@
 """
 $(TYPEDEF)
 
-Store forward quantities with element type `R`.
-
 This storage is relative to a single sequence.
 
 # Fields
 
-The only fields useful outside of the algorithm are `α` and `logL`, the rest does not belong to the public API.
+Only the fields with a description are part of the public API.
 
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
+    "loglikelihood of the observation sequence"
     logL::RefValue{R}
-    "observation loglikelihoods `logb[i] = ℙ(Y[t] | X[t]=i)`"
     logb::Vector{R}
-    "scaled forward messsages for a given time step"
+    "posterior last state marginals `α[T] = ℙ(X[t]=i | Y[1:T])"
     α::Vector{R}
-    "same as `α` but for the next time step"
     α_next::Vector{R}
 end
 

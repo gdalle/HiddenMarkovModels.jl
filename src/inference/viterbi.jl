@@ -1,29 +1,23 @@
 """
 $(TYPEDEF)
 
-Store Viterbi quantities with element type `R`.
-
 This storage is relative to a single sequence.
 
 # Fields
 
-The only field useful outside of the algorithm is `q`, the rest does not belong to the public API.
+Only the fields with a description are part of the public API.
 
 $(TYPEDFIELDS)
 """
 struct ViterbiStorage{R}
+    "joint loglikelihood of the sequence of observations and the most likely state sequence"
     logL::RefValue{R}
-    "observation loglikelihoods at a given time step"
     logb::Vector{R}
-    "highest path score when accounting for the first `t` observations and ending at a given state"
     ϕ::Vector{R}
-    "same as `ϕ` but for the previous time step"
     ϕ_prev::Vector{R}
-    "penultimate state maximizing the path score"
     ψ::Matrix{Int}
-    "most likely state at each time `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
+    "most likely state sequence `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
-    "scratch storage space"
     scratch::Vector{R}
 end
 
