@@ -86,7 +86,13 @@ function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
 end
 
 """
-    fit!(hmm, ...)
+    fit!(
+        hmm::AbstractHMM,
+        obs_seq::AbstractVector;
+        control_seq::AbstractVector,
+        seq_ends::AbstractVector{Int},
+        fb_storage::ForwardBackwardStorage,
+    )
 
 Update `hmm` in-place based on information generated during forward-backward.
 """
