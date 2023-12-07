@@ -9,19 +9,15 @@ HiddenMarkovModels
 ```@docs
 AbstractHMM
 HMM
-PermutedHMM
 ```
 
 ## Basics
 
 ```@docs
 rand
-length
-eltype
 initialization
 transition_matrix
 obs_distributions
-fit!
 ```
 
 ## Inference
@@ -32,7 +28,16 @@ forward
 viterbi
 forward_backward
 baum_welch
-MultiSeq
+```
+
+## Utils
+
+```@docs
+length
+eltype
+fit!
+HiddenMarkovModels.fit_in_sequence!
+HiddenMarkovModels.seq_limits
 ```
 
 ## Internals
@@ -46,7 +51,6 @@ Do not consider them to be part of the API subject to semantic versioning.
 HiddenMarkovModels.ForwardStorage
 HiddenMarkovModels.ViterbiStorage
 HiddenMarkovModels.ForwardBackwardStorage
-HiddenMarkovModels.BaumWelchStorage
 ```
 
 ### Initializing storage
@@ -55,7 +59,6 @@ HiddenMarkovModels.BaumWelchStorage
 HiddenMarkovModels.initialize_forward
 HiddenMarkovModels.initialize_viterbi
 HiddenMarkovModels.initialize_forward_backward
-HiddenMarkovModels.initialize_baum_welch
 ```
 
 ### Modifying storage
@@ -72,9 +75,6 @@ HiddenMarkovModels.baum_welch!
 ```@docs
 HiddenMarkovModels.rand_prob_vec
 HiddenMarkovModels.rand_trans_mat
-HiddenMarkovModels.project_prob_vec
-HiddenMarkovModels.project_trans_mat
-HiddenMarkovModels.fit_in_sequence!
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.LightCategorical
 ```

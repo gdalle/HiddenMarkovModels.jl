@@ -1,80 +1,76 @@
 using Distributions
 using HMMBase: HMMBase
 using HiddenMarkovModels
-using HiddenMarkovModels: LightDiagNormal, LightCategorical, similar_hmms
+import HiddenMarkovModels as HMMs
+using HiddenMarkovModels:
+    LightDiagNormal, LightCategorical, similar_hmms, coherent_algorithms
 using LinearAlgebra
-using Random
+using Random: Random, AbstractRNG, default_rng, seed!
 using SimpleUnPack
 using SparseArrays
 using Test
 
-Random.seed!(63)
+rng = default_rng()
+seed!(rng, 63)
 
-function test_comparison_hmmbase(hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer)
-    state_seq, obs_seq = rand(hmm, T)
-    obs_mat = collect(reduce(hcat, obs_seq)')
+function coherent_hmmbase(
+    rng::AbstractRNG, hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer
+)
+    sim = rand(rng, hmm, T)
+    obs_mat = collect(reduce(hcat, sim.obs_seq)')
 
-    obs_seq_concat = vcat(obs_seq, obs_seq)
-    seq_ends = [length(obs_seq), 2 * length(obs_seq)]
+    obs_seq = vcat(sim.obs_seq, sim.obs_seq)
+    seq_ends = [length(sim.obs_seq), 2 * length(sim.obs_seq)]
 
     hmm_base = HMMBase.HMM(deepcopy(hmm))
     hmm_guess_base = HMMBase.HMM(deepcopy(hmm_guess))
 
-    @testset "Logdensity" begin
-        logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
-        logL = logdensityof(hmm, obs_seq_concat; seq_ends)
-        @test logL ≈ 2logL_base
+    logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
+    logL = logdensityof(hmm, obs_seq; seq_ends)
+    if !(logL ≈ 2logL_base)
+        @warn "Logdensity incoherent with HMMBase"
+        return false
     end
 
-    @testset "Forward" begin
-        α_base, logL_base = HMMBase.forward(hmm_base, obs_mat)
-        α, logL = forward(hmm, obs_seq_concat; seq_ends)
-        @test isapprox(α, α_base[end, :])
-        @test logL ≈ 2 * logL_base
+    α_base, logL_forward_base = HMMBase.forward(hmm_base, obs_mat)
+    α, logL_forward = forward(hmm, obs_seq; seq_ends)
+    if !isapprox(α[:, 1:T], α_base') || !isapprox(α[:, (T + 1):(2T)], α_base')
+        @warn "Forward filtered marginals incoherent with HMMBase"
+        return false
+    elseif !(logL_forward ≈ 2logL_forward_base)
+        @warn "Forward loglikelihood incoherent with HMMBase"
+        return false
     end
 
-    @testset "Viterbi" begin
-        q_base = HMMBase.viterbi(hmm_base, obs_mat)
-        q, logL = viterbi(hmm, obs_seq_concat; seq_ends)
-        @test logL ≈ 2 * logdensityof(hmm, obs_seq, q[1:T])
-        @test logL >= 2 * logdensityof(hmm, obs_seq, state_seq)
-        # Viterbi decoding can vary in case of (infrequent) ties
-        @test mean(q[1:T] .== q_base) > 0.9
-        @test mean(q[(T + 1):(2T)] .== q_base) > 0.9
+    q_base = HMMBase.viterbi(hmm_base, obs_mat)
+    q, logL_viterbi = viterbi(hmm, obs_seq; seq_ends)
+    # Viterbi decoding can vary in case of (infrequent) ties
+    if mean(q[1:T] .== q_base) < 0.9 || mean(q[(T + 1):(2T)] .== q_base) < 0.9
+        @warn "Viterbi state sequence incoherent with HMMBase"
+        return false
     end
 
-    @testset "Forward-backward" begin
-        γ_base = HMMBase.posteriors(hmm_base, obs_mat)
-        γ, logL = forward_backward(hmm, obs_seq_concat; seq_ends)
-        @test isapprox(γ[:, 1:T], γ_base')
-        @test isapprox(γ[:, (T + 1):(2T)], γ_base')
-        @test logL ≈ logdensityof(hmm, obs_seq_concat; seq_ends)
+    γ_base = HMMBase.posteriors(hmm_base, obs_mat)
+    γ, logL_forward_backward = forward_backward(hmm, obs_seq; seq_ends)
+    if !isapprox(γ[:, 1:T], γ_base') || !isapprox(γ[:, (T + 1):(2T)], γ_base')
+        @warn "Forward-backward filtered marginals incoherent with HMMBase"
+        return false
     end
 
-    @testset "Baum-Welch" begin
-        hmm_est_base, hist_base = HMMBase.fit_mle(
-            hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
-        )
-        logL_evolution_base = hist_base.logtots
-        hmm_est, logL_evolution = baum_welch(
-            hmm_guess, obs_seq_concat; seq_ends, max_iterations=10, atol=-Inf
-        )
-        @test isapprox(
-            logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
-        )
-        @test similar_hmms(hmm_est, HMM(hmm_est_base); atol=1e-5)
+    hmm_est_base, hist_base = HMMBase.fit_mle(hmm_guess_base, obs_mat; maxiter=10, tol=-Inf)
+    logL_evolution_base = hist_base.logtots
+    hmm_est, logL_evolution = baum_welch(
+        hmm_guess, obs_seq; seq_ends, max_iterations=10, atol=-Inf
+    )
+    if !isapprox(logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)])
+        @warn "Baum-Welch loglikelihood evolution incoherent with HMMBase"
+        return false
+    elseif !similar_hmms(hmm_est, HMM(hmm_est_base); atol=1e-5, test_init=true)
+        @warn "Baum-Welch estimate incoherent with HMMBase"
+        return false
     end
-end
 
-function test_correctness_baum_welch(
-    hmm::AbstractHMM, hmm_guess::AbstractHMM; T::Integer, nb_seqs::Integer, atol
-)
-    obs_seqs = [rand(hmm, T).obs_seq for _ in 1:nb_seqs]
-    obs_seqs_concat = reduce(vcat, obs_seqs)
-    seq_ends = cumsum(length.(obs_seqs))
-    hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seqs_concat; seq_ends)
-    @test last(logL_evolution) > first(logL_evolution)
-    @test similar_hmms(hmm_est, hmm; atol)
+    return true
 end
 
 ## Distributions
@@ -92,8 +88,11 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
-    test_comparison_hmmbase(hmm, hmm_guess; T=100)
+    T, K = 200, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_hmmbase(rng, hmm, hmm_guess; T)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
 end
 
 @testset "Normal" begin
@@ -109,8 +108,11 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
-    test_comparison_hmmbase(hmm, hmm_guess; T=100)
+    T, K = 100, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_hmmbase(rng, hmm, hmm_guess; T)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
 end
 
 @testset "DiagNormal" begin
@@ -127,8 +129,11 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
-    test_comparison_hmmbase(hmm, hmm_guess; T=100)
+    T, K = 100, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_hmmbase(rng, hmm, hmm_guess; T)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
 end
 
 ## Light distributions
@@ -146,7 +151,10 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
+    T, K = 200, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
 end
 
 @testset "LightDiagNormal" begin
@@ -165,7 +173,10 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
+    T, K = 100, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
 end
 
 ## Weird arrays
@@ -189,5 +200,40 @@ end
     dists_guess = [Normal(-1), Normal(0), Normal(+1)]
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_correctness_baum_welch(hmm, hmm_guess; T=100, nb_seqs=20, atol=0.05)
+    T, K = 100, 100
+    control_seq = fill(nothing, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+end
+
+# Controlled
+
+struct DiffusionHMM{R1,R2,R3} <: AbstractHMM
+    init::Vector{R1}
+    trans::Matrix{R2}
+    means::Vector{R3}
+end
+
+HMMs.initialization(hmm::DiffusionHMM) = hmm.init
+
+function HMMs.transition_matrix(hmm::DiffusionHMM, λ::Number)
+    @assert 0 <= λ <= 1
+    N = length(hmm)
+    return (1 - λ) * hmm.trans + λ * ones(N, N) / N
+end
+
+function HMMs.obs_distributions(hmm::DiffusionHMM, λ::Number)
+    return [Normal((1 - λ) * hmm.means[i]) for i in 1:length(hmm)]
+end
+
+@testset "Controlled" begin
+    init = rand_prob_vec(rng, 2)
+    trans = rand_trans_mat(rng, 2)
+    means = randn(rng, 2)
+    hmm = DiffusionHMM(init, trans, means)
+
+    T, K = 100, 100
+    control_seq = rand(rng, T * K)
+    seq_ends = T:T:(T * K)
+    @test coherent_algorithms(rng, hmm; control_seq, seq_ends, atol=0.05)
 end

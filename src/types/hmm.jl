@@ -51,6 +51,6 @@ function StatsAPI.fit!(
         fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
     # Safety check
-    check_hmm(hmm; control=control_seq[1])
+    check_hmm(hmm)
     return nothing
 end

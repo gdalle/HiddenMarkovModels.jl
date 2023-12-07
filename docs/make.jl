@@ -42,21 +42,17 @@ function literate_title(path)
 end
 
 pages = [
-    "Essentials" => [
-        "Home" => "index.md",
-        "Background" => "background.md",
-        "Alternatives" => "alternatives.md",
-    ],
+    "Home" => "index.md",
     "Tutorials" => [
         "Basics" => joinpath("examples", "basics.md"),
-        "Distributions" => joinpath("examples", "distributions.md"),
+        "Periodic" => joinpath("examples", "periodic.md"),
         "Controlled" => joinpath("examples", "controlled.md"),
     ],
     "API reference" => "api.md",
     "Advanced" => [
+        "Alternatives" => "alternatives.md",
         "Debugging" => "debugging.md",
         "Formulas" => "formulas.md",
-        "Roadmap" => "roadmap.md",
     ],
 ]
 

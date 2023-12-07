@@ -49,34 +49,3 @@ rand_trans_mat(::Type{R}, N::Integer) where {R} = rand_trans_mat(default_rng(), 
 
 rand_prob_vec(N::Integer) = rand_prob_vec(default_rng(), N)
 rand_trans_mat(N::Integer) = rand_trans_mat(default_rng(), N)
-
-"""
-$(SIGNATURES)
-
-Compute the Euclidean projection of a vector `v` on the probability simplex.
-
-Reference: <https://arxiv.org/abs/1602.02068>.
-"""
-function project_prob_vec(v::AbstractVector{R}) where {R}
-    d = length(v)
-    v_sorted = sort(v; rev=true)
-    v_sorted_cumsum = cumsum(v_sorted)
-    k = maximum(j for j in 1:d if (1 + j * v_sorted[j]) > v_sorted_cumsum[j])
-    τ = (v_sorted_cumsum[k] - 1) / k
-    p = v .- τ
-    p .= max.(p, zero(R))
-    return p
-end
-
-"""
-$(SIGNATURES)
-
-Compute the row-wise Euclidean projection of a matrix `M` on the space of transition matrices.
-"""
-function project_trans_mat(M::AbstractMatrix)
-    A = copy(M)
-    for v in eachrow(A)
-        v .= project_prob_vec(v)
-    end
-    return A
-end

@@ -12,6 +12,22 @@
 
 A Julia package for HMM modeling, simulation, inference and learning.
 
+## Mathematical background
+
+[Hidden Markov Models](https://en.wikipedia.org/wiki/Hidden_Markov_model) are a statistical modeling framework that is ubiquitous in signal processing, bioinformatics and plenty of other fields. They capture the distribution of an observation sequence $(Y_t)$ by assuming the existence of a latent state sequence $(X_t)$ such that:
+
+* the state follows a (discrete time, discrete space) Markov chain $\mathbb{P}_\theta(X_t | X_{t-1})$
+* the observation distribution is determined at each time by the state $\mathbb{P}_\theta(Y_t | X_t)$
+
+Following [Rabiner (1989)](https://ieeexplore.ieee.org/document/18626), we can list several statistical problems, each of which has an efficient solution algorithm that our package implements:
+
+| Problem    | Goal                                                                                                      | Algorithm        |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
+| Evaluation | Likelihood of the observation sequence $\mathbb{P}_\theta(Y_{1:T})$                                       | Forward          |
+| Inference  | State marginals $\mathbb{P}_\theta(X_t \vert Y_{1:T})$                                                    | Forward-backward |
+| Decoding   | Most likely state sequence $\underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}_\theta(X_{1:T} \vert Y_{1:T})$ | Viterbi          |
+| Learning   | Best parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch       |
+
 ## Getting started
 
 This package can be installed using Julia's package manager:
@@ -26,7 +42,7 @@ Then, you can create your first HMM as follows:
 using Distributions, HiddenMarkovModels
 init = [0.2, 0.8]
 trans = [0.1 0.9; 0.7 0.3]
-dists = [Normal(-1), Normal(1)]
+dists = [Normal(-1.0), Normal(1.0)]
 hmm = HMM(init, trans, dists)
 ```
 
@@ -35,23 +51,18 @@ Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.j
 ## Main features
 
 This package is **generic**.
-Observations can be arbitrary Julia objects, not just scalars or arrays.
-Their distributions only need to implement `rand(rng, dist)` and `logdensityof(dist, x)` from [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl).
-Number types are not restricted to floating point, and automatic differentiation is supported in forward mode ([ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)) and reverse mode ([ChainRules.jl](https://github.com/JuliaDiff/ChainRules.jl)).
+Observations can be arbitrary Julia objects, not just scalars or arrays, because their distributions only need to implement `rand(rng, dist)` and `logdensityof(dist, x)` ([DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl)).
+Number types are not restricted to floating point, and automatic differentiation is supported in forward mode ([ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)).
+Time-heterogeneous or controlled HMMs are supported out of the box.
 
 This package is **fast**.
 All the inference functions have allocation-free versions, which leverage efficient linear algebra subroutines.
-Multithreading is used to parallelize computations across sequences, and compatibility with various array types is ensured.
-We include extensive benchmarks against Julia and Python competitors thanks to [BenchmarkTools.jl](https://github.com/JuliaCI/BenchmarkTools.jl) and [PythonCall.jl](https://github.com/cjdoris/PythonCall.jl).
+We will include extensive benchmarks against Julia and Python competitors ([BenchmarkTools.jl](https://github.com/JuliaCI/BenchmarkTools.jl) + [PythonCall.jl](https://github.com/cjdoris/PythonCall.jl)).
 
 This package is **reliable**.
-It gives the same results as the previous reference package [HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl) up to numerical accuracy.
-The test suite incorporates quality checks with [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl), as well as linting and type stability checks with [JET.jl](https://github.com/aviatesk/JET.jl).
+It gives the same results as the previous reference package ([HMMBase.jl](https://github.com/maxmouchet/HMMBase.jl)) up to numerical accuracy.
+The test suite incorporates quality checks ([Aqua.jl](https://github.com/JuliaTesting/Aqua.jl)), as well as type stability analysis ([JET.jl](https://github.com/aviatesk/JET.jl)).
 A detailed documentation will help you find the functions you need.
-
-But this package is **limited in scope**.
-It is designed for HMMs with a small number of states, because memory and runtime scale quadratically (even if the transitions are sparse).
-It is also meant to perform best on a CPU, and not tested at all on GPUs.
 
 ## Contributing
 

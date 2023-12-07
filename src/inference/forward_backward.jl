@@ -13,14 +13,12 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
     ξ::Vector{M}
     "loglikelihood of the observation sequence"
-    logL::RefValue{R}
-    α::Matrix{R}
-    β::Matrix{R}
-    c::Vector{R}
-    logB::Matrix{R}
-    logm::Vector{R}
+    logL::Vector{R}
     B::Matrix{R}
-    scratch::Vector{R}
+    α::Matrix{R}
+    c::Vector{R}
+    β::Matrix{R}
+    Bβ::Matrix{R}
 end
 
 Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
@@ -35,9 +33,9 @@ function initialize_forward_backward(
     seq_ends::AbstractVector{Int},
     transition_marginals=true,
 )
-    N, T = length(hmm), length(obs_seq)
-    trans = transition_matrix(hmm, control_seq[1])
+    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
+    trans = transition_matrix(hmm, control_seq[1])
     M = typeof(similar(trans, R))
 
     γ = Matrix{R}(undef, N, T)
@@ -47,15 +45,13 @@ function initialize_forward_backward(
             ξ[t] = similar(transition_matrix(hmm, control_seq[t]), R)
         end
     end
-    logL = RefValue{R}()
-    α = Matrix{R}(undef, N, T)
-    β = Matrix{R}(undef, N, T)
-    c = Vector{R}(undef, T)
-    logB = Matrix{R}(undef, N, T)
-    logm = Vector{R}(undef, T)
+    logL = Vector{R}(undef, K)
     B = Matrix{R}(undef, N, T)
-    scratch = Vector{R}(undef, N)
-    return ForwardBackwardStorage{R,M}(γ, ξ, logL, α, β, c, logB, logm, B, scratch)
+    α = Matrix{R}(undef, N, T)
+    c = Vector{R}(undef, T)
+    β = Matrix{R}(undef, N, T)
+    Bβ = Matrix{R}(undef, N, T)
+    return ForwardBackwardStorage{R,M}(γ, ξ, logL, B, α, c, β, Bβ)
 end
 
 """
@@ -69,55 +65,38 @@ function forward_backward!(
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
-    @unpack logL, α, β, c, γ, ξ, logB, logm, B, scratch = storage
+    @unpack logL, α, β, c, γ, ξ, B, Bβ = storage
 
-    @views for t in eachindex(obs_seq, control_seq)
-        obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
-    end
-    maximum!(logm', logB)
-    B .= exp.(logB .- logm')
+    # Forward (fill B, α, c and logL)
+    forward!(storage, hmm, obs_seq; control_seq, seq_ends)
 
-    for k in eachindex(seq_ends)
+    @views for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
-        # Forward
-        @views begin
-            init = initialization(hmm)
-            α[:, t1] .= init .* B[:, t1]
-            c[t1] = inv(sum(α[:, t1]))
-            lmul!(c[t1], α[:, t1])
-        end
-        @views for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t])
-            mul!(α[:, t + 1], trans', α[:, t])
-            α[:, t + 1] .*= B[:, t + 1]
-            c[t + 1] = inv(sum(α[:, t + 1]))
-            lmul!(c[t + 1], α[:, t + 1])
-        end
-
-        # Backward and transition marginals
+        # Backward
         β[:, t2] .= c[t2]
-        if transition_marginals
-            ξ[t2] .= zero(R)
-        end
-        @views for t in (t2 - 1):-1:t1
+        for t in (t2 - 1):-1:t1
             trans = transition_matrix(hmm, control_seq[t])
-            scratch .= B[:, t + 1] .* β[:, t + 1]  # Bβ
-            mul!(β[:, t], trans, scratch)
+            Bβ[:, t + 1] .= B[:, t + 1] .* β[:, t + 1]
+            mul!(β[:, t], trans, Bβ[:, t + 1])
             lmul!(c[t], β[:, t])
-            if transition_marginals
-                # transition marginals using Bβ
-                mul_rows_cols!(ξ[t], view(α, :, t), trans, scratch)
+        end
+        Bβ[:, t1] .= B[:, t1] .* β[:, t1]
+
+        # State marginals
+        γ[:, t1:t2] .= α[:, t1:t2] .* β[:, t1:t2] ./ c[t1:t2]'
+
+        # Transition marginals
+        if transition_marginals
+            for t in t1:(t2 - 1)
+                trans = transition_matrix(hmm, control_seq[t])
+                mul_rows_cols!(ξ[t], α[:, t], trans, Bβ[:, t + 1])
             end
+            ξ[t2] .= zero(R)
         end
     end
 
-    # State marginals
-    γ .= α .* β ./ c'
     check_finite(γ)
-
-    # Loglikelihood
-    logL[] = -sum(log, c) + sum(logm)
     return nothing
 end
 
@@ -141,5 +120,5 @@ function forward_backward(
         hmm, obs_seq; control_seq, seq_ends, transition_marginals
     )
     forward_backward!(storage, hmm, obs_seq; control_seq, seq_ends, transition_marginals)
-    return storage.γ, storage.logL[]
+    return storage.γ, sum(storage.logL)
 end

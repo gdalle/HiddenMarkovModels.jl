@@ -10,28 +10,27 @@ using Distributions:
     fit
 
 function HiddenMarkovModels.fit_in_sequence!(
-    dists::AbstractVector{D}, i::Integer, x, w
-) where {D<:Distribution}
-    dists[i] = fit_from_sequence(D, x, w)
-    return nothing
-end
-
-function fit_from_sequence(
-    ::Type{D}, x_nums::AbstractVector, w::AbstractVector
+    dists::AbstractVector{D}, i::Integer, x_nums::AbstractVector, w::AbstractVector
 ) where {D<:UnivariateDistribution}
-    return fit(D, x_nums, w)
+    return dists[i] = fit(D, x_nums, w)
 end
 
-function fit_from_sequence(
-    ::Type{D}, x_vecs::AbstractVector{<:AbstractVector}, w::AbstractVector
+function HiddenMarkovModels.fit_in_sequence!(
+    dists::AbstractVector{D},
+    i::Integer,
+    x_vecs::AbstractVector{<:AbstractVector},
+    w::AbstractVector,
 ) where {D<:MultivariateDistribution}
-    return fit(D, reduce(hcat, x_vecs), w)
+    return dists[i] = fit(D, reduce(hcat, x_vecs), w)
 end
 
-function fit_from_sequence(
-    ::Type{D}, x_mats::AbstractVector{<:AbstractMatrix}, w::AbstractVector
+function HiddenMarkovModels.fit_in_sequence!(
+    dists::AbstractVector{D},
+    i::Integer,
+    x_mats::AbstractVector{<:AbstractMatrix},
+    w::AbstractVector,
 ) where {D<:MatrixDistribution}
-    return fit(D, reduce(dcat, x_mats), w)
+    return dists[i] = fit(D, reduce(dcat, x_mats), w)
 end
 
 dcat(M1, M2) = cat(M1, M2; dims=3)

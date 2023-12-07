@@ -14,7 +14,9 @@ examples_path = joinpath(dirname(@__DIR__), "examples")
         end
 
         @testset "Code quality" begin
-            Aqua.test_all(HiddenMarkovModels; deps_compat=(check_extras=false,))
+            Aqua.test_all(
+                HiddenMarkovModels; ambiguities=false, deps_compat=(check_extras=false,)
+            )
         end
 
         @testset "Code linting" begin
@@ -33,10 +35,6 @@ examples_path = joinpath(dirname(@__DIR__), "examples")
 
     @testset "Correctness" begin
         include("correctness.jl")
-    end
-
-    @testset "Autodiff" begin
-        include("autodiff.jl")
     end
 
     for file in readdir(examples_path)

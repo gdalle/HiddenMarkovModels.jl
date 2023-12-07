@@ -169,7 +169,7 @@ version = "0.1.0"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [[deps.HiddenMarkovModels]]
-deps = ["ChainRulesCore", "DensityInterface", "DocStringExtensions", "LinearAlgebra", "PrecompileTools", "Random", "Requires", "SimpleUnPack", "SparseArrays", "StatsAPI"]
+deps = ["ChainRulesCore", "DensityInterface", "DocStringExtensions", "FillArrays", "LinearAlgebra", "PrecompileTools", "Random", "Requires", "SimpleUnPack", "SparseArrays", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 version = "0.4.0"

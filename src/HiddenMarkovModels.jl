@@ -37,15 +37,14 @@ include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
-include("utils/test.jl")
 include("utils/limits.jl")
+include("utils/test.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 include("inference/logdensity.jl")
-# include("inference/chainrules.jl")
 
 include("types/hmm.jl")
 

@@ -16,16 +16,13 @@ function rand_gaussian_hmm(; configuration)
     return hmm
 end
 
-function rand_seqs(; configuration)
-    @unpack obs_dim, seq_length, nb_seqs = configuration
-    obs_seqs = [[randn(obs_dim) for _ in 1:seq_length] for _ in 1:nb_seqs]
-    return MultiSeq(obs_seqs)
-end
-
 function benchmarkables_hiddenmarkovmodels(; configuration, algos)
     @unpack seq_length, nb_seqs, bw_iter = configuration
     hmm = rand_gaussian_hmm(; configuration)
-    obs_seqs = MultiSeq([rand(hmm, seq_length).obs_seq for _ in 1:nb_seqs])
+    obs_seqs = [rand(hmm, seq_length).obs_seq for _ in 1:nb_seqs]
+
+    obs_seq = reduce(vcat, obs_seqs)
+    seq_ends = cumsum(length.(obs_seqs))
 
     benchs = Dict()
 
@@ -37,52 +34,55 @@ function benchmarkables_hiddenmarkovmodels(; configuration, algos)
 
     if "logdensity" in algos
         benchs["logdensity"] = @benchmarkable begin
-            logdensityof($hmm, $obs_seqs)
+            logdensityof($hmm, $obs_seq; seq_ends=$seq_ends)
         end
     end
 
     if "forward" in algos
         benchs["forward_init"] = @benchmarkable begin
-            initialize_forward_backward($hmm, $obs_seqs)
+            initialize_forward_backward($hmm, $obs_seq; seq_ends=$seq_ends)
         end
         benchs["forward!"] = @benchmarkable begin
-            forward!(f_storages, $hmm, $obs_seqs)
-        end setup = (f_storages = initialize_forward($hmm, $obs_seqs))
+            forward!(f_storage, $hmm, $obs_seq; seq_ends=$seq_ends)
+        end setup = (f_storage = initialize_forward($hmm, $obs_seq; seq_ends=$seq_ends))
     end
 
     if "viterbi" in algos
         benchs["viterbi_init"] = @benchmarkable begin
-            initialize_viterbi($hmm, $obs_seqs)
+            initialize_viterbi($hmm, $obs_seq; seq_ends=$seq_ends)
         end
         benchs["viterbi!"] = @benchmarkable begin
-            viterbi!(v_storages, $hmm, $obs_seqs)
-        end setup = (v_storages = initialize_viterbi($hmm, $obs_seqs))
+            viterbi!(v_storage, $hmm, $obs_seq; seq_ends=$seq_ends)
+        end setup = (v_storage = initialize_viterbi($hmm, $obs_seq; seq_ends=$seq_ends))
     end
 
     if "forward_backward" in algos
         benchs["forward_backward_init"] = @benchmarkable begin
-            initialize_forward_backward($hmm, $obs_seqs)
+            initialize_forward_backward($hmm, $obs_seq; seq_ends=$seq_ends)
         end
         benchs["forward_backward!"] = @benchmarkable begin
-            forward_backward!(fb_storages, $hmm, $obs_seqs)
-        end setup = (fb_storages = initialize_forward_backward($hmm, $obs_seqs))
+            forward_backward!(fb_storage, $hmm, $obs_seq; seq_ends=$seq_ends)
+        end setup = (
+            fb_storage = initialize_forward_backward($hmm, $obs_seq; seq_ends=$seq_ends)
+        )
     end
 
     if "baum_welch" in algos
-        benchs["baum_welch_init"] = @benchmarkable begin
-            initialize_baum_welch($hmm, $obs_seqs)
-        end
         benchs["baum_welch!"] = @benchmarkable begin
             baum_welch!(
-                bw_storage,
+                fb_storage,
+                logL_evolution,
                 $hmm,
-                $obs_seqs;
+                $obs_seq;
+                seq_ends=$seq_ends,
                 max_iterations=$bw_iter,
                 atol=-Inf,
                 loglikelihood_increasing=false,
             )
         end setup = (
-            bw_storage = initialize_baum_welch($hmm, $obs_seqs; max_iterations=$bw_iter)
+            fb_storage = initialize_forward_backward($hmm, $obs_seq; seq_ends=$seq_ends);
+            logL_evolution = Float64[];
+            sizehint!(logL_evolution, $bw_iter)
         )
     end
 

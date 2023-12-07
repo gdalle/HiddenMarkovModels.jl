@@ -11,12 +11,10 @@ struct ViterbiStorage{R}
     "most likely state sequence `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
     "joint loglikelihood of the observation sequence & the most likely state sequence"
-    logL::RefValue{R}
-    logb::Vector{R}
-    ϕ::Vector{R}
-    ϕ_prev::Vector{R}
+    logL::Vector{R}
+    logB::Matrix{R}
+    ϕ::Matrix{R}
     ψ::Matrix{Int}
-    scratch::Vector{R}
 end
 
 Base.eltype(::ViterbiStorage{R}) where {R} = R
@@ -30,16 +28,14 @@ function initialize_viterbi(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 )
-    N, T = length(hmm), length(obs_seq)
+    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     q = Vector{Int}(undef, T)
-    logL = RefValue{R}()
-    logb = Vector{R}(undef, N)
-    ϕ = Vector{R}(undef, N)
-    ϕ_prev = Vector{R}(undef, N)
+    logL = Vector{R}(undef, K)
+    logB = Matrix{R}(undef, N, T)
+    ϕ = Matrix{R}(undef, N, T)
     ψ = Matrix{Int}(undef, N, T)
-    scratch = Vector{R}(undef, N)
-    return ViterbiStorage(q, logL, logb, ϕ, ϕ_prev, ψ, scratch)
+    return ViterbiStorage(q, logL, logB, ϕ, ψ)
 end
 
 """
@@ -52,32 +48,33 @@ function viterbi!(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 ) where {R}
-    @unpack logL, logb, ϕ, ϕ_prev, ψ, q, scratch = storage
-    logL[] = zero(R)
-    for k in eachindex(seq_ends)
+    @unpack q, logL, logB, ϕ, ψ = storage
+
+    @views for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
+
+        obs_logdensities!(logB[:, t1], hmm, obs_seq[t1], control_seq[t1])
         init = initialization(hmm)
-        obs_logdensities!(logb, hmm, obs_seq[t1], control_seq[t1])
-        ϕ .= log.(init) .+ logb
-        ϕ_prev .= ϕ
+        ϕ[:, t1] .= log.(init) .+ logB[:, t1]
+
         for t in (t1 + 1):t2
+            obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
             trans = transition_matrix(hmm, control_seq[t - 1])
-            obs_logdensities!(logb, hmm, obs_seq[t], control_seq[t])
             for j in 1:length(hmm)
-                @views scratch .= ϕ_prev .+ log.(trans[:, j])
-                i_max = argmax(scratch)
+                i_max = argmax(ϕ[i, t - 1] + log(trans[i, j]) for i in 1:length(hmm))
                 ψ[j, t] = i_max
-                ϕ[j] = scratch[i_max] + logb[j]
+                ϕ[j, t] = ϕ[i_max, t - 1] + log(trans[i_max, j]) + logB[j, t]
             end
-            ϕ_prev .= ϕ
         end
-        check_finite(ϕ)
-        q[t2] = argmax(ϕ)
+
+        q[t2] = argmax(ϕ[:, t2])
         for t in (t2 - 1):-1:t1
             q[t] = ψ[q[t + 1], t + 1]
         end
-        logL[] += ϕ[q[t2]]
+        logL[k] = ϕ[q[t2], t2]
     end
+
+    check_finite(ϕ)
     return nothing
 end
 
@@ -100,5 +97,5 @@ function viterbi(
 )
     storage = initialize_viterbi(hmm, obs_seq; control_seq, seq_ends)
     viterbi!(storage, hmm, obs_seq; control_seq, seq_ends)
-    return storage.q, storage.logL[]
+    return storage.q, sum(storage.logL)
 end

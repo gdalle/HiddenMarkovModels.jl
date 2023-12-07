@@ -1,5 +1,7 @@
 # Competitors
 
+## Julia
+
 We compare features among the following Julia packages:
 
 * HiddenMarkovModels.jl (abbreviated to HMMs.jl)
@@ -22,3 +24,9 @@ There are also more generic packages for probabilistic programming, which are ab
 | Logarithmic probabilities | halfway             | halfway             | yes             |
 
 Sim = Simulation, FB = Forward-Backward, Vit = Viterbi, BW = Baum-Welch
+
+## Python
+
+* [hmmlearn](https://github.com/hmmlearn/hmmlearn) (based on NumPy)
+* [pomegrnate](https://github.com/jmschrei/pomegranate) (based on PyTorch)
+* [dynamax](https://github.com/probml/dynamax) (based on JAX)

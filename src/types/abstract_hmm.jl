@@ -68,7 +68,7 @@ transition_matrix(hmm::AbstractHMM, control::Nothing) = transition_matrix(hmm)
 
 Return a vector of observation distributions, one for each state of `hmm`  when `control` is applied.
 
-There objects should support
+These objects should support
 
 - `rand(rng, dist)`
 - `DensityInterface.logdensityof(dist, obs)`

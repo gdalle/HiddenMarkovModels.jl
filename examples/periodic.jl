@@ -114,14 +114,10 @@ hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess)
 control_seqs = [1:rand(rng, T:(2T)) for k in 1:100];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
-obs_seq_concat = reduce(vcat, obs_seqs);
-control_seq_concat = reduce(vcat, control_seqs);
-seq_ends = cumsum(length.(obs_seqs));
-
-#-
-
 hmm_est, logL_evolution = baum_welch(
-    hmm_guess, obs_seq_concat; control_seq=control_seq_concat, seq_ends=seq_ends
+    hmm_guess,
+    reduce(vcat, obs_seqs);
+    control_seq=reduce(vcat, control_seqs),
+    seq_ends=cumsum(length.(obs_seqs)),
 )
-
 @test HMMs.similar_hmms(hmm_est, hmm; control_seq=1:2, atol=0.05)  #src
