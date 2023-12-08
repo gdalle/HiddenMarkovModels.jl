@@ -14,7 +14,7 @@ using Test  #src
 rng = Random.default_rng()
 Random.seed!(rng, 63)
 
-#-
+# ## Model construction
 
 struct ControlledGaussianHMM{T} <: AbstractHMM
     init::Vector{T}
@@ -35,26 +35,6 @@ end
 function HMMs.obs_distributions(hmm::ControlledGaussianHMM, control::AbstractVector)
     return [Normal(dot(control, hmm.dist_coeffs[i])) for i in 1:length(hmm)]
 end
-
-#-
-
-init = [0.4, 0.6]
-trans = [0.7 0.3; 0.2 0.8]
-dist_coeffs = [-ones(3), ones(3)]
-hmm = ControlledGaussianHMM(init, trans, dist_coeffs)
-
-#-
-
-T = 100
-control_seq = [randn(rng, 3) for t in 1:T];
-state_seq, obs_seq = rand(rng, hmm, control_seq);
-
-#-
-
-viterbi(hmm, obs_seq; control_seq)
-forward(hmm, obs_seq; control_seq)
-logdensityof(hmm, obs_seq; control_seq)
-forward_backward(hmm, obs_seq; control_seq);
 
 #-
 
@@ -88,27 +68,33 @@ function StatsAPI.fit!(
     end
 end
 
+# ## Demo
+
+init = [0.4, 0.6]
+trans = [0.7 0.3; 0.2 0.8]
+dist_coeffs = [-ones(3), ones(3)]
+hmm = ControlledGaussianHMM(init, trans, dist_coeffs);
+
 #-
 
 init_guess = [0.5, 0.5]
 trans_guess = [0.5 0.5; 0.5 0.5]
 dist_coeffs_guess = [-0.5 * ones(3), 0.5 * ones(3)]
-hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess)
+hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
 
-control_seqs = [[randn(rng, 3) for t in 1:rand(T:(2T))] for k in 1:100];
+control_seqs = [[randn(rng, 3) for t in 1:rand(100:200)] for k in 1:100];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
-hmm_est, logL_evolution = baum_welch(
-    hmm_guess,
-    reduce(vcat, obs_seqs);
-    control_seq=reduce(vcat, control_seqs),
-    seq_ends=cumsum(length.(obs_seqs)),
-)
-@test HMMs.similar_hmms(  #src
-    hmm_est,  #src
-    hmm;  #src
-    control_seq=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],  #src
-    atol=0.1,  #src
-)  #src
+obs_seq = reduce(vcat, obs_seqs)
+control_seq = reduce(vcat, control_seqs)
+seq_ends = cumsum(length.(obs_seqs));
+
+#-
+
+hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends)
+
+# ## Tests  #src
+
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)  #src

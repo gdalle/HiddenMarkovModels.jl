@@ -6,7 +6,7 @@ function baum_welch_has_converged(
         progress = logL - logL_prev
         if loglikelihood_increasing && progress < min(0, -atol)
             error("Loglikelihood decreased in Baum-Welch")
-        elseif abs(progress) < atol
+        elseif progress < atol
             return true
         end
     end
@@ -48,7 +48,7 @@ Return a tuple `(hmm_est, logL_evolution)`.
 # Keyword arguments
 
 $(DESCRIBE_CONTROL_STARTS)
-- `atol`: minimum loglikelihood variation (up or down) at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
+- `atol`: minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
 - `max_iterations`: maximum number of iterations of the algorithm
 - `loglikelihood_increasing`: whether to throw an error if the loglikelihood decreases
 """

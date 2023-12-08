@@ -11,13 +11,21 @@ AbstractHMM
 HMM
 ```
 
-## Basics
+## Interface
 
 ```@docs
-rand
 initialization
 transition_matrix
 obs_distributions
+```
+
+## Utils
+
+```@docs
+length
+rand
+eltype
+seq_limits
 ```
 
 ## Inference
@@ -27,45 +35,26 @@ logdensityof
 forward
 viterbi
 forward_backward
-baum_welch
 ```
 
-## Utils
+## Learning
 
 ```@docs
-length
-eltype
+baum_welch
 fit!
-HiddenMarkovModels.fit_in_sequence!
-HiddenMarkovModels.seq_limits
 ```
 
-## Internals
-
-These objects are not yet stabilized and may change at any time.
-Do not consider them to be part of the API subject to semantic versioning.
-
-### Storage types
+## In-place versions
 
 ```@docs
 HiddenMarkovModels.ForwardStorage
-HiddenMarkovModels.ViterbiStorage
-HiddenMarkovModels.ForwardBackwardStorage
-```
-
-### Initializing storage
-
-```@docs
 HiddenMarkovModels.initialize_forward
-HiddenMarkovModels.initialize_viterbi
-HiddenMarkovModels.initialize_forward_backward
-```
-
-### Modifying storage
-
-```@docs
 HiddenMarkovModels.forward!
+HiddenMarkovModels.ViterbiStorage
+HiddenMarkovModels.initialize_viterbi
 HiddenMarkovModels.viterbi!
+HiddenMarkovModels.ForwardBackwardStorage
+HiddenMarkovModels.initialize_forward_backward
 HiddenMarkovModels.forward_backward!
 HiddenMarkovModels.baum_welch!
 ```
@@ -77,34 +66,8 @@ HiddenMarkovModels.rand_prob_vec
 HiddenMarkovModels.rand_trans_mat
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.LightCategorical
+HiddenMarkovModels.fit_in_sequence!
 ```
-
-## Notations
-
-### Integers
-
-- `N`: number of states
-- `T`: trajectory length
-
-### Models and simulations
-
-- `init`: initialization (vector of state probabilities)
-- `trans`: transition_matrix (matrix of transition probabilities)
-- `dists`: observation distribution (vector of `rand`-able and `logdensityof`-able objects)
-- `state_seq`: a sequence of states (vector of integers)
-- `obs_seq`: a sequence of observations (vector of individual observations)
-- `obs_seqs`: several sequences of observations
-- `nb_seqs`: number of observation sequences
-- `logL`: loglikelihood
-
-### Forward backward
-
-- `(log)b`: vector of observation (log)likelihoods by state for an individual observation
-- `(log)B`: matrix of observation (log)likelihoods by state for a sequence of observations
-- `α`: scaled forward variables
-- `β`: scaled backward variables
-- `γ`: state marginals
-- `ξ`: transition marginals
 
 ## Index
 

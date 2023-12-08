@@ -19,14 +19,15 @@ A Julia package for HMM modeling, simulation, inference and learning.
 * the state follows a (discrete time, discrete space) Markov chain $\mathbb{P}_\theta(X_t | X_{t-1})$
 * the observation distribution is determined at each time by the state $\mathbb{P}_\theta(Y_t | X_t)$
 
-Following [Rabiner (1989)](https://ieeexplore.ieee.org/document/18626), we can list several statistical problems, each of which has an efficient solution algorithm that our package implements:
+HMMs are associated with several statistical problems, each of which has an efficient solution algorithm that our package implements:
 
 | Problem    | Goal                                                                                                      | Algorithm        |
 | ---------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
 | Evaluation | Likelihood of the observation sequence $\mathbb{P}_\theta(Y_{1:T})$                                       | Forward          |
-| Inference  | State marginals $\mathbb{P}_\theta(X_t \vert Y_{1:T})$                                                    | Forward-backward |
+| Filtering | Non-anticipative state marginals $\mathbb{P}_\theta(X_t \vert Y_{1:t})$                                       | Forward          |
+| Smoothing  | State marginals $\mathbb{P}_\theta(X_t \vert Y_{1:T})$                                                    | Forward-backward |
 | Decoding   | Most likely state sequence $\underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}_\theta(X_{1:T} \vert Y_{1:T})$ | Viterbi          |
-| Learning   | Best parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch       |
+| Learning   | Maximum likelihood parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch       |
 
 ## Getting started
 
@@ -40,8 +41,8 @@ Then, you can create your first HMM as follows:
 
 ```julia
 using Distributions, HiddenMarkovModels
-init = [0.2, 0.8]
-trans = [0.1 0.9; 0.7 0.3]
+init = [0.4, 0.6]
+trans = [0.9 0.1; 0.2 0.8]
 dists = [Normal(-1.0), Normal(1.0)]
 hmm = HMM(init, trans, dists)
 ```

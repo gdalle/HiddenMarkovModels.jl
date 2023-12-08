@@ -68,11 +68,11 @@ transition_matrix(hmm::AbstractHMM, control::Nothing) = transition_matrix(hmm)
 
 Return a vector of observation distributions, one for each state of `hmm`  when `control` is applied.
 
-These objects should support
+These objects should implement
 
-- `rand(rng, dist)`
-- `DensityInterface.logdensityof(dist, obs)`
-- `StatsAPI.fit!(dist, obs_seq, weight_seq)`
+- `Random.rand(rng, dist)` for sampling
+- `DensityInterface.logdensityof(dist, obs)` for inference
+- `StatsAPI.fit!(dist, obs_seq, weight_seq)` for learning
 """
 obs_distributions(hmm::AbstractHMM, control::Nothing) = obs_distributions(hmm)
 

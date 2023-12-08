@@ -13,7 +13,8 @@ using Test  #src
 rng = Random.default_rng()
 Random.seed!(rng, 63)
 
-#-
+# ## Model construction
+
 struct PeriodicHMM{T<:Number,D,L} <: AbstractHMM
     init::Vector{T}
     trans_per::NTuple{L,Matrix{T}}
@@ -35,27 +36,6 @@ end
 function HMMs.obs_distributions(hmm::PeriodicHMM, t::Integer)
     return hmm.dists_per[(t - 1) % period(hmm) + 1]
 end
-
-#-
-
-init = [0.4, 0.6]
-trans_per = ([0.8 0.2; 0.2 0.8], [0.6 0.4; 0.4 0.6])
-dists_per = ([Normal(-1), Normal(+1)], [Normal(-2), Normal(+2)])
-hmm = PeriodicHMM(init, trans_per, dists_per)
-
-#-
-
-T = 100
-control_seq = 1:T
-state_seq, obs_seq = rand(rng, hmm, control_seq)
-@test sum(abs, obs_seq[1:2:end]) < 0.8 * sum(abs, obs_seq[2:2:end])  #src
-
-#-
-
-viterbi(hmm, obs_seq; control_seq)
-forward(hmm, obs_seq; control_seq)
-logdensityof(hmm, obs_seq; control_seq)
-forward_backward(hmm, obs_seq; control_seq);
 
 #-
 
@@ -102,22 +82,33 @@ function StatsAPI.fit!(
     return nothing
 end
 
+# ## Demo
+
+init = [0.4, 0.6]
+trans_per = ([0.8 0.2; 0.2 0.8], [0.6 0.4; 0.4 0.6])
+dists_per = ([Normal(-1), Normal(+1)], [Normal(-2), Normal(+2)])
+hmm = PeriodicHMM(init, trans_per, dists_per);
+
 #-
 
 init_guess = [0.5, 0.5]
 trans_per_guess = ([0.7 0.3; 0.3 0.7], [0.5 0.5; 0.5 0.5])
 dists_per_guess = ([Normal(-0.7), Normal(+0.7)], [Normal(-1.5), Normal(+1.5)])
-hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess)
+hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess);
 
 #-
 
-control_seqs = [1:rand(rng, T:(2T)) for k in 1:100];
+control_seqs = [1:rand(rng, 100:200) for k in 1:100];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
-hmm_est, logL_evolution = baum_welch(
-    hmm_guess,
-    reduce(vcat, obs_seqs);
-    control_seq=reduce(vcat, control_seqs),
-    seq_ends=cumsum(length.(obs_seqs)),
-)
-@test HMMs.similar_hmms(hmm_est, hmm; control_seq=1:2, atol=0.05)  #src
+obs_seq = reduce(vcat, obs_seqs)
+control_seq = reduce(vcat, control_seqs)
+seq_ends = cumsum(length.(obs_seqs));
+
+#-
+
+hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends)
+
+# ## Tests  #src
+
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)  #src

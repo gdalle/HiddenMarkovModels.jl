@@ -23,10 +23,11 @@ export AbstractHMM, HMM
 export initialization, transition_matrix, obs_distributions
 export fit!, logdensityof
 export viterbi, forward, forward_backward, baum_welch
+export seq_limits
 
 const DESCRIBE_CONTROL_STARTS = """
 - `control_seq`: a control sequence with the same length as `obs_seq`
-- `ends`: the indices at which each subsequence inside `obs_seq` and `control_seq` finishes, useful in the case of multiple sequences
+- `seq_ends`: the indices at which each subsequence inside `obs_seq` and `control_seq` finishes, useful in the case of multiple sequences
 """
 
 include("types/abstract_hmm.jl")
@@ -38,7 +39,6 @@ include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
 include("utils/limits.jl")
-include("utils/test.jl")
 
 include("inference/forward.jl")
 include("inference/viterbi.jl")
@@ -48,14 +48,20 @@ include("inference/logdensity.jl")
 
 include("types/hmm.jl")
 
+function test_equal_hmms end
+function test_coherent_algorithms end
+
 if !isdefined(Base, :get_extension)
     function __init__()
-        @require Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f" include(
-            "../ext/HiddenMarkovModelsDistributionsExt.jl"
-        )
-        @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" include(
-            "../ext/HiddenMarkovModelsHMMBaseExt.jl"
-        )
+        @require Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f" begin
+            include("../ext/HiddenMarkovModelsDistributionsExt.jl")
+        end
+        @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" begin
+            include("../ext/HiddenMarkovModelsHMMBaseExt.jl")
+        end
+        @require Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40" begin
+            include("../ext/HiddenMarkovModelsTestExt.jl")
+        end
     end
 end
 

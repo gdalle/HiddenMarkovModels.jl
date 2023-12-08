@@ -132,7 +132,7 @@ end
     dists = [LightCategorical(rand_prob_vec(rng, R, D)) for i in 1:N]
     hmm = HMM(init, trans, dists)
     test_type_stability(rng, hmm; control_seq, seq_ends)
-    @test_skip test_allocations(rng, hmm; control_seq, seq_ends)
+    test_allocations(rng, hmm; control_seq, seq_ends)
 end
 
 @testset "LightDiagNormal" begin

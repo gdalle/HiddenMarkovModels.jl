@@ -1,4 +1,4 @@
-using HiddenMarkovModels: LightCategorical, LightDiagNormal
+using HiddenMarkovModels: LightCategorical, LightDiagNormal, rand_prob_vec
 using Statistics
 using Test
 

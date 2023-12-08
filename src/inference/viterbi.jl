@@ -61,9 +61,16 @@ function viterbi!(
             obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
             trans = transition_matrix(hmm, control_seq[t - 1])
             for j in 1:length(hmm)
-                i_max = argmax(ϕ[i, t - 1] + log(trans[i, j]) for i in 1:length(hmm))
+                i_max = 1
+                score_max = ϕ[i_max, t - 1] + log(trans[i_max, j])
+                for i in 2:length(hmm)
+                    score = ϕ[i, t - 1] + log(trans[i, j])
+                    if score > score_max
+                        score_max, i_max = score, i
+                    end
+                end
                 ψ[j, t] = i_max
-                ϕ[j, t] = ϕ[i_max, t - 1] + log(trans[i_max, j]) + logB[j, t]
+                ϕ[j, t] = score_max + logB[j, t]
             end
         end
 
@@ -74,7 +81,7 @@ function viterbi!(
         logL[k] = ϕ[q[t2], t2]
     end
 
-    check_finite(ϕ)
+    check_right_finite(ϕ)
     return nothing
 end
 

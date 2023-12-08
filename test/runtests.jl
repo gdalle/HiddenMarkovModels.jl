@@ -5,8 +5,6 @@ using JuliaFormatter: JuliaFormatter
 using JET: JET
 using Test
 
-examples_path = joinpath(dirname(@__DIR__), "examples")
-
 @testset verbose = true "HiddenMarkovModels.jl" begin
     if VERSION >= v"1.9"
         @testset "Code formatting" begin
@@ -20,7 +18,6 @@ examples_path = joinpath(dirname(@__DIR__), "examples")
         end
 
         @testset "Code linting" begin
-            using Zygote
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 
@@ -37,6 +34,7 @@ examples_path = joinpath(dirname(@__DIR__), "examples")
         include("correctness.jl")
     end
 
+    examples_path = joinpath(dirname(@__DIR__), "examples")
     for file in readdir(examples_path)
         @testset "Example - $file" begin
             include(joinpath(examples_path, file))
