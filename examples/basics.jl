@@ -19,12 +19,12 @@ Random.seed!(rng, 63);
 # ## Model construction
 
 #=
-The package provides a versatile `HMM` type with three attributes:
+The package provides a versatile [`HMM`](@ref) type with three attributes:
 - a vector of state initialization probabilities
 - a matrix of state transition probabilities
 - a vector of observation distributions, one for each state
 
-Here we keep it simple by using Distributions.jl, but there are other ways.
+We keep it simple for now by leveraging Distributions.jl.
 =#
 
 init = [0.8, 0.2]
@@ -35,14 +35,13 @@ hmm = HMM(init, trans, dists);
 # ## Simulation
 
 #=
-You can simulate a pair of state and observation sequences by specifying how long you want them to be.
+You can simulate a pair of state and observation sequences with [`rand`](@ref) by specifying how long you want them to be.
 =#
 
 state_seq, obs_seq = rand(rng, hmm, 20);
 
 #=
 Note that the observation sequence is a vector, whose elements have whatever type an observation distribution returns when sampled.
-As we will see, this can be more generic than just numbers or arrays.
 =#
 
 state_seq[1], obs_seq[1]
@@ -54,7 +53,7 @@ In practical applications, the state sequence is not known, which is why we need
 # ## Inference
 
 #=
-The Viterbi algorithm returns the most likely state sequence $\hat{X}_{1:T} = \underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}(X_{1:T} \vert Y_{1:T})$, along with the joint loglikelihood $\mathbb{P}(\hat{X}_{1:T}, Y_{1:T})$.
+The Viterbi algorithm ([`viterbi`](@ref)) returns the most likely state sequence $\hat{X}_{1:T} = \underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}(X_{1:T} \vert Y_{1:T})$, along with the joint loglikelihood $\mathbb{P}(\hat{X}_{1:T}, Y_{1:T})$.
 =#
 
 best_state_seq, best_joint_loglikelihood = viterbi(hmm, obs_seq);
@@ -66,7 +65,7 @@ As we can see, it is very close to the true state sequence, but not necessarily 
 vcat(state_seq', best_state_seq')
 
 #=
-The forward algorithm returns a matrix of filtered state marginals $\alpha[i, t] = \mathbb{P}(X_t = i | Y_{1:t})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
+The forward algorithm ([`forward`](@ref)) returns a matrix of filtered state marginals $\alpha[i, t] = \mathbb{P}(X_t = i | Y_{1:t})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
 =#
 
 filtered_state_marginals, obs_seq_loglikelihood1 = forward(hmm, obs_seq);
@@ -79,7 +78,7 @@ This is particularly useful to infer the marginal distribution of the last state
 filtered_state_marginals[:, end]
 
 #=
-Conversely, the forward-backward algorithm returns a matrix of smoothed state marginals $\gamma[i, t] = \mathbb{P}(X_t = i | Y_{1:T})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
+Conversely, the forward-backward algorithm ([`forward_backward`](@ref)) returns a matrix of smoothed state marginals $\gamma[i, t] = \mathbb{P}(X_t = i | Y_{1:T})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
 =#
 
 smoothed_state_marginals, obs_seq_loglikelihood2 = forward_backward(hmm, obs_seq);
@@ -93,7 +92,7 @@ Note that forward and forward-backward only coincide at the last time step.
 collect(zip(filtered_state_marginals, smoothed_state_marginals))
 
 #=
-Finally, we provide a thin wrapper around the forward algorithm for observation sequence loglikelihoods $\mathbb{P}(Y_{1:T})$.
+Finally, we provide a thin wrapper ([`logdensityof`](@ref)) around the forward algorithm for observation sequence loglikelihoods $\mathbb{P}(Y_{1:T})$.
 =#
 
 logdensityof(hmm, obs_seq)
@@ -113,7 +112,7 @@ logdensityof(hmm, obs_seq, best_state_seq)
 # ## Learning
 
 #=
-The Baum-Welch algorithm is a variant of Expectation-Maximization, designed specifically to estimate HMM parameters.
+The Baum-Welch algorithm ([`baum_welch`](@ref)) is a variant of Expectation-Maximization, designed specifically to estimate HMM parameters.
 Since it is a local optimization procedure, it requires a starting point that is close enough to the true model.
 =#
 
@@ -123,11 +122,11 @@ dists_guess = [MvNormal(-0.5 * ones(3), I), MvNormal(+0.5 * ones(3), I)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #=
-Now we can estimate parameters based on a slightly longer sequence.
+Let's estimate parameters based on a slightly longer sequence.
 =#
 
 _, long_obs_seq = rand(rng, hmm, 1000)
-hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, long_obs_seq);
+hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq);
 
 #=
 An essential guarantee of this algorithm is that the loglikelihood of the observation sequence keeps increasing as the model improves.
@@ -166,12 +165,13 @@ In many applications, we have access to various observation sequences of differe
 =#
 
 _, obs_seq2 = rand(rng, hmm, 30)
-obs_seqs = [obs_seq, obs_seq2];
+_, obs_seq3 = rand(rng, hmm, 10)
+obs_seqs = [obs_seq, obs_seq2, obs_seq3];
 
 #=
 Every algorithm in the package accepts multiple sequences in a concatenated form.
 The user must also specify where each sequence ends in the concatenated vector, by passing `seq_ends` as a keyword argument.
-Otherwise, the input would be treated as a single observation sequence, which is mathematically incorrect.
+Otherwise, the input will be treated as a unique observation sequence, which is mathematically incorrect.
 =#
 
 obs_seq_concat = reduce(vcat, obs_seqs)
@@ -184,7 +184,7 @@ The outputs of inference algorithms are then concatenated, and the associated lo
 best_state_seq_concat, _ = viterbi(hmm, obs_seq_concat; seq_ends);
 
 #=
-The function `seq_limits` returns the begin and end of a given sequence in the concatenated vector.
+The function [`seq_limits`](@ref) returns the begin and end of a given sequence in the concatenated vector.
 It can be used to untangle the results.
 =#
 
@@ -192,12 +192,13 @@ start2, stop2 = seq_limits(seq_ends, 2)
 best_state_seq_concat[start2:stop2] == first(viterbi(hmm, obs_seq2))
 
 #=
-While inference algorithms can also be run separately on each sequence without changing the results, considering multiple sequences together is nontrivial for Baum-Welch, and the package takes care of it automatically.
+While inference algorithms can also be run separately on each sequence without changing the results, considering multiple sequences together is nontrivial for Baum-Welch.
+That is why the package takes care of it automatically.
 =#
 
-baum_welch(hmm_guess, obs_seq_concat; seq_ends);
+hmm_est_concat, _ = baum_welch(hmm_guess, obs_seq_concat; seq_ends);
 
 # ## Tests  #src
 
-control_seq, seq_ends = fill(nothing, 1000), 100:10:1000  #src
+control_seq, seq_ends = fill(nothing, 1000), 100:100:1000  #src
 test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=1e-1)  #src

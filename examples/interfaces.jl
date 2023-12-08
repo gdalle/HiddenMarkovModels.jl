@@ -1,10 +1,11 @@
 # # Interfaces
 
 #=
-Here we discuss how to extend the observation distributions or HMM behavior to fit specific needs.
+Here we discuss how to extend the observation distributions or HMM behavior to satisfy specific needs.
 =#
 
 using DensityInterface
+using Distributions
 using HiddenMarkovModels
 using HiddenMarkovModels: test_coherent_algorithms  #src
 using LinearAlgebra
@@ -28,8 +29,6 @@ They only need to implement three methods:
 
 In addition, the observation can be arbitrary Julia types.
 So let's construct a distribution that generates stuff.
-
-If you want more sophisticated examples, check out the definitions of `HiddenMarkovModels.LightDiagNormal` and `HiddenMarkovModels.LightCategorical`, which are designed to be fast and allocation-free.
 =#
 
 struct Stuff{T}
@@ -55,13 +54,10 @@ end
 
 #=
 It is important to declare to DensityInterface.jl that the custom distribution has a density, thanks to the following trait.
+The logdensity itself can be computed up to an additive constant without issue.
 =#
 
 DensityInterface.DensityKind(::StuffDist) = HasDensity()
-
-#=
-The logdensity itself can be computed up to an additive constant without issue.
-=#
 
 function DensityInterface.logdensityof(dist::StuffDist, obs::Stuff)
     return -abs2(obs.quantity - dist.quantity_mean)
@@ -114,10 +110,9 @@ hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq)
 obs_distributions(hmm_est)
 
-# ## Tests  #src
-
-control_seq, seq_ends = fill(nothing, 1000), 100:10:1000  #src
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.2, init=false)  #src
+#=
+If you want more sophisticated examples, check out [`HiddenMarkovModels.LightDiagNormal`](@ref) and [`HiddenMarkovModels.LightCategorical`](@ref), which are designed to be fast and allocation-free.
+=#
 
 # ## Creating a new HMM type
 
@@ -126,13 +121,14 @@ In some scenarios, the vanilla Baum-Welch algorithm is not exactly what we want.
 For instance, we might have a prior on the parameters of our model, which we want to apply during the fitting step of the iterative procedure.
 
 Then we need to create a new type that satisfies the `AbstractHMM` interface.
-Let's make a simpler version of the built-in `HMM`m with a prior saying that each transition has been observed exactly once.
+Let's make a simpler version of the built-in `HMM`m with a prior saying that each transition has already been observed a certain number of times.
 =#
 
 struct PriorHMM{T,D} <: AbstractHMM
     init::Vector{T}
     trans::Matrix{T}
     dists::Vector{D}
+    trans_prior_count::Int
 end
 
 #=
@@ -144,16 +140,17 @@ HiddenMarkovModels.transition_matrix(hmm::PriorHMM) = hmm.trans
 HiddenMarkovModels.obs_distributions(hmm::PriorHMM) = hmm.dists
 
 #=
-In addition, we want to overload `logdensityof` to specify our prior loglikelihood.
+In addition, we want to overload [`logdensityof(hmm)`](@ref) to specify our prior loglikelihood.
+It corresponds to a Dirichlet distribution over each row of the transition matrix, where each Dirichlet parameter is one plus the number of times the corresponding transition has been observed.
 =#
 
 function DensityInterface.logdensityof(hmm::PriorHMM)
-    prior = Dirichlet(ones(length(hmm)))
+    prior = Dirichlet(fill(hmm.trans_prior_count + 1, length(hmm)))
     return sum(logdensityof(prior, row) for row in eachrow(transition_matrix(hmm)))
 end
 
 #=
-And finally, we redefine the specific method of `fit!` that is used during Baum-Welch.
+And finally, we redefine the specific method of `fit!` that is used during Baum-Welch: [`fit!(hmm, obs_seq; control_seq, seq_ends, fb_storage)`](@ref).
 It accepts the same inputs as `baum_welch` for multiple sequences (disregard `control_seq` for now), and an additional `fb_storage` containing the results of the forward-backward algorithm.
 
 The goal is to modify `hmm` in-place to update its parameters with their current maximum likelihood estimates.
@@ -168,7 +165,7 @@ function StatsAPI.fit!(
     fb_storage::HiddenMarkovModels.ForwardBackwardStorage,
 )
     hmm.init .= 0
-    hmm.trans .= 1  # this is where the prior comes in
+    hmm.trans .= hmm.trans_prior_count
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         hmm.init .+= fb_storage.γ[:, t1]
@@ -178,7 +175,7 @@ function StatsAPI.fit!(
     hmm.trans ./= sum(hmm.trans; dims=2)
 
     for i in 1:length(hmm)
-        weight_seq = storage.γ[:, i]
+        weight_seq = fb_storage.γ[i, :]
         fit!(hmm.dists[i], obs_seq, weight_seq)
     end
     return nothing
@@ -189,6 +186,22 @@ Some distributions, such as those from Distributions.jl
 - do not support in-place fitting
 - might expect different formats, e.g. higher-order arrays instead of a vector of objects
 
-The function `HiddenMarkovModels.fit_in_sequence!` is a replacement for `fit!` which you can overload at will.
-It is already designed to handle Distributions.jl.
+The function [`HiddenMarkovModels.fit_in_sequence!`](@ref) is a replacement for `fit!` that is designed to handle Distributions.jl.
+You can overload it for your own objects too.
 =#
+
+trans_prior_count = 10
+prior_hmm_guess = PriorHMM(init_guess, trans_guess, dists_guess, trans_prior_count)
+
+prior_hmm_est, prior_logl_evolution = baum_welch(prior_hmm_guess, obs_seq)
+
+#=
+As we can see, the transition matrix for our Bayesian version is slightly more spread out, although this effect would nearly disappear with enough data.
+=#
+
+cat(transition_matrix(hmm_est), transition_matrix(prior_hmm_est); dims=3)
+
+# ## Tests  #src
+
+control_seq, seq_ends = fill(nothing, 1000), 100:100:1000  #src
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.2, init=false)  #src

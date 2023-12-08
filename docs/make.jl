@@ -43,6 +43,7 @@ end
 
 pages = [
     "Home" => "index.md",
+    "API reference" => "api.md",
     "Tutorials" => [
         "Basics" => joinpath("examples", "basics.md"),
         "Interfaces" => joinpath("examples", "interfaces.md"),
@@ -50,7 +51,6 @@ pages = [
         "Periodic" => joinpath("examples", "periodic.md"),
         "Controlled" => joinpath("examples", "controlled.md"),
     ],
-    "API reference" => "api.md",
     "Advanced" => [
         "Alternatives" => "alternatives.md",
         "Debugging" => "debugging.md",
