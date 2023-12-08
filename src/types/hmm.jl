@@ -14,6 +14,12 @@ struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHM
     trans::M
     "observation distributions"
     dists::VD
+
+    function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
+        hmm = new{typeof(init), typeof(trans), typeof(dists)}(init, trans, dists)
+        check_hmm(hmm)
+        return hmm
+    end
 end
 
 function Base.copy(hmm::HMM)

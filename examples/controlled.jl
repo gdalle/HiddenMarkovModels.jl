@@ -84,7 +84,7 @@ hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
 
-control_seqs = [[randn(rng, 3) for t in 1:rand(100:200)] for k in 1:100];
+control_seqs = [[randn(rng, 3) for t in 1:rand(100:200)] for k in 1:10];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 obs_seq = reduce(vcat, obs_seqs)

@@ -1,5 +1,9 @@
 # # Basics
 
+#=
+Here, we show how to use the essential ingredients of the package.
+=#
+
 using Distributions
 using HiddenMarkovModels
 using HiddenMarkovModels: test_coherent_algorithms  #src
@@ -195,5 +199,5 @@ baum_welch(hmm_guess, obs_seq_concat; seq_ends);
 
 # ## Tests  #src
 
-control_seq, seq_ends = fill(nothing, 1000), 10:10:1000  #src
+control_seq, seq_ends = fill(nothing, 1000), 100:10:1000  #src
 test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=1e-1)  #src

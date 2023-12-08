@@ -147,3 +147,12 @@ end
 function Random.rand(hmm::AbstractHMM, T::Integer)
     return rand(hmm, Fill(nothing, T))
 end
+
+## Prior
+
+"""
+    logdensityof(hmm)
+
+Return the prior loglikelihood associated with the parameters of `hmm`.
+"""
+DensityInterface.logdensityof(hmm::AbstractHMM) = 0

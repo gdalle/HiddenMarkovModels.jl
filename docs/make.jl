@@ -45,7 +45,8 @@ pages = [
     "Home" => "index.md",
     "Tutorials" => [
         "Basics" => joinpath("examples", "basics.md"),
-        "Distributions" => joinpath("examples", "distributions.md"),
+        "Interfaces" => joinpath("examples", "interfaces.md"),
+        "Autodiff" => joinpath("examples", "autodiff.md"),
         "Periodic" => joinpath("examples", "periodic.md"),
         "Controlled" => joinpath("examples", "controlled.md"),
     ],

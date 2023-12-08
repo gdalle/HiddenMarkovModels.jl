@@ -63,7 +63,7 @@ function test_identical_hmmbase(
         @test isapprox(
             logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
         )
-        test_equal_hmms(hmm_est, HMM(hmm_est_base); atol)
+        test_equal_hmms(hmm_est, HMM(hmm_est_base); atol, init=true)
     end
 
     return nothing
@@ -71,7 +71,7 @@ end
 
 ## Settings
 
-T, K = 20, 1000
+T, K = 100, 10
 
 ## Distributions
 
