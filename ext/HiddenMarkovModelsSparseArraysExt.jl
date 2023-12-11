@@ -1,6 +1,6 @@
 module HiddenMarkovModelsSparseArraysExt
 
-using HiddenMarkovModels
+using HiddenMarkovModels: HiddenMarkovModels
 using SparseArrays
 
 HiddenMarkovModels.mynonzeros(x::AbstractSparseArray) = nonzeros(x)

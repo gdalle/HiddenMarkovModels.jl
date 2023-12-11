@@ -13,8 +13,7 @@ function test_identical_hmmbase(
         obs_seq = vcat(sim.obs_seq, sim.obs_seq)
         seq_ends = [length(sim.obs_seq), 2 * length(sim.obs_seq)]
 
-        hmm_base = HMMBase.HMM(hmm)
-        hmm_guess_base = HMMBase.HMM(hmm_guess)
+        hmm_base = HMMBase.HMM(deepcopy(hmm.init), deepcopy(hmm.trans), deepcopy(hmm.dists))
 
         logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
         logL = logdensityof(hmm, obs_seq; seq_ends)
@@ -35,6 +34,12 @@ function test_identical_hmmbase(
         @test isapprox(γ[:, 1:T], γ_base') && isapprox(γ[:, (T + 1):(2T)], γ_base')
 
         if !isnothing(hmm_guess)
+            hmm_guess_base = HMMBase.HMM(
+                deepcopy(hmm_guess.init),
+                deepcopy(hmm_guess.trans),
+                deepcopy(hmm_guess.dists),
+            )
+
             hmm_est_base, hist_base = HMMBase.fit_mle(
                 hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
             )
@@ -45,7 +50,12 @@ function test_identical_hmmbase(
             @test isapprox(
                 logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
             )
-            test_equal_hmms(hmm_est, HMM(hmm_est_base); atol, init=true)
+            test_equal_hmms(
+                hmm_est,
+                HMM(hmm_est_base.a, hmm_est_base.A, hmm_est_base.B);
+                atol,
+                init=true,
+            )
         end
     end
 end

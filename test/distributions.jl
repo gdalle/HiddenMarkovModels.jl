@@ -1,5 +1,6 @@
 using Distributions
 using HiddenMarkovModels: LightCategorical, LightDiagNormal, logdensityof, rand_prob_vec
+using LinearAlgebra
 using Statistics
 using Test
 
@@ -46,5 +47,5 @@ end
     test_fit_allocs(dist, x, w)
     # Logdensity
     @test logdensityof(dist, x[1]) ≈
-        logdensityof(MvNormal(μ, σ), x[1]) + length(x[1]) * log(sqrt(2π))
+        logdensityof(MvNormal(μ, Diagonal(abs2.(σ))), x[1]) + length(x[1]) * log(sqrt(2π))
 end

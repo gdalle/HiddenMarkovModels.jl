@@ -14,7 +14,6 @@ using FillArrays: Fill
 using LinearAlgebra: dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
-using Requires: @require
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!
 
@@ -48,20 +47,11 @@ include("inference/chainrules.jl")
 
 include("types/hmm.jl")
 
-if !isdefined(Base, :get_extension)
-    function __init__()
-        @require Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f" begin
-            include("../ext/HiddenMarkovModelsDistributionsExt.jl")
-        end
-        @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" begin
-            include("../ext/HiddenMarkovModelsHMMBaseExt.jl")
-        end
-        @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" begin
-            include("../ext/HiddenMarkovModelsSparseArraysExt.jl")
-        end
-    end
-end
-
 include("precompile.jl")
+
+if !isdefined(Base, :get_extension)
+    include("../ext/HiddenMarkovModelsDistributionsExt.jl")
+    include("../ext/HiddenMarkovModelsSparseArraysExt.jl")
+end
 
 end

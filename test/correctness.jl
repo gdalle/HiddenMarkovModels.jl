@@ -52,8 +52,10 @@ seq_ends = cumsum(length.(control_seqs))
 end
 
 @testset "DiagNormal" begin
-    dists = [MvNormal(μ[1], I), MvNormal(μ[2], I)]
-    dists_guess = [MvNormal(μ_guess[1], I), MvNormal(μ_guess[2], I)]
+    dists = [MvNormal(μ[1], Diagonal(abs2.(σ))), MvNormal(μ[2], Diagonal(abs2.(σ)))]
+    dists_guess = [
+        MvNormal(μ_guess[1], Diagonal(abs2.(σ))), MvNormal(μ_guess[2], Diagonal(abs2.(σ)))
+    ]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
