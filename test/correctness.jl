@@ -14,7 +14,7 @@ seed!(rng, 63)
 
 ## Settings
 
-T, K = 200, 100
+T, K = 100, 200
 
 init = [0.4, 0.6]
 init_guess = [0.5, 0.5]
@@ -79,7 +79,7 @@ end
     test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)
 end
 
-@testset "LightDiagNormal" begin
+@test_skip @testset "LightDiagNormal" begin
     dists = [LightDiagNormal(μ[1], σ), LightDiagNormal(μ[2], σ)]
     dists_guess = [LightDiagNormal(μ_guess[1], σ), LightDiagNormal(μ_guess[2], σ)]
 

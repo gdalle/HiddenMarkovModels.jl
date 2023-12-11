@@ -121,4 +121,4 @@ Still, first order optimization can be relevant when we lack explicit formulas f
 # ## Tests  #src
 
 @test grad_f ≈ grad_z  #src
-@test_broken grad_e ≈ grad_f  #src
+@test grad_e ≈ grad_f  #src

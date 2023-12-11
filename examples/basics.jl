@@ -215,7 +215,7 @@ map(dist -> dist.μ, hcat(obs_distributions(hmm_est_concat), obs_distributions(h
 
 # ## Tests  #src
 
-control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:100];  #src
+control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:200];  #src
 control_seq = reduce(vcat, control_seqs);  #src
 seq_ends = cumsum(length.(control_seqs));  #src
 

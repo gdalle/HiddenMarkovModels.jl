@@ -39,10 +39,13 @@ function Base.rand(rng::AbstractRNG, dist::LightDiagNormal{T1,T2}) where {T1,T2}
 end
 
 function DensityInterface.logdensityof(dist::LightDiagNormal, x)
-    a = -sum(abs2, (x[i] - dist.μ[i]) / dist.σ[i] for i in eachindex(x, dist.μ, dist.σ))
     b = -sum(dist.logσ)
-    logd = (a / 2) + b
-    return logd
+    c =
+        -sum(
+            abs2(x[i] - dist.μ[i]) / (2 * abs2(dist.σ[i])) for
+            i in eachindex(x, dist.μ, dist.σ)
+        )
+    return b + c
 end
 
 function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
@@ -51,12 +54,11 @@ function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     dist.σ .= zero(T2)
     for (xᵢ, wᵢ) in zip(x, w)
         dist.μ .+= xᵢ .* wᵢ
+        dist.σ .+= abs2.(xᵢ) .* wᵢ
     end
     dist.μ ./= w_tot
-    for (xᵢ, wᵢ) in zip(x, w)
-        dist.σ .+= abs2.(xᵢ .- dist.μ) .* wᵢ
-    end
     dist.σ ./= w_tot
+    dist.σ .-= abs2.(dist.μ)
     dist.σ .= sqrt.(dist.σ)
     dist.logσ .= log.(dist.σ)
     check_positive(dist.σ)

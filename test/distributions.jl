@@ -1,4 +1,5 @@
-using HiddenMarkovModels: LightCategorical, LightDiagNormal, rand_prob_vec
+using Distributions
+using HiddenMarkovModels: LightCategorical, LightDiagNormal, logdensityof, rand_prob_vec
 using Statistics
 using Test
 
@@ -24,6 +25,8 @@ end
     fit!(dist_est, x, w)
     @test dist_est.p ≈ p atol = 1e-2
     test_fit_allocs(dist, x, w)
+    # Logdensity
+    @test logdensityof(dist, x[1]) ≈ logdensityof(Categorical(p), x[1])
 end
 
 @testset "LightDiagNormal" begin
@@ -41,4 +44,7 @@ end
     @test dist_est.μ ≈ μ atol = 1e-2
     @test dist_est.σ ≈ σ atol = 1e-2
     test_fit_allocs(dist, x, w)
+    # Logdensity
+    @test logdensityof(dist, x[1]) ≈
+        logdensityof(MvNormal(μ, σ), x[1]) + length(x[1]) * log(sqrt(2π))
 end
