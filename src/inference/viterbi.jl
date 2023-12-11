@@ -10,7 +10,7 @@ $(TYPEDFIELDS)
 struct ViterbiStorage{R}
     "most likely state sequence `q[t] = argmaxᵢ ℙ(X[t]=i | Y[1:T])`"
     q::Vector{Int}
-    "joint loglikelihood of the observation sequence & the most likely state sequence"
+    "one joint loglikelihood per pair (observation sequence, most likely state sequence)"
     logL::Vector{R}
     logB::Matrix{R}
     ϕ::Matrix{R}
@@ -90,7 +90,7 @@ $(SIGNATURES)
 
 Apply the Viterbi algorithm to infer the most likely state sequence corresponding to `obs_seq` for `hmm`.
 
-Return a tuple `(q, logL)` defined in [`ViterbiStorage`](@ref).
+Return a tuple `(storage.q, sum(storage.logL))` where `storage` is of type [`ViterbiStorage`](@ref).
 
 # Keyword arguments
 

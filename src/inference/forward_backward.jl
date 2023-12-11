@@ -12,7 +12,7 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     γ::Matrix{R}
     "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
     ξ::Vector{M}
-    "loglikelihood of the observation sequence"
+    "one loglikelihood per observation sequence"
     logL::Vector{R}
     B::Matrix{R}
     α::Matrix{R}
@@ -36,13 +36,13 @@ function initialize_forward_backward(
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     trans = transition_matrix(hmm, control_seq[1])
-    M = typeof(similar(trans, R))
+    M = typeof(mysimilar_mutable(trans, R))
 
     γ = Matrix{R}(undef, N, T)
     ξ = Vector{M}(undef, T)
     if transition_marginals
         for t in 1:T
-            ξ[t] = similar(transition_matrix(hmm, control_seq[t]), R)
+            ξ[t] = mysimilar_mutable(transition_matrix(hmm, control_seq[t]), R)
         end
     end
     logL = Vector{R}(undef, K)
@@ -105,7 +105,7 @@ $(SIGNATURES)
 
 Apply the forward-backward algorithm to infer the posterior state and transition marginals during sequence `obs_seq` for `hmm`.
 
-Return a tuple `(γ, logL)` defined in [`ForwardBackwardStorage`](@ref).
+Return a tuple `(storage.γ, sum(storage.logL))` where `storage` is of type [`ForwardBackwardStorage`](@ref).
 
 $(DESCRIBE_CONTROL_STARTS)
 """

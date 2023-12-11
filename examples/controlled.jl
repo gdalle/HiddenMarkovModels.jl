@@ -7,6 +7,7 @@ Here, we give a example of controlled HMM (also called input-output HMM), in the
 using Distributions
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
+using HMMTest  #src
 using LinearAlgebra
 using Random
 using SimpleUnPack
@@ -32,7 +33,7 @@ struct ControlledGaussianHMM{T} <: AbstractHMM
 end
 
 #=
-Assuming we are in state $i$ with a vector of controls $u$, our observation is given by the linear model $y \sim \mathcal{N}(\beta_i^\top u, 1)$. 
+In state $i$ with a vector of controls $u$, our observation is given by the linear model $y \sim \mathcal{N}(\beta_i^\top u, 1)$. 
 =#
 
 function HMMs.initialization(hmm::ControlledGaussianHMM)
@@ -103,7 +104,7 @@ function StatsAPI.fit!(
     for k in eachindex(seq_ends)
         t1, t2 = HMMs.seq_limits(seq_ends, k)
         hmm.init .+= γ[:, t1]
-        @views hmm.trans .+= sum(ξ[t1:t2])
+        hmm.trans .+= sum(ξ[t1:t2])
     end
     hmm.init ./= sum(hmm.init)
     for row in eachrow(hmm.trans)
@@ -124,7 +125,7 @@ Now we put it to the test.
 
 init_guess = [0.7, 0.3]
 trans_guess = [0.6 0.4; 0.4 0.6]
-dist_coeffs_guess = [-0.5 * ones(d), 0.5 * ones(d)]
+dist_coeffs_guess = [-0.7 * ones(d), 0.7 * ones(d)]
 hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
@@ -148,4 +149,5 @@ hcat(hmm_est.dist_coeffs[2], hmm.dist_coeffs[2])
 
 # ## Tests  #src
 
-HMMs.test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)  #src
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.08, init=false)  #src
+test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src

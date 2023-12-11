@@ -8,6 +8,7 @@ This time-dependent HMM is implemented as a particular case of controlled HMM.
 using Distributions
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
+using HMMTest  #src
 using Random
 using SimpleUnPack
 using StatsAPI
@@ -74,7 +75,7 @@ The observations mostly alternate between positive and negative values, which is
 We now generate several sequences of variable lengths, for inference and learning tasks.
 =#
 
-control_seqs = [1:rand(100:200) for k in 1:200]
+control_seqs = [1:rand(100:200) for k in 1:1000]
 obs_seqs = [rand(rng, hmm, control_seqs[k]).obs_seq for k in eachindex(control_seqs)];
 
 obs_seq = reduce(vcat, obs_seqs)
@@ -134,7 +135,7 @@ function StatsAPI.fit!(
             t1, t2 = HMMs.seq_limits(seq_ends, k)
             append!(times_l, (t1 + l - 1):L:t2)
         end
-        @views for i in 1:N
+        for i in 1:N
             HMMs.fit_in_sequence!(hmm.dists_per[l], i, obs_seq[times_l], γ[i, times_l])
         end
     end
@@ -181,4 +182,5 @@ hcat(obs_distributions(hmm_est, 2), obs_distributions(hmm, 2))
 
 # ## Tests  #src
 
-HMMs.test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1)  #src
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1, init=false)  #src
+test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src

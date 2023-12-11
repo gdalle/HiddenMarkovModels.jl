@@ -10,7 +10,7 @@ $(TYPEDFIELDS)
 struct ForwardStorage{R}
     "posterior last state marginals `α[i] = ℙ(X[T]=i | Y[1:T])"
     α::Matrix{R}
-    "loglikelihood of the observation sequence"
+    "one loglikelihood per observation sequence"
     logL::Vector{R}
     B::Matrix{R}
     c::Vector{R}
@@ -92,7 +92,7 @@ $(SIGNATURES)
 
 Apply the forward algorithm to infer the current state after sequence `obs_seq` for `hmm`.
     
-Return a tuple `(α, logL)` defined in [`ForwardStorage`](@ref).
+Return a tuple `(storage.α, sum(storage.logL))` where `storage` is of type [`ForwardStorage`](@ref).
 
 # Keyword arguments
 

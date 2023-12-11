@@ -46,6 +46,7 @@ pages = [
     "API reference" => "api.md",
     "Tutorials" => [
         "Basics" => joinpath("examples", "basics.md"),
+        "Types" => joinpath("examples", "types.md"),
         "Interfaces" => joinpath("examples", "interfaces.md"),
         "Autodiff" => joinpath("examples", "autodiff.md"),
         "Time dependency" => joinpath("examples", "temporal.md"),

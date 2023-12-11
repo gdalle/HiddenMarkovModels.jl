@@ -43,7 +43,7 @@ $(SIGNATURES)
 
 Apply the Baum-Welch algorithm to estimate the parameters of an HMM on `obs_seq`, starting from `hmm_guess`.
 
-Return a tuple `(hmm_est, logL_evolution)`.
+Return a tuple `(hmm_est, loglikelihood_evolution)` where `hmm_est` is the estimated HMM and `loglikelihood_evolution` is a vector of loglikelihood values, one per iteration of the algorithm.
 
 # Keyword arguments
 

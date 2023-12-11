@@ -11,12 +11,11 @@ using ChainRulesCore: ChainRulesCore, NoTangent, RuleConfig, rrule_via_ad
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
 using DocStringExtensions
 using FillArrays: Fill
-using LinearAlgebra: Diagonal, axpy!, dot, ldiv!, lmul!, mul!
+using LinearAlgebra: dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
 using Requires: @require
 using SimpleUnPack: @unpack
-using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nnz, nonzeros, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHMM, HMM
@@ -49,9 +48,6 @@ include("inference/chainrules.jl")
 
 include("types/hmm.jl")
 
-function test_equal_hmms end
-function test_coherent_algorithms end
-
 if !isdefined(Base, :get_extension)
     function __init__()
         @require Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f" begin
@@ -60,8 +56,8 @@ if !isdefined(Base, :get_extension)
         @require HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7" begin
             include("../ext/HiddenMarkovModelsHMMBaseExt.jl")
         end
-        @require Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40" begin
-            include("../ext/HiddenMarkovModelsTestExt.jl")
+        @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" begin
+            include("../ext/HiddenMarkovModelsSparseArraysExt.jl")
         end
     end
 end

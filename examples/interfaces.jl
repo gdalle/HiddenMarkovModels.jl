@@ -8,6 +8,7 @@ using DensityInterface
 using Distributions
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
+using HMMTest  #src
 using LinearAlgebra
 using Random: Random, AbstractRNG
 using StatsAPI
@@ -132,6 +133,7 @@ For instance, we might have a prior on the parameters of our model, which we wan
 Then we need to create a new type that satisfies the `AbstractHMM` interface.
 
 Let's make a simpler version of the built-in `HMM`, with a prior saying that each transition has already been observed a certain number of times.
+Such a prior can be very useful to regularize estimation and avoid numerical instabilities.
 It amounts to drawing every row of the transition matrix from a Dirichlet distribution, where each Dirichlet parameter is one plus the number of times the corresponding transition has been observed.
 =#
 
@@ -234,11 +236,12 @@ As we can see, the transition matrix for our Bayesian version is slightly more s
 
 cat(transition_matrix(hmm_est), transition_matrix(prior_hmm_est); dims=3)
 
-#=
-Such priors can be very useful to regularize estimation and avoid numerical instabilities.
-=#
-
 # ## Tests  #src
 
-control_seq, seq_ends = fill(nothing, 5000), 100:100:5000  #src
-HMMs.test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1)  #src
+control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:100];  #src
+control_seq = reduce(vcat, control_seqs);  #src
+seq_ends = cumsum(length.(control_seqs));  #src
+
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false)  #src
+test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)  #src

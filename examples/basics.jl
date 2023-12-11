@@ -6,7 +6,7 @@ Here we show how to use the essential ingredients of the package.
 
 using Distributions
 using HiddenMarkovModels
-import HiddenMarkovModels as HMMs
+using HMMTest  #src
 using LinearAlgebra
 using Random
 using Test  #src
@@ -30,7 +30,7 @@ We keep it simple for now by leveraging Distributions.jl.
 d = 3
 init = [0.8, 0.2]
 trans = [0.7 0.3; 0.3 0.7]
-dists = [MvNormal(-ones(d), I), MvNormal(+ones(d), I)]
+dists = [MvNormal(-1.0 * ones(d), I), MvNormal(+1.0 * ones(d), I)]
 hmm = HMM(init, trans, dists);
 
 # ## Simulation
@@ -215,5 +215,10 @@ map(dist -> dist.μ, hcat(obs_distributions(hmm_est_concat), obs_distributions(h
 
 # ## Tests  #src
 
-control_seq, seq_ends = fill(nothing, 5000), 100:100:5000  #src
-HMMs.test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1)  #src
+control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:100];  #src
+control_seq = reduce(vcat, control_seqs);  #src
+seq_ends = cumsum(length.(control_seqs));  #src
+
+test_identical_hmmbase(rng, hmm, hmm_guess; T=100)  #src
+test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)  #src
+test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src

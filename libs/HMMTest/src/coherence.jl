@@ -1,10 +1,3 @@
-module HiddenMarkovModelsTestExt
-
-using HiddenMarkovModels
-using HiddenMarkovModels: seq_limits, test_equal_hmms
-using Random: AbstractRNG
-using Test
-
 infnorm(x) = maximum(abs, x)
 
 function check_equal_hmms(
@@ -50,7 +43,7 @@ function check_equal_hmms(
     return equal_check
 end
 
-function HiddenMarkovModels.test_equal_hmms(
+function test_equal_hmms(
     hmm1::AbstractHMM,
     hmm2::AbstractHMM;
     control_seq=[nothing],
@@ -61,7 +54,7 @@ function HiddenMarkovModels.test_equal_hmms(
     return nothing
 end
 
-function HiddenMarkovModels.test_coherent_algorithms(
+function test_coherent_algorithms(
     rng::AbstractRNG,
     hmm::AbstractHMM,
     hmm_guess::Union{Nothing,AbstractHMM}=nothing;
@@ -70,41 +63,39 @@ function HiddenMarkovModels.test_coherent_algorithms(
     atol::Real=0.1,
     init::Bool=true,
 )
-    simulations = map(eachindex(seq_ends)) do k
-        t1, t2 = seq_limits(seq_ends, k)
-        rand(rng, hmm, control_seq[t1:t2])
+    @testset "Coherence" begin
+        simulations = map(eachindex(seq_ends)) do k
+            t1, t2 = seq_limits(seq_ends, k)
+            rand(rng, hmm, control_seq[t1:t2])
+        end
+
+        state_seqs = [sim.state_seq for sim in simulations]
+        obs_seqs = [sim.obs_seq for sim in simulations]
+
+        state_seq = reduce(vcat, state_seqs)
+        obs_seq = reduce(vcat, obs_seqs)
+
+        logL = logdensityof(hmm, obs_seq; control_seq, seq_ends)
+        logL_joint = logdensityof(hmm, obs_seq, state_seq; control_seq, seq_ends)
+
+        q, logL_viterbi = viterbi(hmm, obs_seq; control_seq, seq_ends)
+        @test logL_viterbi > logL_joint
+        @test logL_viterbi ≈ logdensityof(hmm, obs_seq, q; control_seq, seq_ends)
+
+        α, logL_forward = forward(hmm, obs_seq; control_seq, seq_ends)
+        @test logL_forward ≈ logL
+
+        γ, logL_forward_backward = forward_backward(hmm, obs_seq; control_seq, seq_ends)
+        @test logL_forward_backward ≈ logL
+        @test all(α[:, seq_ends[k]] ≈ γ[:, seq_ends[k]] for k in eachindex(seq_ends))
+
+        if !isnothing(hmm_guess)
+            hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends)
+            @test all(>=(0), diff(logL_evolution))
+            @test !check_equal_hmms(
+                hmm, hmm_guess; control_seq=control_seq[1:2], atol, test=false
+            )
+            test_equal_hmms(hmm, hmm_est; control_seq=control_seq[1:2], atol, init)
+        end
     end
-
-    state_seqs = [sim.state_seq for sim in simulations]
-    obs_seqs = [sim.obs_seq for sim in simulations]
-
-    state_seq = reduce(vcat, state_seqs)
-    obs_seq = reduce(vcat, obs_seqs)
-
-    logL = logdensityof(hmm, obs_seq; control_seq, seq_ends)
-    logL_joint = logdensityof(hmm, obs_seq, state_seq; control_seq, seq_ends)
-
-    q, logL_viterbi = viterbi(hmm, obs_seq; control_seq, seq_ends)
-    @test logL_viterbi > logL_joint
-    @test logL_viterbi ≈ logdensityof(hmm, obs_seq, q; control_seq, seq_ends)
-
-    α, logL_forward = forward(hmm, obs_seq; control_seq, seq_ends)
-    @test logL_forward ≈ logL
-
-    γ, logL_forward_backward = forward_backward(hmm, obs_seq; control_seq, seq_ends)
-    @test logL_forward_backward ≈ logL
-    @test all(α[:, seq_ends[k]] ≈ γ[:, seq_ends[k]] for k in eachindex(seq_ends))
-
-    if !isnothing(hmm_guess)
-        hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends)
-        @test all(>=(0), diff(logL_evolution))
-        @test !check_equal_hmms(
-            hmm, hmm_guess; control_seq=control_seq[1:2], atol, test=false
-        )
-        test_equal_hmms(hmm, hmm_est; control_seq=control_seq[1:2], atol, init)
-    end
-
-    return nothing
-end
-
 end

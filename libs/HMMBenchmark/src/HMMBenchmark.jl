@@ -15,7 +15,6 @@ using HiddenMarkovModels:
     forward!,
     initialize_forward_backward,
     forward_backward!,
-    initialize_baum_welch,
     baum_welch!
 using LinearAlgebra: SymTridiagonal
 using Pkg: Pkg
@@ -27,8 +26,8 @@ include("configuration.jl")
 include("algos.jl")
 include("suite.jl")
 
-benchmarkables_hmmbase(; kwargs...) = error("HMMBase not loaded")
-benchmarkables_hmmlearn(; kwargs...) = error("PythonCall not loaded")
-benchmarkables_pomegranate(; kwargs...) = error("PythonCall not loaded")
+benchmarkables_hmmbase(args...; kwargs...) = error("HMMBase not loaded")
+benchmarkables_hmmlearn(args...; kwargs...) = error("PythonCall not loaded")
+benchmarkables_pomegranate(args...; kwargs...) = error("PythonCall not loaded")
 
 end

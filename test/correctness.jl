@@ -1,14 +1,8 @@
 using Distributions
-using HMMBase: HMMBase
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
-using HiddenMarkovModels:
-    LightDiagNormal,
-    LightCategorical,
-    rand_prob_vec,
-    rand_trans_mat,
-    test_equal_hmms,
-    test_coherent_algorithms
+using HiddenMarkovModels: LightDiagNormal, LightCategorical
+using HMMTest
 using LinearAlgebra
 using Random: Random, AbstractRNG, default_rng, seed!
 using SimpleUnPack
@@ -18,200 +12,85 @@ using Test
 rng = default_rng()
 seed!(rng, 63)
 
-function test_identical_hmmbase(
-    rng::AbstractRNG,
-    hmm::AbstractHMM,
-    hmm_guess::Union{Nothing,AbstractHMM}=nothing;
-    T::Integer,
-    atol::Real=1e-5,
-)
-    sim = rand(rng, hmm, T)
-    obs_mat = collect(reduce(hcat, sim.obs_seq)')
-
-    obs_seq = vcat(sim.obs_seq, sim.obs_seq)
-    seq_ends = [length(sim.obs_seq), 2 * length(sim.obs_seq)]
-
-    hmm_base = HMMBase.HMM(hmm)
-    hmm_guess_base = HMMBase.HMM(hmm_guess)
-
-    logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
-    logL = logdensityof(hmm, obs_seq; seq_ends)
-    @test logL ≈ 2logL_base
-
-    α_base, logL_forward_base = HMMBase.forward(hmm_base, obs_mat)
-    α, logL_forward = forward(hmm, obs_seq; seq_ends)
-    @test isapprox(α[:, 1:T], α_base') && isapprox(α[:, (T + 1):(2T)], α_base')
-    @test logL_forward ≈ 2logL_forward_base
-
-    q_base = HMMBase.viterbi(hmm_base, obs_mat)
-    q, logL_viterbi = viterbi(hmm, obs_seq; seq_ends)
-    # Viterbi decoding can vary in case of (infrequent) ties
-    @test mean(q[1:T] .== q_base) > 0.9 && mean(q[(T + 1):(2T)] .== q_base) > 0.9
-
-    γ_base = HMMBase.posteriors(hmm_base, obs_mat)
-    γ, logL_forward_backward = forward_backward(hmm, obs_seq; seq_ends)
-    @test isapprox(γ[:, 1:T], γ_base') && isapprox(γ[:, (T + 1):(2T)], γ_base')
-
-    if !isnothing(hmm_guess)
-        hmm_est_base, hist_base = HMMBase.fit_mle(
-            hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
-        )
-        logL_evolution_base = hist_base.logtots
-        hmm_est, logL_evolution = baum_welch(
-            hmm_guess, obs_seq; seq_ends, max_iterations=10, atol=-Inf
-        )
-        @test isapprox(
-            logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
-        )
-        test_equal_hmms(hmm_est, HMM(hmm_est_base); atol, init=true)
-    end
-
-    return nothing
-end
-
 ## Settings
 
-T, K = 100, 20
+T, K = 200, 100
 
-## Distributions
+init = [0.4, 0.6]
+init_guess = [0.5, 0.5]
 
-# TODO: add uniform
+trans = [0.8 0.2; 0.2 0.8]
+trans_guess = [0.7 0.3; 0.3 0.7]
 
-@testset "Categorical" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
+p = [[0.8, 0.2], [0.2, 0.8]]
+p_guess = [[0.7, 0.3], [0.3, 0.7]]
 
-    trans = [0.8 0.2; 0.2 0.8]
-    trans_guess = [0.7 0.3; 0.3 0.7]
+μ = [-ones(2), +ones(2)]
+μ_guess = [-0.7 * ones(2), +0.7 * ones(2)]
 
-    dists = [Categorical([0.2, 0.8]), Categorical([0.8, 0.2])]
-    dists_guess = [Categorical([0.3, 0.7]), Categorical([0.7, 0.3])]
+σ = ones(2)
 
-    hmm = HMM(init, trans, dists)
-    hmm_guess = HMM(init_guess, trans_guess, dists_guess)
+control_seqs = [fill(nothing, rand(rng, T:(2T))) for k in 1:K];
+control_seq = reduce(vcat, control_seqs)
+seq_ends = cumsum(length.(control_seqs))
 
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
-    test_identical_hmmbase(rng, hmm, hmm_guess; T)
-    test_coherent_algorithms(
-        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
-    )
-end
+## Uncontrolled
 
 @testset "Normal" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
-
-    trans = [0.8 0.2; 0.2 0.8]
-    trans_guess = [0.7 0.3; 0.3 0.7]
-
-    dists = [Normal(-1.0), Normal(+1.0)]
-    dists_guess = [Normal(-0.7), Normal(+0.7)]
+    dists = [Normal(μ[1][1]), Normal(μ[2][1])]
+    dists_guess = [Normal(μ_guess[1][1]), Normal(μ_guess[2][1])]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
     test_identical_hmmbase(rng, hmm, hmm_guess; T)
     test_coherent_algorithms(
         rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
     )
+    test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)
+    test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)
 end
 
 @testset "DiagNormal" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
-
-    trans = [0.8 0.2; 0.2 0.8]
-    trans_guess = [0.7 0.3; 0.3 0.7]
-
-    D = 3
-    dists = [MvNormal(-ones(D), I), MvNormal(+ones(D), I)]
-    dists_guess = [MvNormal(-ones(D) / 2, I), MvNormal(+ones(D) / 2, I)]
+    dists = [MvNormal(μ[1], I), MvNormal(μ[2], I)]
+    dists_guess = [MvNormal(μ_guess[1], I), MvNormal(μ_guess[2], I)]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
     test_identical_hmmbase(rng, hmm, hmm_guess; T)
     test_coherent_algorithms(
         rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
     )
+    test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)
 end
 
-## Light distributions
-
 @testset "LightCategorical" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
-
-    trans = [0.8 0.2; 0.2 0.8]
-    trans_guess = [0.7 0.3; 0.3 0.7]
-
-    dists = [LightCategorical([0.2, 0.8]), LightCategorical([0.8, 0.2])]
-    dists_guess = [LightCategorical([0.3, 0.7]), LightCategorical([0.7, 0.3])]
+    dists = [LightCategorical(p[1]), LightCategorical(p[2])]
+    dists_guess = [LightCategorical(p_guess[1]), LightCategorical(p_guess[2])]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
     test_coherent_algorithms(
         rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
     )
+    test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)
+    test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)
 end
 
 @testset "LightDiagNormal" begin
-    init = [0.4, 0.6]
-    init_guess = [0.5, 0.5]
-
-    trans = [0.8 0.2; 0.2 0.8]
-    trans_guess = [0.7 0.3; 0.3 0.7]
-
-    D = 3
-    dists = [LightDiagNormal(-ones(D), ones(D)), LightDiagNormal(+ones(D), ones(D))]
-    dists_guess = [
-        LightDiagNormal(-ones(D) / 2, ones(D)), LightDiagNormal(+ones(D) / 2, ones(D))
-    ]
+    dists = [LightDiagNormal(μ[1], σ), LightDiagNormal(μ[2], σ)]
+    dists_guess = [LightDiagNormal(μ_guess[1], σ), LightDiagNormal(μ_guess[2], σ)]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
     test_coherent_algorithms(
         rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
     )
-end
-
-## Weird arrays
-
-@testset "Normal sparse" begin
-    init = [0.2, 0.6, 0.2]
-    trans = sparse([
-        0.8 0.2 0.0
-        0.0 0.8 0.2
-        0.2 0.0 0.8
-    ])
-    dists = [Normal(-2.0), Normal(0.0), Normal(+2.0)]
-    hmm = HMM(init, trans, dists)
-
-    init_guess = [0.3, 0.4, 0.3]
-    trans_guess = sparse([
-        0.7 0.3 0.0
-        0.0 0.7 0.3
-        0.3 0.0 0.7
-    ])
-    dists_guess = [Normal(-1.5), Normal(0.0), Normal(+1.5)]
-    hmm_guess = HMM(init_guess, trans_guess, dists_guess)
-
-    control_seq = fill(nothing, T * K)
-    seq_ends = T:T:(T * K)
-    test_coherent_algorithms(
-        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
-    )
+    test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)
+    test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)
 end
 
 # Controlled
@@ -236,12 +115,13 @@ function HMMs.obs_distributions(hmm::DiffusionHMM, λ::Number)
 end
 
 @testset "Controlled" begin
-    init = rand_prob_vec(rng, 2)
-    trans = rand_trans_mat(rng, 2)
     means = randn(rng, 2)
     hmm = DiffusionHMM(init, trans, means)
 
-    control_seq = rand(rng, T * K)
-    seq_ends = T:T:(T * K)
+    control_seqs = [[rand(rng) for t in 1:rand(T:(2T))] for k in 1:K]
+    control_seq = reduce(vcat, control_seqs)
+    seq_ends = cumsum(length.(control_seqs))
+
     test_coherent_algorithms(rng, hmm; control_seq, seq_ends, atol=0.05, init=false)
+    test_type_stability(rng, hmm; control_seq, seq_ends)
 end

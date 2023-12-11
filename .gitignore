@@ -5,7 +5,8 @@
 /Manifest.toml
 /docs/build/
 /docs/Manifest.toml
-/benchmark/HMMBenchmark/Manifest.toml
+/test/Manifest.toml
+/libs/**/Manifest.toml
 
 scratchpad.jl
 

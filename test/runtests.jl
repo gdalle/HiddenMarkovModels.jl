@@ -1,9 +1,12 @@
 using Aqua: Aqua
 using Documenter: Documenter
 using HiddenMarkovModels
+using JET
 using JuliaFormatter: JuliaFormatter
-using JET: JET
+using Pkg
 using Test
+
+Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     if VERSION >= v"1.9"
@@ -18,12 +21,9 @@ using Test
         end
 
         @testset "Code linting" begin
+            using Distributions
             using Zygote
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
-        end
-
-        @testset "Types and allocations" begin
-            include("types_allocations.jl")
         end
     end
 

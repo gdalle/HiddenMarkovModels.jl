@@ -16,7 +16,7 @@ struct LightCategorical{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
     logp::V2
 end
 
-function LightCategorical(p)
+function LightCategorical(p::AbstractVector)
     check_prob_vec(p)
     return LightCategorical(p, log.(p))
 end
