@@ -11,7 +11,7 @@ function DensityInterface.logdensityof(
     hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
-    seq_ends::AbstractVector{Int}=[length(obs_seq)],
+    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     _, logL = forward(hmm, obs_seq; control_seq, seq_ends)
     return logL
@@ -31,7 +31,7 @@ function DensityInterface.logdensityof(
     obs_seq::AbstractVector,
     state_seq::AbstractVector;
     control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
-    seq_ends::AbstractVector{Int}=[length(obs_seq)],
+    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     R = eltype(hmm, obs_seq[1], control_seq[1])
     logL = zero(R)

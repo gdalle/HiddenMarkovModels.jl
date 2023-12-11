@@ -18,6 +18,7 @@ using Test
         end
 
         @testset "Code linting" begin
+            using Zygote
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
 

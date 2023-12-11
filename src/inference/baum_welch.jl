@@ -30,7 +30,7 @@ function baum_welch!(
     for iteration in 1:max_iterations
         forward_backward!(fb_storage, hmm, obs_seq; control_seq, seq_ends)
         push!(logL_evolution, logdensityof(hmm) + sum(fb_storage.logL))
-        fit!(hmm, obs_seq; control_seq, seq_ends, fb_storage)
+        fit!(hmm, fb_storage, obs_seq; control_seq, seq_ends)
         if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
             break
         end
@@ -56,7 +56,7 @@ function baum_welch(
     hmm_guess::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
-    seq_ends::AbstractVector{Int}=[length(obs_seq)],
+    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
     atol=1e-5,
     max_iterations=100,
     loglikelihood_increasing=true,

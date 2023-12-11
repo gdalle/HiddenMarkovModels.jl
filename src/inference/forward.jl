@@ -102,7 +102,7 @@ function forward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
-    seq_ends::AbstractVector{Int}=[length(obs_seq)],
+    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     storage = initialize_forward(hmm, obs_seq; control_seq, seq_ends)
     forward!(storage, hmm, obs_seq; control_seq, seq_ends)

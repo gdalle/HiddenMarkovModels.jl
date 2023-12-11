@@ -1,12 +1,12 @@
 # # Basics
 
 #=
-Here, we show how to use the essential ingredients of the package.
+Here we show how to use the essential ingredients of the package.
 =#
 
 using Distributions
 using HiddenMarkovModels
-using HiddenMarkovModels: test_coherent_algorithms  #src
+import HiddenMarkovModels as HMMs
 using LinearAlgebra
 using Random
 using Test  #src
@@ -16,7 +16,7 @@ using Test  #src
 rng = Random.default_rng()
 Random.seed!(rng, 63);
 
-# ## Model construction
+# ## Model
 
 #=
 The package provides a versatile [`HMM`](@ref) type with three attributes:
@@ -27,9 +27,10 @@ The package provides a versatile [`HMM`](@ref) type with three attributes:
 We keep it simple for now by leveraging Distributions.jl.
 =#
 
+d = 3
 init = [0.8, 0.2]
 trans = [0.7 0.3; 0.3 0.7]
-dists = [MvNormal(-ones(3), I), MvNormal(+ones(3), I)]
+dists = [MvNormal(-ones(d), I), MvNormal(+ones(d), I)]
 hmm = HMM(init, trans, dists);
 
 # ## Simulation
@@ -118,15 +119,15 @@ Since it is a local optimization procedure, it requires a starting point that is
 
 init_guess = [0.7, 0.3]
 trans_guess = [0.6 0.4; 0.4 0.6]
-dists_guess = [MvNormal(-0.5 * ones(3), I), MvNormal(+0.5 * ones(3), I)]
+dists_guess = [MvNormal(-0.7 * ones(d), I), MvNormal(+0.7 * ones(d), I)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #=
 Let's estimate parameters based on a slightly longer sequence.
 =#
 
-_, long_obs_seq = rand(rng, hmm, 1000)
-hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq);
+_, long_obs_seq = rand(rng, hmm, 100)
+hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, long_obs_seq);
 
 #=
 An essential guarantee of this algorithm is that the loglikelihood of the observation sequence keeps increasing as the model improves.
@@ -135,13 +136,13 @@ An essential guarantee of this algorithm is that the loglikelihood of the observ
 first(loglikelihood_evolution), last(loglikelihood_evolution)
 
 #=
-We can check that the transition matrix has been correctly estimated.
+We can check that the transition matrix estimate has improved.
 =#
 
 cat(transition_matrix(hmm_est), transition_matrix(hmm); dims=3)
 
 #=
-And so have the observation distributions.
+And so have the estimates for the observation distributions.
 =#
 
 map(dist -> dist.μ, hcat(obs_distributions(hmm_est), obs_distributions(hmm)))
@@ -164,9 +165,9 @@ This is important to keep in mind when testing new models.
 In many applications, we have access to various observation sequences of different lengths.
 =#
 
-_, obs_seq2 = rand(rng, hmm, 30)
-_, obs_seq3 = rand(rng, hmm, 10)
-obs_seqs = [obs_seq, obs_seq2, obs_seq3];
+_, long_obs_seq2 = rand(rng, hmm, 300)
+_, long_obs_seq3 = rand(rng, hmm, 200)
+long_obs_seqs = [long_obs_seq, long_obs_seq2, long_obs_seq3];
 
 #=
 Every algorithm in the package accepts multiple sequences in a concatenated form.
@@ -174,14 +175,15 @@ The user must also specify where each sequence ends in the concatenated vector, 
 Otherwise, the input will be treated as a unique observation sequence, which is mathematically incorrect.
 =#
 
-obs_seq_concat = reduce(vcat, obs_seqs)
-seq_ends = cumsum(length.(obs_seqs))
+long_obs_seq_concat = reduce(vcat, long_obs_seqs)
+seq_ends = cumsum(length.(long_obs_seqs))
 
 #=
 The outputs of inference algorithms are then concatenated, and the associated loglikelihoods are summed over all sequences.
 =#
 
-best_state_seq_concat, _ = viterbi(hmm, obs_seq_concat; seq_ends);
+best_state_seq_concat, _ = viterbi(hmm, long_obs_seq_concat; seq_ends);
+length(best_state_seq_concat)
 
 #=
 The function [`seq_limits`](@ref) returns the begin and end of a given sequence in the concatenated vector.
@@ -189,16 +191,29 @@ It can be used to untangle the results.
 =#
 
 start2, stop2 = seq_limits(seq_ends, 2)
-best_state_seq_concat[start2:stop2] == first(viterbi(hmm, obs_seq2))
+
+#-
+
+best_state_seq_concat[start2:stop2] == first(viterbi(hmm, long_obs_seq2))
 
 #=
 While inference algorithms can also be run separately on each sequence without changing the results, considering multiple sequences together is nontrivial for Baum-Welch.
 That is why the package takes care of it automatically.
 =#
 
-hmm_est_concat, _ = baum_welch(hmm_guess, obs_seq_concat; seq_ends);
+hmm_est_concat, _ = baum_welch(hmm_guess, long_obs_seq_concat; seq_ends);
+
+#=
+Our estimate should be a little better.
+=#
+
+cat(transition_matrix(hmm_est_concat), transition_matrix(hmm); dims=3)
+
+#-
+
+map(dist -> dist.μ, hcat(obs_distributions(hmm_est_concat), obs_distributions(hmm)))
 
 # ## Tests  #src
 
-control_seq, seq_ends = fill(nothing, 1000), 100:100:1000  #src
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=1e-1)  #src
+control_seq, seq_ends = fill(nothing, 5000), 100:100:5000  #src
+HMMs.test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1)  #src

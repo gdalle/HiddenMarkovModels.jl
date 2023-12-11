@@ -113,7 +113,7 @@ function forward_backward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
-    seq_ends::AbstractVector{Int}=[length(obs_seq)],
+    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     transition_marginals = false
     storage = initialize_forward_backward(

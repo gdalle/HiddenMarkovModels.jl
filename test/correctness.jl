@@ -71,7 +71,7 @@ end
 
 ## Settings
 
-T, K = 100, 10
+T, K = 100, 20
 
 ## Distributions
 
@@ -93,7 +93,9 @@ T, K = 100, 10
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
     test_identical_hmmbase(rng, hmm, hmm_guess; T)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 @testset "Normal" begin
@@ -103,8 +105,8 @@ end
     trans = [0.8 0.2; 0.2 0.8]
     trans_guess = [0.7 0.3; 0.3 0.7]
 
-    dists = [Normal(-1), Normal(+1)]
-    dists_guess = [Normal(-0.5), Normal(+0.5)]
+    dists = [Normal(-1.0), Normal(+1.0)]
+    dists_guess = [Normal(-0.7), Normal(+0.7)]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
@@ -112,7 +114,9 @@ end
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
     test_identical_hmmbase(rng, hmm, hmm_guess; T)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 @testset "DiagNormal" begin
@@ -132,7 +136,9 @@ end
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
     test_identical_hmmbase(rng, hmm, hmm_guess; T)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 ## Light distributions
@@ -152,7 +158,9 @@ end
 
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 @testset "LightDiagNormal" begin
@@ -173,7 +181,9 @@ end
 
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 ## Weird arrays
@@ -185,21 +195,23 @@ end
         0.0 0.8 0.2
         0.2 0.0 0.8
     ])
-    dists = [Normal(-2), Normal(0), Normal(+2)]
+    dists = [Normal(-2.0), Normal(0.0), Normal(+2.0)]
     hmm = HMM(init, trans, dists)
 
-    init_guess = [0.3, 0.4, 0.4]
+    init_guess = [0.3, 0.4, 0.3]
     trans_guess = sparse([
-        0.6 0.4 0.0
-        0.0 0.6 0.4
-        0.4 0.0 0.6
+        0.7 0.3 0.0
+        0.0 0.7 0.3
+        0.3 0.0 0.7
     ])
-    dists_guess = [Normal(-1), Normal(0), Normal(+1)]
+    dists_guess = [Normal(-1.5), Normal(0.0), Normal(+1.5)]
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
     control_seq = fill(nothing, T * K)
     seq_ends = T:T:(T * K)
-    test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(
+        rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false
+    )
 end
 
 # Controlled
@@ -231,5 +243,5 @@ end
 
     control_seq = rand(rng, T * K)
     seq_ends = T:T:(T * K)
-    test_coherent_algorithms(rng, hmm; control_seq, seq_ends, atol=0.05)
+    test_coherent_algorithms(rng, hmm; control_seq, seq_ends, atol=0.05, init=false)
 end

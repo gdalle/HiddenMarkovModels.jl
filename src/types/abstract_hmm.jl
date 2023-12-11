@@ -5,21 +5,27 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement the following methods:
+To create your own subtype of `AbstractHMM`, you need to implement the following methods for inference:
 
 - [`initialization(hmm)`](@ref)
 - [`transition_matrix(hmm, control)`](@ref)
 - [`obs_distributions(hmm, control)`](@ref)
 
+For learning, two more methods must be implemented:
+
 # Applicable functions
 
-Any HMM object which satisfies the interface can be given as input to the following functions:
+Any `AbstractHMM` which satisfies the inference interface can be given to the following functions:
 
 - [`rand(rng, hmm, control_seq)`](@ref)
-- [`logdensityof(hmm, obs_seq, control_seq)`](@ref)
-- [`forward(hmm, obs_seq, control_seq)`](@ref)
-- [`viterbi(hmm, obs_seq, control_seq)`](@ref)
-- [`forward_backward(hmm, obs_seq, control_seq)`](@ref)
+- [`logdensityof(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`forward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`viterbi(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`forward_backward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+
+If it satisfies the learning interface, the following function also applies:
+
+- [`baum_welch(hmm, hmm_guess, obs_seq; control_seq, seq_ends)`]
 """
 abstract type AbstractHMM end
 
@@ -57,24 +63,26 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
+    transition_matrix(hmm)
     transition_matrix(hmm, control)
 
-Return the matrix of state transition probabilities for `hmm` when `control` is applied.
+Return the matrix of state transition probabilities for `hmm` (when `control` is applied).
 """
-transition_matrix(hmm::AbstractHMM, control::Nothing) = transition_matrix(hmm)
+transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
 
 """
+    obs_distributions(hmm)
     obs_distributions(hmm, control)
 
-Return a vector of observation distributions, one for each state of `hmm`  when `control` is applied.
+Return a vector of observation distributions, one for each state of `hmm`  (when `control` is applied).
 
-These objects should implement
+These distribution objects should implement
 
 - `Random.rand(rng, dist)` for sampling
 - `DensityInterface.logdensityof(dist, obs)` for inference
 - `StatsAPI.fit!(dist, obs_seq, weight_seq)` for learning
 """
-obs_distributions(hmm::AbstractHMM, control::Nothing) = obs_distributions(hmm)
+obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
 function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
     dists = obs_distributions(hmm, control)
@@ -88,10 +96,10 @@ end
 """
     fit!(
         hmm::AbstractHMM,
+        fb_storage::ForwardBackwardStorage,
         obs_seq::AbstractVector;
         control_seq::AbstractVector,
         seq_ends::AbstractVector{Int},
-        fb_storage::ForwardBackwardStorage,
     )
 
 Update `hmm` in-place based on information generated during forward-backward.
@@ -104,7 +112,7 @@ StatsAPI.fit!  # TODO: complete
     rand([rng,] hmm, T)
     rand([rng,] hmm, control_seq)
 
-Simulate `hmm` for `T` time steps / when the sequence `control_seq` is applied.
+Simulate `hmm` for `T` time steps, or when the sequence `control_seq` is applied.
     
 Return a named tuple `(; state_seq, obs_seq)`.
 """

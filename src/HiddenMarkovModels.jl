@@ -27,7 +27,7 @@ export seq_limits
 
 const DESCRIBE_CONTROL_STARTS = """
 - `control_seq`: a control sequence with the same length as `obs_seq`
-- `seq_ends`: the indices at which each subsequence inside `obs_seq` and `control_seq` finishes, useful in the case of multiple sequences
+- `seq_ends`: in the case where `obs_seq` and `control_seq` are concatenations of multiple sequences, `seq_ends` contains the indices at which each of those sequences ends
 """
 
 include("types/abstract_hmm.jl")
@@ -45,6 +45,7 @@ include("inference/viterbi.jl")
 include("inference/forward_backward.jl")
 include("inference/baum_welch.jl")
 include("inference/logdensity.jl")
+include("inference/chainrules.jl")
 
 include("types/hmm.jl")
 
@@ -65,6 +66,6 @@ if !isdefined(Base, :get_extension)
     end
 end
 
-# include("precompile.jl")
+include("precompile.jl")
 
 end

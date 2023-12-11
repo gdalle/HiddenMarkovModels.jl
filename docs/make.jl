@@ -48,8 +48,8 @@ pages = [
         "Basics" => joinpath("examples", "basics.md"),
         "Interfaces" => joinpath("examples", "interfaces.md"),
         "Autodiff" => joinpath("examples", "autodiff.md"),
-        "Periodic" => joinpath("examples", "periodic.md"),
-        "Controlled" => joinpath("examples", "controlled.md"),
+        "Time dependency" => joinpath("examples", "temporal.md"),
+        "Control dependency" => joinpath("examples", "controlled.md"),
     ],
     "Advanced" => [
         "Alternatives" => "alternatives.md",

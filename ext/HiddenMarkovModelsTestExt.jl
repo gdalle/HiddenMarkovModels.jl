@@ -68,7 +68,7 @@ function HiddenMarkovModels.test_coherent_algorithms(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
     atol::Real=0.1,
-    init::Bool=false,
+    init::Bool=true,
 )
     simulations = map(eachindex(seq_ends)) do k
         t1, t2 = seq_limits(seq_ends, k)
