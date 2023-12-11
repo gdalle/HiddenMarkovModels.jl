@@ -1,38 +1,33 @@
 """
-    AbstractHiddenMarkovModel 
+    AbstractHMM 
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-To create your own subtype of `AbstractHiddenMarkovModel`, you need to implement the following methods:
+To create your own subtype of `AbstractHMM`, you need to implement the following methods for inference:
 
-- [`length(hmm)`](@ref)
-- [`eltype(hmm, obs)`](@ref)
 - [`initialization(hmm)`](@ref)
-- [`transition_matrix(hmm)`](@ref)
-- [`obs_distributions(hmm)`](@ref)
-- [`fit!(hmm, init_count, trans_count, obs_seq, state_marginals)`](@ref) (optional)
+- [`transition_matrix(hmm, control)`](@ref)
+- [`obs_distributions(hmm, control)`](@ref)
+
+For learning, two more methods must be implemented:
 
 # Applicable functions
 
-Any HMM object which satisfies the interface can be given as input to the following functions:
+Any `AbstractHMM` which satisfies the inference interface can be given to the following functions:
 
-- [`logdensityof(hmm, obs_seq)`](@ref)
-- [`forward(hmm, obs_seq)`](@ref)
-- [`viterbi(hmm, obs_seq)`](@ref)
-- [`forward_backward(hmm, obs_seq)`](@ref)
-- [`rand(rng, hmm, T)`](@ref)
-- [`baum_welch(hmm, obs_seq)`](@ref) (if `fit!` is implemented)
-"""
-abstract type AbstractHiddenMarkovModel end
+- [`rand(rng, hmm, control_seq)`](@ref)
+- [`logdensityof(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`forward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`viterbi(hmm, obs_seq; control_seq, seq_ends)`](@ref)
+- [`forward_backward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
 
-"""
-    AbstractHMM
+If it satisfies the learning interface, the following function also applies:
 
-Alias for the type `AbstractHiddenMarkovModel`.
+- [`baum_welch(hmm, hmm_guess, obs_seq; control_seq, seq_ends)`]
 """
-const AbstractHMM = AbstractHiddenMarkovModel
+abstract type AbstractHMM end
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
@@ -43,19 +38,20 @@ const AbstractHMM = AbstractHiddenMarkovModel
 
 Return the number of states of `hmm`.
 """
-Base.length
+Base.length(hmm::AbstractHMM) = length(initialization(hmm))
 
 """
-    eltype(hmm, obs)
+    eltype(hmm, obs, control)
 
-Return a type that can accommodate forward-backward computations on observations similar to `obs`.
+Return a type that can accommodate forward-backward computations for `hmm` on observations similar to `obs`.
 
 It is typically a promotion between the element type of the initialization, the element type of the transition matrix, and the type of an observation logdensity evaluated at `obs`.
 """
-function Base.eltype(hmm::AbstractHMM, obs)
+function Base.eltype(hmm::AbstractHMM, obs, control)
     init_type = eltype(initialization(hmm))
-    trans_type = eltype(transition_matrix(hmm))
-    logdensity_type = typeof(logdensityof(obs_distributions(hmm)[1], obs))
+    trans_type = eltype(transition_matrix(hmm, control))
+    dist = obs_distributions(hmm, control)[1]
+    logdensity_type = typeof(logdensityof(dist, obs))
     return promote_type(init_type, trans_type, logdensity_type)
 end
 
@@ -67,68 +63,104 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
-    transition_matrix(hmm) 
+    transition_matrix(hmm)
+    transition_matrix(hmm, control)
 
-Return the matrix of state transition probabilities for `hmm`.
+Return the matrix of state transition probabilities for `hmm` (when `control` is applied).
 """
-function transition_matrix end
+transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
 
 """
     obs_distributions(hmm)
+    obs_distributions(hmm, control)
 
-Return a vector of observation distributions, one for each state of `hmm`.
+Return a vector of observation distributions, one for each state of `hmm`  (when `control` is applied).
 
-There objects should support `rand(rng, dist)` and `DensityInterface.logdensityof(dist, obs)`.
+These distribution objects should implement
+
+- `Random.rand(rng, dist)` for sampling
+- `DensityInterface.logdensityof(dist, obs)` for inference
+- `StatsAPI.fit!(dist, obs_seq, weight_seq)` for learning
 """
-function obs_distributions end
+obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
-function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs)
-    d = obs_distributions(hmm)
-    for i in eachindex(logb, d)
-        logb[i] = logdensityof(d[i], obs)
+function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
+    dists = obs_distributions(hmm, control)
+    @inbounds for i in eachindex(logb, dists)
+        logb[i] = logdensityof(dists[i], obs)
     end
+    check_right_finite(logb)
+    return nothing
 end
 
 """
-    fit!(hmm, init_count, trans_count, obs_seq, state_marginals)
+    fit!(
+        hmm::AbstractHMM,
+        fb_storage::ForwardBackwardStorage,
+        obs_seq::AbstractVector;
+        control_seq::AbstractVector,
+        seq_ends::AbstractVector{Int},
+    )
 
 Update `hmm` in-place based on information generated during forward-backward.
-
-This method is only necessary for the Baum-Welch algorithm.
-
-# Arguments
-
-- `init_count::Vector`: posterior initialization counts for each state (size `N`)
-- `trans_count::AbstractMatrix`: posterior transition counts for each state (size `(N, N)`)
-- `obs_seq::Vector`: sequence of observation, possibly concatenated (size `T`)
-- `state_marginals::Matrix`: posterior probabilities of being in each state at each time, to be used as weights during maximum likelihood fitting of the observation distributions (size `(N, T)`).
-
-# See also
-
-- [`BaumWelchStorage`](@ref)
-- [`ForwardBackwardStorage`](@ref)
 """
 StatsAPI.fit!  # TODO: complete
 
 ## Sampling
 
 """
-    rand(hmm, T)
-    rand(rng, hmm, T)
+    rand([rng,] hmm, T)
+    rand([rng,] hmm, control_seq)
 
-Simulate `hmm` for `T` time steps. 
+Simulate `hmm` for `T` time steps, or when the sequence `control_seq` is applied.
+    
+Return a named tuple `(; state_seq, obs_seq)`.
 """
-function Base.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
-    p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
+    T = length(control_seq)
+    dummy_log_probas = fill(-Inf, length(hmm))
+
+    init = initialization(hmm)
     state_seq = Vector{Int}(undef, T)
-    state_seq[1] = rand(rng, Categorical(p; check_args=false))
-    @views for t in 2:T
-        state_seq[t] = rand(rng, Categorical(A[state_seq[t - 1], :]; check_args=false))
+    state1 = rand(rng, LightCategorical(init, dummy_log_probas))
+    state_seq[1] = state1
+
+    @views for t in 1:(T - 1)
+        trans = transition_matrix(hmm, control_seq[t])
+        state_seq[t + 1] = rand(
+            rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
+        )
     end
-    obs_seq = [rand(rng, d[state_seq[t]]) for t in 1:T]
+
+    dists1 = obs_distributions(hmm, control_seq[1])
+    obs1 = rand(rng, dists1[state1])
+    obs_seq = Vector{typeof(obs1)}(undef, T)
+    obs_seq[1] = obs1
+
+    for t in 2:T
+        dists = obs_distributions(hmm, control_seq[t])
+        obs_seq[t] = rand(rng, dists[state_seq[t]])
+    end
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-Base.rand(hmm::AbstractHMM, T::Integer) = rand(default_rng(), hmm, T)
+function Random.rand(hmm::AbstractHMM, control_seq::AbstractVector)
+    return rand(default_rng(), hmm, control_seq)
+end
+
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, T::Integer)
+    return rand(rng, hmm, Fill(nothing, T))
+end
+
+function Random.rand(hmm::AbstractHMM, T::Integer)
+    return rand(hmm, Fill(nothing, T))
+end
+
+## Prior
+
+"""
+    logdensityof(hmm)
+
+Return the prior loglikelihood associated with the parameters of `hmm`.
+"""
+DensityInterface.logdensityof(hmm::AbstractHMM) = 0

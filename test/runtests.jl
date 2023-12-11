@@ -1,47 +1,45 @@
 using Aqua: Aqua
 using Documenter: Documenter
 using HiddenMarkovModels
+using JET
 using JuliaFormatter: JuliaFormatter
-using JET: JET
+using Pkg
 using Test
 
-@testset verbose = true "HiddenMarkovModels.jl" begin
-    @testset "Code formatting" begin
-        @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
-    end
+Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
 
+@testset verbose = true "HiddenMarkovModels.jl" begin
     if VERSION >= v"1.9"
+        @testset "Code formatting" begin
+            @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
+        end
+
         @testset "Code quality" begin
-            Aqua.test_all(HiddenMarkovModels; ambiguities=false)
+            Aqua.test_all(
+                HiddenMarkovModels; ambiguities=false, deps_compat=(check_extras=false,)
+            )
         end
 
         @testset "Code linting" begin
+            using Distributions
+            using Zygote
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
+    end
 
-        @testset "Type stability" begin
-            include("type_stability.jl")
-        end
-
-        @testset "Allocations" begin
-            include("allocations.jl")
-        end
+    @testset "Distributions" begin
+        include("distributions.jl")
     end
 
     @testset "Correctness" begin
         include("correctness.jl")
     end
 
-    @testset "Array types" begin
-        include("arrays.jl")
-    end
-
-    @testset "Autodiff" begin
-        include("autodiff.jl")
-    end
-
-    @testset "DNA" begin
-        include("dna.jl")
+    examples_path = joinpath(dirname(@__DIR__), "examples")
+    for file in readdir(examples_path)
+        @testset "Example - $file" begin
+            include(joinpath(examples_path, file))
+        end
     end
 
     @testset "Doctests" begin

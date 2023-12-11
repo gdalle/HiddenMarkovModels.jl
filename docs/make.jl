@@ -1,6 +1,7 @@
 using Documenter
 using DocumenterCitations
 using HiddenMarkovModels
+using Literate
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style=:authoryear)
 
@@ -22,19 +23,40 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
+examples_jl_path = joinpath(dirname(@__DIR__), "examples")
+examples_md_path = joinpath(@__DIR__, "src", "examples")
+
+for file in readdir(examples_md_path)
+    if endswith(file, ".md")
+        rm(joinpath(examples_md_path, file))
+    end
+end
+
+for file in readdir(examples_jl_path)
+    Literate.markdown(joinpath(examples_jl_path, file), examples_md_path)
+end
+
+function literate_title(path)
+    l = first(readlines(path))
+    return l[3:end]
+end
+
 pages = [
     "Home" => "index.md",
-    "Essentials" => [
-        "Background" => "background.md",
-        "API reference" => "api.md",
-        "Competitors" => "competitors.md",
-    ],
+    "API reference" => "api.md",
     "Tutorials" => [
-        "Built-in HMM" => "builtin.md",
-        "Custom HMM" => "custom.md",
-        "Debugging" => "debugging.md",
+        "Basics" => joinpath("examples", "basics.md"),
+        "Types" => joinpath("examples", "types.md"),
+        "Interfaces" => joinpath("examples", "interfaces.md"),
+        "Autodiff" => joinpath("examples", "autodiff.md"),
+        "Time dependency" => joinpath("examples", "temporal.md"),
+        "Control dependency" => joinpath("examples", "controlled.md"),
     ],
-    "Advanced" => ["Formulas" => "formulas.md", "Roadmap" => "roadmap.md"],
+    "Advanced" => [
+        "Alternatives" => "alternatives.md",
+        "Debugging" => "debugging.md",
+        "Formulas" => "formulas.md",
+    ],
 ]
 
 fmt = Documenter.HTML(;

@@ -7,58 +7,56 @@ Basic implementation of an HMM.
 
 $(TYPEDFIELDS)
 """
-struct HiddenMarkovModel{I<:AbstractVector,T<:AbstractMatrix,D<:AbstractVector} <:
-       AbstractHMM
+struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHMM
     "initial state probabilities"
-    init::I
+    init::V
     "state transition matrix"
-    trans::T
-    "observation distributions (must be amenable to `logdensityof` and `rand`)"
-    dists::D
+    trans::M
+    "observation distributions"
+    dists::VD
 
-    function HiddenMarkovModel(init::I, trans::T, dists::D) where {I,T,D}
-        hmm = new{I,T,D}(init, trans, dists)
+    function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
+        hmm = new{typeof(init),typeof(trans),typeof(dists)}(init, trans, dists)
         check_hmm(hmm)
         return hmm
     end
 end
 
-"""
-    HMM
-
-Alias for the type `HiddenMarkovModel`.
-"""
-const HMM = HiddenMarkovModel
-
 function Base.copy(hmm::HMM)
-    return HiddenMarkovModel(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
+    return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
 end
 
-Base.length(hmm::HMM) = length(hmm.init)
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists
 
+## Fitting
+
 function StatsAPI.fit!(
     hmm::HMM,
-    init_count::Vector,
-    trans_count::AbstractMatrix,
-    obs_seq::Vector,
-    state_marginals::Matrix,
+    fb_storage::ForwardBackwardStorage,
+    obs_seq::AbstractVector;
+    control_seq::AbstractVector,
+    seq_ends::AbstractVector{Int},
 )
-    # Initialization
-    hmm.init .= init_count
-    sum_to_one!(hmm.init)
-    # Transition matrix
-    hmm.trans .= trans_count
-    foreach(sum_to_one!, eachrow(hmm.trans))
-    #  Observation distributions
-    for i in eachindex(hmm.dists)
-        fit_element_from_sequence!(hmm.dists, i, obs_seq, view(state_marginals, i, :))
+    @unpack γ, ξ = fb_storage
+    # Fit states
+    hmm.init .= zero(eltype(hmm.init))
+    hmm.trans .= zero(eltype(hmm.trans))
+    for k in eachindex(seq_ends)
+        t1, t2 = seq_limits(seq_ends, k)
+        hmm.init .+= view(γ, :, t1)
+        for t in t1:(t2 - 1)
+            mynonzeros(hmm.trans) .+= mynonzeros(ξ[t])
+        end
     end
+    sum_to_one!(hmm.init)
+    foreach(sum_to_one!, eachrow(hmm.trans))
+    # Fit observations
+    for i in 1:length(hmm)
+        fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
+    end
+    # Safety check
+    check_hmm(hmm)
     return nothing
-end
-
-function permute(hmm::AbstractHMM, perm::Vector{Int})
-    return HMM(hmm.init[perm], hmm.trans[perm, :][:, perm], hmm.dists[perm])
 end

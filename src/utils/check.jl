@@ -22,6 +22,12 @@ function check_positive(a)
     end
 end
 
+function check_nonnegative(a)
+    if any(<(zero(eltype(a))), mynonzeros(a))
+        throw(OverflowError("Some values are negative"))
+    end
+end
+
 function check_prob_vec(p::AbstractVector)
     check_finite(p)
     if !valid_prob_vec(p)
@@ -49,8 +55,8 @@ function check_dists(d::AbstractVector)
     return true
 end
 
-function check_hmm_sizes(p::AbstractVector, A::AbstractMatrix, d::AbstractVector)
-    if !(size(A) == (length(p), length(p)) == (length(d), length(d)))
+function check_hmm_sizes(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
+    if !(size(trans) == (length(init), length(init)) == (length(dists), length(dists)))
         throw(
             DimensionMismatch(
                 "Initialization, transition matrix and observation distributions have incompatible sizes.",
@@ -59,13 +65,13 @@ function check_hmm_sizes(p::AbstractVector, A::AbstractMatrix, d::AbstractVector
     end
 end
 
-function check_hmm(hmm::AbstractHMM)
-    p = initialization(hmm)
-    A = transition_matrix(hmm)
-    d = obs_distributions(hmm)
-    check_hmm_sizes(p, A, d)
-    check_prob_vec(p)
-    check_trans_mat(A)
-    check_dists(d)
+function check_hmm(hmm::AbstractHMM; control=nothing)
+    init = initialization(hmm)
+    trans = transition_matrix(hmm, control)
+    dists = obs_distributions(hmm, control)
+    check_hmm_sizes(init, trans, dists)
+    check_prob_vec(init)
+    check_trans_mat(trans)
+    check_dists(dists)
     return nothing
 end
