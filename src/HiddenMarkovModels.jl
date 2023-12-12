@@ -23,11 +23,6 @@ export fit!, logdensityof
 export viterbi, forward, forward_backward, baum_welch
 export seq_limits
 
-const DESCRIBE_CONTROL_STARTS = """
-- `control_seq`: a control sequence with the same length as `obs_seq`
-- `seq_ends`: in the case where `obs_seq` and `control_seq` are concatenations of multiple sequences, `seq_ends` contains the indices at which each of those sequences ends
-"""
-
 include("types/abstract_hmm.jl")
 
 include("utils/linalg.jl")

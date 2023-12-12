@@ -2,10 +2,6 @@
 $(SIGNATURES)
 
 Run the forward algorithm to compute the loglikelihood of `obs_seq` for `hmm`, integrating over all possible state sequences.
-
-# Keyword arguments
-
-$(DESCRIBE_CONTROL_STARTS)
 """
 function DensityInterface.logdensityof(
     hmm::AbstractHMM,
@@ -21,10 +17,6 @@ end
 $(SIGNATURES)
 
 Run the forward algorithm to compute the the joint loglikelihood of `obs_seq` and `state_seq` for `hmm`.
-
-# Keyword arguments
-
-$(DESCRIBE_CONTROL_STARTS)
 """
 function DensityInterface.logdensityof(
     hmm::AbstractHMM,
