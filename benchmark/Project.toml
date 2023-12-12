@@ -1,3 +1,4 @@
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 HMMBenchmark = "557005d5-2e4a-43f9-8aa7-ba8df2d03179"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"

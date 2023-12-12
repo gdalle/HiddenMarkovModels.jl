@@ -10,7 +10,7 @@
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![JET](https://img.shields.io/badge/%E2%9C%88%EF%B8%8F%20tested%20with%20-%20JET.jl%20-%20red)](https://github.com/aviatesk/JET.jl)
 
-A Julia package for simulation, inference and learning of [Hidden Markov Models](https://en.wikipedia.org/wiki/Hidden_Markov_model).
+A Julia package for simulation, inference and learning of Hidden Markov Models.
 
 ## Getting started
 
@@ -34,28 +34,25 @@ Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.j
 
 ## Some background
 
-HMMs are a widely used modeling framework in signal processing, bioinformatics and plenty of other fields.
-They capture the distribution of an observation sequence $(Y_t)$ by assuming the existence of a latent state sequence $(X_t)$ such that:
-
-* the state follows a (discrete time, discrete space) Markov chain $\mathbb{P}_\theta(X_t | X_{t-1})$
-* the observation distribution is determined at each time by the state $\mathbb{P}_\theta(Y_t | X_t)$
-
+[Hidden Markov Models](https://en.wikipedia.org/wiki/Hidden_Markov_model) (HMMs) are a widely used modeling framework in signal processing, bioinformatics and plenty of other fields.
+They explain an observation sequence $(Y_t)$ by assuming the existence of a latent Markovian state sequence $(X_t)$ whose current value determines the distribution of observations.
+In our framework, both the state and the observation sequence are also allowed to depend on a known control sequence $(U_t)$.
 Each of the problems below has an efficient solution algorithm which our package implements:
 
-| Problem    | Goal                                                                                                      | Algorithm        |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
-| Evaluation | Likelihood of the observation sequence $\mathbb{P}_\theta(Y_{1:T})$                                       | Forward          |
-| Filtering | Non-anticipative state marginals $\mathbb{P}_\theta(X_t \vert Y_{1:t})$                                       | Forward          |
-| Smoothing  | State marginals $\mathbb{P}_\theta(X_t \vert Y_{1:T})$                                                    | Forward-backward |
-| Decoding   | Most likely state sequence $\underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}_\theta(X_{1:T} \vert Y_{1:T})$ | Viterbi          |
-| Learning   | Maximum likelihood parameter $\underset{\theta}{\mathrm{argmax}}~\mathbb{P}_\theta(Y_{1:T})$                            | Baum-Welch       |
+| Problem    | Goal                                   | Algorithm        |
+| ---------- | -------------------------------------- | ---------------- |
+| Evaluation | Likelihood of the observation sequence | Forward          |
+| Filtering  | Last state marginals                   | Forward          |
+| Smoothing  | All state marginals                    | Forward-backward |
+| Decoding   | Most likely state sequence             | Viterbi          |
+| Learning   | Maximum likelihood parameter           | Baum-Welch       |
 
 ## Main features
 
 This package is **generic**.
 Observations can be arbitrary Julia objects, not just scalars or arrays.
 Number types are not restricted to floating point, which enables automatic differentiation.
-Time-heterogeneous or controlled HMMs are supported out of the box.
+Time-dependent or controlled HMMs are supported out of the box.
 
 This package is **fast**.
 All the inference functions have allocation-free versions, which leverage efficient linear algebra subroutines.

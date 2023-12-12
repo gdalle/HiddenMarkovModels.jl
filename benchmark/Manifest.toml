@@ -2,7 +2,7 @@
 
 julia_version = "1.9.4"
 manifest_format = "2.0"
-project_hash = "30d194898a132aa612114340054b3f9c8df83b1c"
+project_hash = "80c5175523e624b16f6f4ee02b054e96a08d03ac"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -169,20 +169,15 @@ version = "0.1.0"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [[deps.HiddenMarkovModels]]
-deps = ["ChainRulesCore", "DensityInterface", "DocStringExtensions", "FillArrays", "LinearAlgebra", "PrecompileTools", "Random", "Requires", "SimpleUnPack", "StatsAPI"]
+deps = ["ChainRulesCore", "DensityInterface", "DocStringExtensions", "FillArrays", "LinearAlgebra", "PrecompileTools", "Random", "SimpleUnPack", "StatsAPI"]
 path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 version = "0.4.0"
+weakdeps = ["Distributions", "SparseArrays"]
 
     [deps.HiddenMarkovModels.extensions]
     HiddenMarkovModelsDistributionsExt = "Distributions"
-    HiddenMarkovModelsHMMBaseExt = "HMMBase"
     HiddenMarkovModelsSparseArraysExt = "SparseArrays"
-
-    [deps.HiddenMarkovModels.weakdeps]
-    Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-    HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
-    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.HypergeometricFunctions]]
 deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
@@ -403,12 +398,6 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
-
-[[deps.Requires]]
-deps = ["UUIDs"]
-git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
-uuid = "ae029012-a4dd-5104-9daa-d747884805df"
-version = "1.3.0"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]

@@ -106,8 +106,6 @@ $(SIGNATURES)
 Apply the forward-backward algorithm to infer the posterior state and transition marginals during sequence `obs_seq` for `hmm`.
 
 Return a tuple `(storage.γ, sum(storage.logL))` where `storage` is of type [`ForwardBackwardStorage`](@ref).
-
-$(DESCRIBE_CONTROL_STARTS)
 """
 function forward_backward(
     hmm::AbstractHMM,

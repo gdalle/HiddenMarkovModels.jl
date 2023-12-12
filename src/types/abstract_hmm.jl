@@ -5,27 +5,23 @@ Abstract supertype for an HMM amenable to simulation, inference and learning.
 
 # Interface
 
-To create your own subtype of `AbstractHMM`, you need to implement the following methods for inference:
+To create your own subtype of `AbstractHMM`, you need to implement the following methods:
 
-- [`initialization(hmm)`](@ref)
-- [`transition_matrix(hmm, control)`](@ref)
-- [`obs_distributions(hmm, control)`](@ref)
-
-For learning, two more methods must be implemented:
+- [`initialization`](@ref)
+- [`transition_matrix`](@ref)
+- [`obs_distributions`](@ref)
+- [`fit!`](@ref) (for learning)
 
 # Applicable functions
 
-Any `AbstractHMM` which satisfies the inference interface can be given to the following functions:
+Any `AbstractHMM` which satisfies the interface can be given to the following functions:
 
-- [`rand(rng, hmm, control_seq)`](@ref)
-- [`logdensityof(hmm, obs_seq; control_seq, seq_ends)`](@ref)
-- [`forward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
-- [`viterbi(hmm, obs_seq; control_seq, seq_ends)`](@ref)
-- [`forward_backward(hmm, obs_seq; control_seq, seq_ends)`](@ref)
-
-If it satisfies the learning interface, the following function also applies:
-
-- [`baum_welch(hmm, hmm_guess, obs_seq; control_seq, seq_ends)`]
+- [`rand`](@ref)
+- [`logdensityof`](@ref)
+- [`forward`](@ref)
+- [`viterbi`](@ref)
+- [`forward_backward`](@ref)
+- [`baum_welch`](@ref) (if `fit!` is implemented)
 """
 abstract type AbstractHMM end
 
@@ -66,7 +62,7 @@ function initialization end
     transition_matrix(hmm)
     transition_matrix(hmm, control)
 
-Return the matrix of state transition probabilities for `hmm` (when `control` is applied).
+Return the matrix of state transition probabilities for `hmm` (possibly when `control` is applied).
 """
 transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
 
@@ -74,7 +70,7 @@ transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
     obs_distributions(hmm)
     obs_distributions(hmm, control)
 
-Return a vector of observation distributions, one for each state of `hmm`  (when `control` is applied).
+Return a vector of observation distributions, one for each state of `hmm` (possibly when `control` is applied).
 
 These distribution objects should implement
 

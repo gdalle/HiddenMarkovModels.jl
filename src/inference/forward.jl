@@ -8,7 +8,7 @@ Only the fields with a description are part of the public API.
 $(TYPEDFIELDS)
 """
 struct ForwardStorage{R}
-    "posterior last state marginals `α[i] = ℙ(X[T]=i | Y[1:T])"
+    "posterior last state marginals `α[i] = ℙ(X[T]=i | Y[1:T])`"
     α::Matrix{R}
     "one loglikelihood per observation sequence"
     logL::Vector{R}
@@ -93,10 +93,6 @@ $(SIGNATURES)
 Apply the forward algorithm to infer the current state after sequence `obs_seq` for `hmm`.
     
 Return a tuple `(storage.α, sum(storage.logL))` where `storage` is of type [`ForwardStorage`](@ref).
-
-# Keyword arguments
-
-$(DESCRIBE_CONTROL_STARTS)
 """
 function forward(
     hmm::AbstractHMM,
