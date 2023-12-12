@@ -21,5 +21,7 @@ jobs:
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/main")'
       - name: Print judgement
         run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+      - name: Comment judgement
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

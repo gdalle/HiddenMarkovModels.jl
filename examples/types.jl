@@ -1,4 +1,4 @@
-# ## Types
+# # Types
 
 #=
 Here we explain why playing with different number and array types can be useful in an HMM.
