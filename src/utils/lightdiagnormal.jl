@@ -58,7 +58,7 @@ function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     end
     dist.μ ./= w_tot
     dist.σ ./= w_tot
-    dist.σ .-= min(abs2.(dist.μ), dist.σ)
+    dist.σ .-= min.(abs2.(dist.μ), dist.σ)
     dist.σ .= sqrt.(dist.σ)
     dist.logσ .= log.(dist.σ)
     check_positive(dist.σ)
