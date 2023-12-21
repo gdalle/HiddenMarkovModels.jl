@@ -42,47 +42,62 @@ $(SIGNATURES)
 function forward!(
     storage,
     hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    t1::Integer,
+    t2::Integer;
+    control_seq::AbstractVector,
+)
+    @unpack α, B, c = storage
+
+    # Initialization
+    Bₜ₁ = view(B, :, t1)
+    obs_logdensities!(Bₜ₁, hmm, obs_seq[t1], control_seq[t1])
+    logm = maximum(Bₜ₁)
+    Bₜ₁ .= exp.(Bₜ₁ .- logm)
+
+    init = initialization(hmm)
+    αₜ₁ = view(α, :, t1)
+    αₜ₁ .= init .* Bₜ₁
+    c[t1] = inv(sum(αₜ₁))
+    lmul!(c[t1], αₜ₁)
+
+    logL = -log(c[t1]) + logm
+
+    # Loop
+    for t in t1:(t2 - 1)
+        Bₜ₊₁ = view(B, :, t + 1)
+        obs_logdensities!(Bₜ₊₁, hmm, obs_seq[t + 1], control_seq[t + 1])
+        logm = maximum(Bₜ₊₁)
+        Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
+
+        trans = transition_matrix(hmm, control_seq[t])
+        αₜ₊₁ = view(α, :, t + 1)
+        mul!(αₜ₊₁, trans', view(α, :, t))
+        αₜ₊₁ .*= Bₜ₊₁
+        c[t + 1] = inv(sum(αₜ₊₁))
+        lmul!(c[t + 1], αₜ₊₁)
+
+        logL += -log(c[t + 1]) + logm
+    end
+
+    return logL
+end
+
+"""
+$(SIGNATURES)
+"""
+function forward!(
+    storage,
+    hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 )
     @unpack α, logL, B, c = storage
-
-    @views for k in eachindex(seq_ends)
+    for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-
-        # Initialization
-        Bₜ₁ = B[:, t1]
-        obs_logdensities!(Bₜ₁, hmm, obs_seq[t1], control_seq[t1])
-        logm = maximum(Bₜ₁)
-        Bₜ₁ .= exp.(Bₜ₁ .- logm)
-
-        init = initialization(hmm)
-        αₜ₁ = α[:, t1]
-        αₜ₁ .= init .* Bₜ₁
-        c[t1] = inv(sum(αₜ₁))
-        lmul!(c[t1], αₜ₁)
-
-        logL[k] = -log(c[t1]) + logm
-
-        # Loop
-        for t in t1:(t2 - 1)
-            Bₜ₊₁ = B[:, t + 1]
-            obs_logdensities!(Bₜ₊₁, hmm, obs_seq[t + 1], control_seq[t + 1])
-            logm = maximum(Bₜ₊₁)
-            Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
-
-            trans = transition_matrix(hmm, control_seq[t])
-            αₜ₊₁ = α[:, t + 1]
-            mul!(αₜ₊₁, trans', α[:, t])
-            αₜ₊₁ .*= Bₜ₊₁
-            c[t + 1] = inv(sum(αₜ₊₁))
-            lmul!(c[t + 1], αₜ₊₁)
-
-            logL[k] += -log(c[t + 1]) + logm
-        end
+        logL[k] = forward!(storage, hmm, obs_seq, t1, t2; control_seq)
     end
-
     check_finite(α)
     return nothing
 end

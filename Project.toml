@@ -16,6 +16,14 @@ SimpleUnPack = "ce78b400-467f-4804-87d8-8f486da07d0a"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 
+[weakdeps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[extensions]
+HiddenMarkovModelsDistributionsExt = "Distributions"
+HiddenMarkovModelsSparseArraysExt = "SparseArrays"
+
 [compat]
 ChainRulesCore = "1.16"
 DensityInterface = "0.4"
@@ -29,11 +37,3 @@ SimpleUnPack = "1.1"
 SparseArrays = "1"
 StatsAPI = "1.6"
 julia = "1.9"
-
-[extensions]
-HiddenMarkovModelsDistributionsExt = "Distributions"
-HiddenMarkovModelsSparseArraysExt = "SparseArrays"
-
-[weakdeps]
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
