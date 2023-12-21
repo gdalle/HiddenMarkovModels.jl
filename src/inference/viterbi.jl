@@ -50,7 +50,7 @@ function viterbi!(
 ) where {R}
     @unpack q, logL, logB, ϕ, ψ = storage
 
-    @threads for k in eachindex(seq_ends)
+    @batch for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
