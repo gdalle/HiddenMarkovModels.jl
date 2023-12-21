@@ -1,8 +1,10 @@
 [deps]
-pytorch = ""
 ipykernel = ""
+jax = ""
 numpy = ""
+pytorch = ""
 
 [pip.deps]
-pomegranate = ""
+dynamax = ""
 hmmlearn = ""
+pomegranate = ""

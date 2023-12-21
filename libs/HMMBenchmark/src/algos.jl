@@ -1,25 +1,23 @@
-function rand_gaussian_hmm(; configuration)
-    @unpack sparse, nb_states, obs_dim = configuration
+function benchmarkables_hiddenmarkovmodels(; configuration, algos)
+    @unpack sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter = configuration
+
+    # Model
     init = ones(nb_states) / nb_states
-    trans = rand_trans_mat(nb_states)
+    trans = ones(nb_states, nb_states) / nb_states
     if obs_dim == 1
-        dists = [Normal(randn(), 1.0) for _ in 1:nb_states]
+        dists = [Normal(i, 1.0) for _ in 1:nb_states]
     else
-        dists = [LightDiagNormal(randn(obs_dim), ones(obs_dim)) for _ in 1:nb_states]
+        dists = [LightDiagNormal(i .* ones(obs_dim), ones(obs_dim)) for _ in 1:nb_states]
     end
     hmm = HiddenMarkovModels.HMM(init, trans, dists)
-    return hmm
-end
 
-function benchmarkables_hiddenmarkovmodels(; configuration, algos)
-    @unpack seq_length, nb_seqs, bw_iter = configuration
-    hmm = rand_gaussian_hmm(; configuration)
+    # Data
     obs_seqs = [rand(hmm, seq_length).obs_seq for _ in 1:nb_seqs]
-
     obs_seq = reduce(vcat, obs_seqs)
     control_seq = fill(nothing, length(obs_seq))
     seq_ends = cumsum(length.(obs_seqs))
 
+    # Benchmarks
     benchs = Dict()
 
     if "rand" in algos
