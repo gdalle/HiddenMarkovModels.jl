@@ -1,58 +1,59 @@
+function HMMBenchmark.benchmarkables_hmmlearn(rng::AbstractRNG; configuration, algos)
+    (; sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) = configuration
 
-## hmmlearn
-
-function rand_params_hmmlearn(; N, D)
-    p = np.ones((N,)) / N
-    A = np.ones((N, N)) / N
-    μ = np.random.randn(N, D)
-    σ = 2 * np.ones((N, D))
-    return (; p, A, μ, σ)
-end
-
-function rand_model_hmmlearn(; N, D, I)
-    @unpack p, A, μ, σ = rand_params_hmmlearn(; N, D)
-    model = hmmlearn.hmm.GaussianHMM(;
-        n_components=N,
+    # Model
+    hmm = hmmlearn.hmm.GaussianHMM(;
+        n_components=nb_states,
         covariance_type="diag",
-        n_iter=I,
+        n_iter=bw_iter,
         tol=-np.inf,
         implementation="scaling",
         init_params="",
     )
-    model.startprob_ = p
-    model.transmat_ = A
-    model.means_ = μ
-    model.covars_ = np.square(σ)
-    return model
-end
+    hmm.startprob_ = np.ones(nb_states) / nb_states
+    hmm.transmat_ = np.ones((nb_states, nb_states)) / nb_states
+    hmm.means_ =
+        np.ones((nb_states, obs_dim)) *
+        np.arange(1, nb_states + 1)[0:(nb_states - 1), np.newaxis]
+    hmm.covars_ = np.ones((nb_states, obs_dim))
 
-function benchmarkables_hmmlearn(; algos, N, D, T, K, I)
-    rand_model_hmmlearn(; N, D, I)
-    obs_mats_list_py = pylist([np.random.randn(T, D) for k in 1:K])
+    # Data
+    obs_mats_list_py = pylist([hmm.sample(seq_length)[0] for _ in 1:nb_seqs])
     obs_mat_concat_py = np.concatenate(obs_mats_list_py)
-    obs_mat_len_py = np.full(K, T)
+    obs_mat_len_py = np.full(nb_seqs, seq_length)
+
+    # Benchmarks
     benchs = Dict()
+
     if "logdensity" in algos
-        benchs["logdensity"] = @benchmarkable pycall(
-            model_score, $obs_mat_concat_py, $obs_mat_len_py
-        ) setup = (model_score = rand_model_hmmlearn(; N=$N, D=$D, I=$I).score)
+        benchs["logdensity"] = @benchmarkable begin
+            pycall($(hmm.score), $obs_mat_concat_py, $obs_mat_len_py)
+        end
     end
+
+    if "forward" in algos
+        benchs["forward"] = @benchmarkable begin
+            pycall($(hmm.score), $obs_mat_concat_py, $obs_mat_len_py)
+        end
+    end
+
     if "viterbi" in algos
-        benchs["viterbi"] = @benchmarkable pycall(
-            model_predict, $obs_mat_concat_py, $obs_mat_len_py
-        ) setup = (model_predict = rand_model_hmmlearn(; N=$N, D=$D, I=$I).predict)
+        benchs["viterbi"] = @benchmarkable begin
+            pycall($(hmm.decode), $obs_mat_concat_py, $obs_mat_len_py)
+        end
     end
+
     if "forward_backward" in algos
-        benchs["forward_backward"] = @benchmarkable pycall(
-            model_predict_proba, $obs_mat_concat_py, $obs_mat_len_py
-        ) setup = (
-            model_predict_proba = rand_model_hmmlearn(; N=$N, D=$D, I=$I).predict_proba
-        )
+        benchs["forward_backward"] = @benchmarkable begin
+            pycall($(hmm.predict_proba), $obs_mat_concat_py, $obs_mat_len_py)
+        end
     end
+
     if "baum_welch" in algos
-        benchs["baum_welch"] = @benchmarkable pycall(
-            model_fit, $obs_mat_concat_py, $obs_mat_len_py
-        ) setup = (model_fit = rand_model_hmmlearn(; N=$N, D=$D, I=$I).fit)
+        benchs["baum_welch"] = @benchmarkable begin
+            pycall($(hmm.fit), $obs_mat_concat_py, $obs_mat_len_py)
+        end
     end
+
     return benchs
 end
