@@ -48,7 +48,7 @@ function forward!(
 )
     @unpack α, logL, B, c = storage
 
-    @batch for k in eachindex(seq_ends)
+    @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         # Initialization

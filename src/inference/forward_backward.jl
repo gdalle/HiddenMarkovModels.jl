@@ -70,7 +70,7 @@ function forward_backward!(
     # Forward (fill B, α, c and logL)
     forward!(storage, hmm, obs_seq; control_seq, seq_ends)
 
-    @batch for k in eachindex(seq_ends)
+    @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         # Backward
