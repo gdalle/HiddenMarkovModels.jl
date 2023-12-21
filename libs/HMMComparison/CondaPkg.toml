@@ -1,0 +1,9 @@
+[deps]
+jax = ""
+numpy = ""
+pytorch = ""
+
+[pip.deps]
+dynamax = ""
+hmmlearn = ""
+pomegranate = ""

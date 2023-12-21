@@ -3,7 +3,7 @@ module HMMBenchmark
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
-using Distributions: Normal, DiagNormal, PDiagMat
+using Distributions: Normal, DiagNormal
 using HiddenMarkovModels
 using HiddenMarkovModels:
     LightDiagNormal,
@@ -16,18 +16,14 @@ using HiddenMarkovModels:
     initialize_forward_backward,
     forward_backward!,
     baum_welch!
-using LinearAlgebra: SymTridiagonal
+using LinearAlgebra: Diagonal, SymTridiagonal
 using Pkg: Pkg
-using SimpleUnPack: @unpack
+using Random: AbstractRNG
 
-export Configuration, define_suite, parse_results
+export Configuration, define_suite, parse_results, print_julia_setup
 
 include("configuration.jl")
 include("algos.jl")
 include("suite.jl")
-
-benchmarkables_hmmbase(args...; kwargs...) = error("HMMBase not loaded")
-benchmarkables_hmmlearn(args...; kwargs...) = error("PythonCall not loaded")
-benchmarkables_pomegranate(args...; kwargs...) = error("PythonCall not loaded")
 
 end
