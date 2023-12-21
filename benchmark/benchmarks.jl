@@ -21,4 +21,3 @@ configurations = [
 ]
 
 SUITE = define_suite(rng; configurations, algos)
-BenchmarkTools.save(joinpath(@__DIR__, "tune.json"), BenchmarkTools.params(SUITE));
