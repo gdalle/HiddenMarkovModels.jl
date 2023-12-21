@@ -1,9 +1,14 @@
+name = "HMMComparison"
+uuid = "3591cd20-7368-4a74-8c15-3975533efb17"
+authors = ["Guillaume Dalle <22795598+gdalle@users.noreply.github.com>"]
+version = "0.1.0"
+
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
 HMMBenchmark = "557005d5-2e4a-43f9-8aa7-ba8df2d03179"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"

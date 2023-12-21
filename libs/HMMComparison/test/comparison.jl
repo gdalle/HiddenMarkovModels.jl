@@ -1,6 +1,5 @@
 using BenchmarkTools
-using HMMBase
-using PythonCall
+using HMMComparison
 using HMMBenchmark
 using Random
 
@@ -15,7 +14,7 @@ configurations = [
     ),
 ]
 
-SUITE = define_suite(rng; implems, configurations, algos)
+SUITE = define_full_suite(rng; implems, configurations, algos)
 # BenchmarkTools.save(joinpath(@__DIR__, "tune.json"), BenchmarkTools.params(SUITE));
 results = BenchmarkTools.run(SUITE; verbose=true)
 data = parse_results(minimum(results); path=joinpath(@__DIR__, "results.csv"))

@@ -1,8 +1,9 @@
-function HMMBenchmark.benchmarkables_hmmlearn(rng::AbstractRNG; configuration, algos)
+function benchmarkables_hmmlearn(rng::AbstractRNG; configuration, algos)
+    np = pyimport("numpy")
     (; sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) = configuration
 
     # Model
-    hmm = hmmlearn.hmm.GaussianHMM(;
+    hmm = pyimport("hmmlearn.hmm").GaussianHMM(;
         n_components=nb_states,
         covariance_type="diag",
         n_iter=bw_iter,

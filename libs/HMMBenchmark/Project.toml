@@ -14,13 +14,5 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
-[weakdeps]
-HMMBase = "b2b3ca75-8444-5ffa-85e6-af70e2b64fe7"
-PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
-
-[extensions]
-HMMBenchmarkHMMBaseExt = ["HMMBase"]
-HMMBenchmarkPythonCallExt = ["PythonCall"]
-
 [compat]
 julia = "1.9"

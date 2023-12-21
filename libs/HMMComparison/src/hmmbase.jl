@@ -1,13 +1,4 @@
-module HMMBenchmarkHMMBaseExt
-
-using BenchmarkTools
-using Distributions
-using HMMBase
-using HMMBenchmark
-using Random: AbstractRNG
-using SparseArrays
-
-function HMMBenchmark.benchmarkables_hmmbase(rng::AbstractRNG; configuration, algos)
+function benchmarkables_hmmbase(rng::AbstractRNG; configuration, algos)
     (; sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) = configuration
 
     # Model
@@ -57,6 +48,4 @@ function HMMBenchmark.benchmarkables_hmmbase(rng::AbstractRNG; configuration, al
     end
 
     return benchs
-end
-
 end

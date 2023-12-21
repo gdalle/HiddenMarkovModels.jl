@@ -1,17 +1,18 @@
-function HMMBenchmark.benchmarkables_pomegranate(rng::AbstractRNG; configuration, algos)
+function benchmarkables_pomegranate(rng::AbstractRNG; configuration, algos)
+    torch = pyimport("torch")
     (; sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) = configuration
 
     # Model
     starts = torch.ones(nb_states) / nb_states
     edges = torch.ones(nb_states, nb_states) / nb_states
     distributions = pylist([
-        pomegranate.distributions.Normal(;
+        pyimport("pomegranate.distributions").Normal(;
             means=i * torch.ones(obs_dim),
             covs=torch.square(torch.ones(obs_dim)),
             covariance_type="diag",
         ) for i in 1:nb_states
     ])
-    hmm = pomegranate.hmm.DenseHMM(;
+    hmm = pyimport("pomegranate.hmm").DenseHMM(;
         distributions=distributions,
         edges=edges,
         starts=starts,

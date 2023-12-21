@@ -5,7 +5,6 @@ using Random
 rng = Random.default_rng()
 Random.seed!(rng, 63)
 
-implems = ("HiddenMarkovModels.jl",)
 algos = ("rand", "logdensity", "forward", "viterbi", "forward_backward", "baum_welch")
 configurations = []
 for nb_states in (4, 16, 64)
@@ -17,5 +16,5 @@ for nb_states in (4, 16, 64)
     )
 end
 
-SUITE = define_suite(rng; implems, configurations, algos)
+SUITE = define_suite(rng; configurations, algos)
 BenchmarkTools.save(joinpath(@__DIR__, "tune.json"), BenchmarkTools.params(SUITE));

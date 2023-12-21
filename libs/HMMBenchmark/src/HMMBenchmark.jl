@@ -20,16 +20,10 @@ using LinearAlgebra: Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
 
-export Configuration, define_suite, parse_results
+export Configuration, define_suite, parse_results, print_julia_setup
 
 include("configuration.jl")
 include("algos.jl")
 include("suite.jl")
-
-benchmarkables_hmmbase(args...; kwargs...) = error("HMMBase not loaded")
-benchmarkables_dynamax(args...; kwargs...) = error("PythonCall not loaded")
-benchmarkables_hmmlearn(args...; kwargs...) = error("PythonCall not loaded")
-benchmarkables_pomegranate(args...; kwargs...) = error("PythonCall not loaded")
-print_python_setup(args...; kwargs...) = error("PythonCall not loaded")
 
 end

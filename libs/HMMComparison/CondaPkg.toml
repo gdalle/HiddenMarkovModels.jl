@@ -1,5 +1,4 @@
 [deps]
-ipykernel = ""
 jax = ""
 numpy = ""
 pytorch = ""
