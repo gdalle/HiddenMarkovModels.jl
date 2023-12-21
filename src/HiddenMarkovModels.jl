@@ -13,7 +13,6 @@ using DocStringExtensions
 using FillArrays: Fill
 using LinearAlgebra: dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
-using Polyester: @batch
 using Random: Random, AbstractRNG, default_rng
 using SimpleUnPack: @unpack
 using StatsAPI: StatsAPI, fit, fit!

@@ -1,8 +1,8 @@
 Base.@kwdef struct Configuration
     nb_states::Int
     obs_dim::Int
-    seq_length::Int = 1000
-    nb_seqs::Int = 100
+    seq_length::Int = 100
+    nb_seqs::Int = 20
     bw_iter::Int = 1
     sparse::Bool = false
     custom_dist::Bool = false

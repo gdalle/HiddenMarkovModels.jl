@@ -60,42 +60,60 @@ $(SIGNATURES)
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    t1::Integer,
+    t2::Integer;
+    control_seq::AbstractVector,
+    transition_marginals::Bool=true,
+) where {R}
+    @unpack α, β, c, γ, ξ, B, Bβ = storage
+
+    # Forward (fill B, α, c and logL)
+    logL = forward!(storage, hmm, obs_seq, t1, t2; control_seq)
+
+    # Backward
+    β[:, t2] .= c[t2]
+    for t in (t2 - 1):-1:t1
+        trans = transition_matrix(hmm, control_seq[t])
+        Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
+        mul!(view(β, :, t), trans, view(Bβ, :, t + 1))
+        lmul!(c[t], view(β, :, t))
+    end
+    Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
+
+    # State marginals
+    γ[:, t1:t2] .= view(α, :, t1:t2) .* view(β, :, t1:t2) ./ view(c, t1:t2)'
+
+    # Transition marginals
+    if transition_marginals
+        for t in t1:(t2 - 1)
+            trans = transition_matrix(hmm, control_seq[t])
+            mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
+        end
+        ξ[t2] .= zero(R)
+    end
+
+    return logL
+end
+
+"""
+$(SIGNATURES)
+"""
+function forward_backward!(
+    storage::ForwardBackwardStorage{R},
+    hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
     @unpack logL, α, β, c, γ, ξ, B, Bβ = storage
-
-    # Forward (fill B, α, c and logL)
-    forward!(storage, hmm, obs_seq; control_seq, seq_ends)
-
-    @batch for k in eachindex(seq_ends)
+    for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-
-        # Backward
-        β[:, t2] .= c[t2]
-        for t in (t2 - 1):-1:t1
-            trans = transition_matrix(hmm, control_seq[t])
-            Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
-            mul!(view(β, :, t), trans, view(Bβ, :, t + 1))
-            lmul!(c[t], view(β, :, t))
-        end
-        Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
-
-        # State marginals
-        γ[:, t1:t2] .= view(α, :, t1:t2) .* view(β, :, t1:t2) ./ view(c, t1:t2)'
-
-        # Transition marginals
-        if transition_marginals
-            for t in t1:(t2 - 1)
-                trans = transition_matrix(hmm, control_seq[t])
-                mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
-            end
-            ξ[t2] .= zero(R)
-        end
+        logL[k] = forward_backward!(
+            storage, hmm, obs_seq, t1, t2; control_seq, transition_marginals
+        )
     end
-
     check_finite(γ)
     return nothing
 end

@@ -44,43 +44,57 @@ $(SIGNATURES)
 function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
+    obs_seq::AbstractVector,
+    t1::Integer,
+    t2::Integer;
+    control_seq::AbstractVector,
+) where {R}
+    @unpack q, logB, ϕ, ψ = storage
+
+    obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
+    init = initialization(hmm)
+    ϕ[:, t1] .= log.(init) .+ view(logB, :, t1)
+
+    for t in (t1 + 1):t2
+        obs_logdensities!(view(logB, :, t), hmm, obs_seq[t], control_seq[t])
+        trans = transition_matrix(hmm, control_seq[t - 1])
+        for j in 1:length(hmm)
+            i_max = 1
+            score_max = ϕ[i_max, t - 1] + log(trans[i_max, j])
+            for i in 2:length(hmm)
+                score = ϕ[i, t - 1] + log(trans[i, j])
+                if score > score_max
+                    score_max, i_max = score, i
+                end
+            end
+            ψ[j, t] = i_max
+            ϕ[j, t] = score_max + logB[j, t]
+        end
+    end
+
+    q[t2] = argmax(view(ϕ, :, t2))
+    for t in (t2 - 1):-1:t1
+        q[t] = ψ[q[t + 1], t + 1]
+    end
+
+    return ϕ[q[t2], t2]
+end
+
+"""
+$(SIGNATURES)
+"""
+function viterbi!(
+    storage::ViterbiStorage{R},
+    hmm::AbstractHMM,
     obs_seq::AbstractVector;
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 ) where {R}
     @unpack q, logL, logB, ϕ, ψ = storage
-
-    @batch for k in eachindex(seq_ends)
+    for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-
-        obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
-        init = initialization(hmm)
-        ϕ[:, t1] .= log.(init) .+ view(logB, :, t1)
-
-        for t in (t1 + 1):t2
-            obs_logdensities!(view(logB, :, t), hmm, obs_seq[t], control_seq[t])
-            trans = transition_matrix(hmm, control_seq[t - 1])
-            for j in 1:length(hmm)
-                i_max = 1
-                score_max = ϕ[i_max, t - 1] + log(trans[i_max, j])
-                for i in 2:length(hmm)
-                    score = ϕ[i, t - 1] + log(trans[i, j])
-                    if score > score_max
-                        score_max, i_max = score, i
-                    end
-                end
-                ψ[j, t] = i_max
-                ϕ[j, t] = score_max + logB[j, t]
-            end
-        end
-
-        q[t2] = argmax(view(ϕ, :, t2))
-        for t in (t2 - 1):-1:t1
-            q[t] = ψ[q[t + 1], t + 1]
-        end
-        logL[k] = ϕ[q[t2], t2]
+        logL[k] = viterbi!(storage, hmm, obs_seq, t1, t2; control_seq)
     end
-
     check_right_finite(ϕ)
     return nothing
 end
