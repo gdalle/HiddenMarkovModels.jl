@@ -51,7 +51,7 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
             forward($hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends)
-        end
+        end evals = 1 samples = 100
         benchs["forward!"] = @benchmarkable begin
             forward!(
                 f_storage, $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
