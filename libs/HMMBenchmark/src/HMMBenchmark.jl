@@ -3,7 +3,7 @@ module HMMBenchmark
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
-using Distributions: Normal, DiagNormal
+using Distributions: Normal, MvNormal
 using HiddenMarkovModels
 using HiddenMarkovModels:
     LightDiagNormal,
@@ -19,6 +19,7 @@ using HiddenMarkovModels:
 using LinearAlgebra: Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
+using SparseArrays: spdiagm
 
 export Configuration, define_suite, parse_results, print_julia_setup
 

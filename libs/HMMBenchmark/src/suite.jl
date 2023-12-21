@@ -1,12 +1,10 @@
 function define_suite(rng::AbstractRNG; configurations, algos)
     SUITE = BenchmarkGroup()
     implem = "HiddenMarkovModels.jl"
-    SUITE[implem] = BenchmarkGroup()
     for configuration in configurations
-        SUITE[implem][to_tuple(configuration)] = BenchmarkGroup()
         bench_tup = benchmarkables_hiddenmarkovmodels(rng; configuration, algos)
         for (algo, bench) in pairs(bench_tup)
-            SUITE[implem][to_tuple(configuration)][algo] = bench
+            SUITE[implem][string(configuration)][algo] = bench
         end
     end
     return SUITE
@@ -15,10 +13,10 @@ end
 function parse_results(results; path=nothing)
     data = DataFrame()
     for implem in identity.(keys(results))
-        for configuration_tup in identity.(keys(results[implem]))
-            configuration = Configuration(configuration_tup...)
-            for algo in identity.(keys(results[implem][configuration_tup]))
-                perf = results[implem][configuration_tup][algo]
+        for configuration_str in identity.(keys(results[implem]))
+            configuration = Configuration(configuration_str)
+            for algo in identity.(keys(results[implem][configuration_str]))
+                perf = results[implem][configuration_str][algo]
                 (; time, gctime, memory, allocs) = perf
                 row = merge(
                     (; implem, algo),
