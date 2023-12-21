@@ -53,12 +53,12 @@ function viterbi!(
     @batch for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
-        obs_logdensities!(logB[:, t1], hmm, obs_seq[t1], control_seq[t1])
+        obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
         init = initialization(hmm)
         ϕ[:, t1] .= log.(init) .+ view(logB, :, t1)
 
         for t in (t1 + 1):t2
-            obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
+            obs_logdensities!(view(logB, :, t), hmm, obs_seq[t], control_seq[t])
             trans = transition_matrix(hmm, control_seq[t - 1])
             for j in 1:length(hmm)
                 i_max = 1
@@ -74,7 +74,7 @@ function viterbi!(
             end
         end
 
-        q[t2] = argmax(ϕ[:, t2])
+        q[t2] = argmax(view(ϕ, :, t2))
         for t in (t2 - 1):-1:t1
             q[t] = ψ[q[t + 1], t + 1]
         end
