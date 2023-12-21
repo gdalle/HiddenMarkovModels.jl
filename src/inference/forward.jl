@@ -48,7 +48,7 @@ function forward!(
 )
     @unpack α, logL, B, c = storage
 
-    @views for k in eachindex(seq_ends)
+    @batch for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         # Initialization
@@ -58,7 +58,7 @@ function forward!(
         Bₜ₁ .= exp.(Bₜ₁ .- logm)
 
         init = initialization(hmm)
-        αₜ₁ = α[:, t1]
+        αₜ₁ = view(α, :, t1)
         αₜ₁ .= init .* Bₜ₁
         c[t1] = inv(sum(αₜ₁))
         lmul!(c[t1], αₜ₁)
@@ -67,14 +67,14 @@ function forward!(
 
         # Loop
         for t in t1:(t2 - 1)
-            Bₜ₊₁ = B[:, t + 1]
+            Bₜ₊₁ = view(B, :, t + 1)
             obs_logdensities!(Bₜ₊₁, hmm, obs_seq[t + 1], control_seq[t + 1])
             logm = maximum(Bₜ₊₁)
             Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
 
             trans = transition_matrix(hmm, control_seq[t])
-            αₜ₊₁ = α[:, t + 1]
-            mul!(αₜ₊₁, trans', α[:, t])
+            αₜ₊₁ = view(α, :, t + 1)
+            mul!(αₜ₊₁, trans', view(α, :, t))
             αₜ₊₁ .*= Bₜ₊₁
             c[t + 1] = inv(sum(αₜ₊₁))
             lmul!(c[t + 1], αₜ₊₁)

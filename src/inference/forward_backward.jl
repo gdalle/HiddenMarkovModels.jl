@@ -70,27 +70,27 @@ function forward_backward!(
     # Forward (fill B, α, c and logL)
     forward!(storage, hmm, obs_seq; control_seq, seq_ends)
 
-    @views for k in eachindex(seq_ends)
+    @batch for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         # Backward
         β[:, t2] .= c[t2]
         for t in (t2 - 1):-1:t1
             trans = transition_matrix(hmm, control_seq[t])
-            Bβ[:, t + 1] .= B[:, t + 1] .* β[:, t + 1]
-            mul!(β[:, t], trans, Bβ[:, t + 1])
-            lmul!(c[t], β[:, t])
+            Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
+            mul!(view(β, :, t), trans, view(Bβ, :, t + 1))
+            lmul!(c[t], view(β, :, t))
         end
-        Bβ[:, t1] .= B[:, t1] .* β[:, t1]
+        Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
 
         # State marginals
-        γ[:, t1:t2] .= α[:, t1:t2] .* β[:, t1:t2] ./ c[t1:t2]'
+        γ[:, t1:t2] .= view(α, :, t1:t2) .* view(β, :, t1:t2) ./ view(c, t1:t2)'
 
         # Transition marginals
         if transition_marginals
             for t in t1:(t2 - 1)
                 trans = transition_matrix(hmm, control_seq[t])
-                mul_rows_cols!(ξ[t], α[:, t], trans, Bβ[:, t + 1])
+                mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
             end
             ξ[t2] .= zero(R)
         end

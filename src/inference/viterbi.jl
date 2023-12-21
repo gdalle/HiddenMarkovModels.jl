@@ -50,12 +50,12 @@ function viterbi!(
 ) where {R}
     @unpack q, logL, logB, ϕ, ψ = storage
 
-    @views for k in eachindex(seq_ends)
+    @batch for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
 
         obs_logdensities!(logB[:, t1], hmm, obs_seq[t1], control_seq[t1])
         init = initialization(hmm)
-        ϕ[:, t1] .= log.(init) .+ logB[:, t1]
+        ϕ[:, t1] .= log.(init) .+ view(logB, :, t1)
 
         for t in (t1 + 1):t2
             obs_logdensities!(logB[:, t], hmm, obs_seq[t], control_seq[t])
