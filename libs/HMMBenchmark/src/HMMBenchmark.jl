@@ -19,6 +19,7 @@ using HiddenMarkovModels:
 using LinearAlgebra: Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
+using SparseArrays: spdiagm
 
 export Configuration, define_suite, parse_results, print_julia_setup
 
