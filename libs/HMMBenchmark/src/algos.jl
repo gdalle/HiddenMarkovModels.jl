@@ -1,13 +1,21 @@
 function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algos)
-    (; sparse, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) = configuration
+    (; sparse, custom_dist, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) =
+        configuration
 
     # Model
     init = ones(nb_states) / nb_states
     trans = ones(nb_states, nb_states) / nb_states
-    if obs_dim == 1
-        dists = [Normal(i, 1.0) for i in 1:nb_states]
-    else
+
+    if custom_dist
         dists = [LightDiagNormal(i .* ones(obs_dim), ones(obs_dim)) for i in 1:nb_states]
+    else
+        if obs_dim == 1
+            dists = [Normal(i, 1.0) for i in 1:nb_states]
+        else
+            dists = [
+                MvNormal(i .* ones(obs_dim), Diagonal(ones(obs_dim))) for i in 1:nb_states
+            ]
+        end
     end
     hmm = HiddenMarkovModels.HMM(init, trans, dists)
 

@@ -3,7 +3,7 @@ module HMMBenchmark
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
-using Distributions: Normal, DiagNormal
+using Distributions: Normal, MvNormal
 using HiddenMarkovModels
 using HiddenMarkovModels:
     LightDiagNormal,

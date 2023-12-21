@@ -1,5 +1,6 @@
 Base.@kwdef struct Configuration
     sparse::Bool
+    custom_dist::Bool
     nb_states::Int
     obs_dim::Int
     seq_length::Int
