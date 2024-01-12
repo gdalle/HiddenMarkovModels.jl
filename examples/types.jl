@@ -97,4 +97,5 @@ seq_ends = cumsum(length.(control_seqs));  #src
 test_identical_hmmbase(rng, hmm, hmm_guess; T=100)  #src
 test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false)  #src
 test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
-test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+# https://github.com/JuliaSparse/SparseArrays.jl/issues/469  #src
+@test_skip test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
