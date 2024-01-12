@@ -12,9 +12,9 @@ function test_type_stability(
         @test_opt target_modules = (HMMs,) rand(hmm, control_seq)
         @test_call target_modules = (HMMs,) rand(hmm, control_seq)
 
-        @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq; control_seq, seq_ends)
+        @test_opt target_modules = (HMMs,) logdensityof(hmm, obs_seq, control_seq; seq_ends)
         @test_call target_modules = (HMMs,) logdensityof(
-            hmm, obs_seq; control_seq, seq_ends
+            hmm, obs_seq, control_seq; seq_ends
         )
         @test_opt target_modules = (HMMs,) logdensityof(
             hmm, obs_seq, state_seq; control_seq, seq_ends
@@ -23,25 +23,25 @@ function test_type_stability(
             hmm, obs_seq, state_seq; control_seq, seq_ends
         )
 
-        @test_opt target_modules = (HMMs,) forward(hmm, obs_seq; control_seq, seq_ends)
-        @test_call target_modules = (HMMs,) forward(hmm, obs_seq; control_seq, seq_ends)
+        @test_opt target_modules = (HMMs,) forward(hmm, obs_seq, control_seq; seq_ends)
+        @test_call target_modules = (HMMs,) forward(hmm, obs_seq, control_seq; seq_ends)
 
-        @test_opt target_modules = (HMMs,) viterbi(hmm, obs_seq; control_seq, seq_ends)
-        @test_call target_modules = (HMMs,) viterbi(hmm, obs_seq; control_seq, seq_ends)
+        @test_opt target_modules = (HMMs,) viterbi(hmm, obs_seq, control_seq; seq_ends)
+        @test_call target_modules = (HMMs,) viterbi(hmm, obs_seq, control_seq; seq_ends)
 
         @test_opt target_modules = (HMMs,) forward_backward(
-            hmm, obs_seq; control_seq, seq_ends
+            hmm, obs_seq, control_seq; seq_ends
         )
         @test_call target_modules = (HMMs,) forward_backward(
-            hmm, obs_seq; control_seq, seq_ends
+            hmm, obs_seq, control_seq; seq_ends
         )
 
         if !isnothing(hmm_guess)
             @test_opt target_modules = (HMMs,) baum_welch(
-                hmm, obs_seq; control_seq, seq_ends, max_iterations=1
+                hmm, obs_seq, control_seq; seq_ends, max_iterations=1
             )
             @test_call target_modules = (HMMs,) baum_welch(
-                hmm, obs_seq; control_seq, seq_ends, max_iterations=1
+                hmm, obs_seq, control_seq; seq_ends, max_iterations=1
             )
         end
     end

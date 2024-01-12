@@ -24,8 +24,8 @@ $(SIGNATURES)
 """
 function initialize_viterbi(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
@@ -45,11 +45,11 @@ function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
+    control_seq::AbstractVector,
     t1::Integer,
     t2::Integer;
-    control_seq::AbstractVector,
 ) where {R}
-    @unpack q, logB, ϕ, ψ = storage
+    (; q, logB, ϕ, ψ) = storage
 
     obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
     init = initialization(hmm)
@@ -86,14 +86,14 @@ $(SIGNATURES)
 function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 ) where {R}
-    @unpack q, logL, logB, ϕ, ψ = storage
+    (; logL, ϕ) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-        logL[k] = viterbi!(storage, hmm, obs_seq, t1, t2; control_seq)
+        logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
     end
     check_right_finite(ϕ)
     return nothing
@@ -108,11 +108,11 @@ Return a tuple `(storage.q, sum(storage.logL))` where `storage` is of type [`Vit
 """
 function viterbi(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
-    storage = initialize_viterbi(hmm, obs_seq; control_seq, seq_ends)
-    viterbi!(storage, hmm, obs_seq; control_seq, seq_ends)
+    storage = initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
+    viterbi!(storage, hmm, obs_seq, control_seq; seq_ends)
     return storage.q, sum(storage.logL)
 end

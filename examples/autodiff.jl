@@ -72,35 +72,35 @@ grad_z = Zygote.gradient(f, params)[1]
 grad_f ≈ grad_z
 
 #=
-For increased efficiency, one can use Enzyme.jl and provide temporary storage.
-This requires going one level deeper, to the mutating [`HiddenMarkovModels.forward!`](@ref) function.
+Enzyme.jl also works natively but we have to avoid the type instability of global variables by providing more information.
 =#
 
-control_seq = fill(nothing, length(obs_seq))
-
-function f!(storage::HMMs.ForwardStorage, params::ComponentVector)
+function f_extended(params::ComponentVector, obs_seq, seq_ends)
     new_hmm = HMM(params.init, params.trans, Normal.(params.means))
-    HMMs.forward!(storage, new_hmm, obs_seq; control_seq, seq_ends)
-    return sum(storage.logL)
-end
+    return logdensityof(new_hmm, obs_seq; seq_ends)
+end;
 
-storage = HMMs.initialize_forward(hmm, obs_seq; control_seq, seq_ends)
-storage_shadow = HMMs.initialize_forward(hmm, obs_seq; control_seq, seq_ends)
-params_shadow = zero(params)
+shadow_params = Enzyme.make_zero(params)
 
 Enzyme.autodiff(
     Enzyme.Reverse,
-    f!,
+    f_extended,
     Enzyme.Active,
-    Enzyme.Duplicated(storage, storage_shadow),
-    Enzyme.Duplicated(params, params_shadow),
+    Enzyme.Duplicated(params, shadow_params),
+    Enzyme.Const(obs_seq),
+    Enzyme.Const(seq_ends),
 )
 
-grad_e = params_shadow
+grad_e = shadow_params
 
 #-
 
 grad_e ≈ grad_f
+
+#=
+For increased efficiency, one can provide temporary storage to Enzyme.jl in order to avoid allocations.
+This requires going one level deeper, by leveraging the in-place [`HiddenMarkovModels.forward!`](@ref) function.
+=#
 
 # ## Gradient methods
 

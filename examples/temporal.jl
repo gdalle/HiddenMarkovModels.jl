@@ -10,7 +10,6 @@ using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using HMMTest  #src
 using Random
-using SimpleUnPack
 using StatsAPI
 using Test  #src
 
@@ -88,7 +87,7 @@ seq_ends = cumsum(length.(obs_seqs));
 All three inference algorithms work in the same way, except that we need to provide the control sequence as a keyword argument.
 =#
 
-best_state_seq, _ = viterbi(hmm, obs_seq; control_seq, seq_ends)
+best_state_seq, _ = viterbi(hmm, obs_seq, control_seq; seq_ends)
 
 #=
 For Viterbi, unsurprisingly, the most likely state sequence aligns with the sign of the observations.
@@ -106,11 +105,11 @@ The key is to split the observations according to which periodic parameter they 
 function StatsAPI.fit!(
     hmm::PeriodicHMM{T},
     fb_storage::HMMs.ForwardBackwardStorage,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 ) where {T}
-    @unpack γ, ξ = fb_storage
+    (; γ, ξ) = fb_storage
     L, N = period(hmm), length(hmm)
 
     hmm.init .= zero(T)
@@ -159,7 +158,7 @@ hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess);
 Naturally, Baum-Welch also requires knowing `control_seq`.
 =#
 
-hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends);
+hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends);
 first(loglikelihood_evolution), last(loglikelihood_evolution)
 
 #=

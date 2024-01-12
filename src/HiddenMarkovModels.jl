@@ -2,6 +2,10 @@
     HiddenMarkovModels
 
 A Julia package for HMM modeling, simulation, inference and learning.
+
+# Exports
+
+$(EXPORTS)
 """
 module HiddenMarkovModels
 
@@ -14,12 +18,12 @@ using FillArrays: Fill
 using LinearAlgebra: dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
-using SimpleUnPack: @unpack
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange
 using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHMM, HMM
 export initialization, transition_matrix, obs_distributions
-export fit!, logdensityof
+export fit!, logdensityof, joint_logdensityof
 export viterbi, forward, forward_backward, baum_welch
 export seq_limits
 

@@ -179,8 +179,8 @@ We will make use of the fields `fb_storage.γ` and `fb_storage.ξ`, which contai
 function StatsAPI.fit!(
     hmm::PriorHMM,
     fb_storage::HiddenMarkovModels.ForwardBackwardStorage,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     ## initialize to defaults without observations

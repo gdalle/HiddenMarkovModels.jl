@@ -28,8 +28,8 @@ $(SIGNATURES)
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
     transition_marginals=true,
 )
@@ -61,15 +61,15 @@ function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
+    control_seq::AbstractVector,
     t1::Integer,
     t2::Integer;
-    control_seq::AbstractVector,
     transition_marginals::Bool=true,
 ) where {R}
-    @unpack α, β, c, γ, ξ, B, Bβ = storage
+    (; α, β, c, γ, ξ, B, Bβ) = storage
 
     # Forward (fill B, α, c and logL)
-    logL = forward!(storage, hmm, obs_seq, t1, t2; control_seq)
+    logL = forward!(storage, hmm, obs_seq, control_seq, t1, t2)
 
     # Backward
     β[:, t2] .= c[t2]
@@ -102,16 +102,16 @@ $(SIGNATURES)
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
-    @unpack logL, α, β, c, γ, ξ, B, Bβ = storage
+    (; logL, γ) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward_backward!(
-            storage, hmm, obs_seq, t1, t2; control_seq, transition_marginals
+            storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
         )
     end
     check_finite(γ)
@@ -127,14 +127,14 @@ Return a tuple `(storage.γ, sum(storage.logL))` where `storage` is of type [`Fo
 """
 function forward_backward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     transition_marginals = false
     storage = initialize_forward_backward(
-        hmm, obs_seq; control_seq, seq_ends, transition_marginals
+        hmm, obs_seq, control_seq; seq_ends, transition_marginals
     )
-    forward_backward!(storage, hmm, obs_seq; control_seq, seq_ends, transition_marginals)
+    forward_backward!(storage, hmm, obs_seq, control_seq; seq_ends, transition_marginals)
     return storage.γ, sum(storage.logL)
 end

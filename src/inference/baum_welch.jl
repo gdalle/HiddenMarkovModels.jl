@@ -20,17 +20,17 @@ function baum_welch!(
     fb_storage::ForwardBackwardStorage,
     logL_evolution::Vector,
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
     atol::Real,
     max_iterations::Integer,
     loglikelihood_increasing::Bool,
 )
     for iteration in 1:max_iterations
-        forward_backward!(fb_storage, hmm, obs_seq; control_seq, seq_ends)
+        forward_backward!(fb_storage, hmm, obs_seq, control_seq; seq_ends)
         push!(logL_evolution, logdensityof(hmm) + sum(fb_storage.logL))
-        fit!(hmm, fb_storage, obs_seq; control_seq, seq_ends)
+        fit!(hmm, fb_storage, obs_seq, control_seq; seq_ends)
         if baum_welch_has_converged(logL_evolution; atol, loglikelihood_increasing)
             break
         end
@@ -53,23 +53,23 @@ Return a tuple `(hmm_est, loglikelihood_evolution)` where `hmm_est` is the estim
 """
 function baum_welch(
     hmm_guess::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
     atol=1e-5,
     max_iterations=100,
     loglikelihood_increasing=true,
 )
     hmm = deepcopy(hmm_guess)
-    fb_storage = initialize_forward_backward(hmm, obs_seq; control_seq, seq_ends)
+    fb_storage = initialize_forward_backward(hmm, obs_seq, control_seq; seq_ends)
     logL_evolution = eltype(fb_storage)[]
     sizehint!(logL_evolution, max_iterations)
     baum_welch!(
         fb_storage,
         logL_evolution,
         hmm,
-        obs_seq;
-        control_seq,
+        obs_seq,
+        control_seq;
         seq_ends,
         atol,
         max_iterations,

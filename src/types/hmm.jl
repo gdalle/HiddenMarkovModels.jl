@@ -35,11 +35,11 @@ obs_distributions(hmm::HMM) = hmm.dists
 function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
-    @unpack γ, ξ = fb_storage
+    (; γ, ξ) = fb_storage
     # Fit states
     hmm.init .= zero(eltype(hmm.init))
     hmm.trans .= zero(eltype(hmm.trans))

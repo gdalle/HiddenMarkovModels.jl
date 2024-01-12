@@ -44,51 +44,41 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
 
     if "logdensity" in algos
         benchs["logdensity"] = @benchmarkable begin
-            logdensityof($hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends)
+            logdensityof($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100
     end
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
-            forward($hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends)
+            forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100
         benchs["forward!"] = @benchmarkable begin
-            forward!(
-                f_storage, $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
-            )
+            forward!(f_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100 setup = (
-            f_storage = initialize_forward(
-                $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
-            )
+            f_storage = initialize_forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
 
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
-            viterbi($hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends)
+            viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100
         benchs["viterbi!"] = @benchmarkable begin
-            viterbi!(
-                v_storage, $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
-            )
+            viterbi!(v_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100 setup = (
-            v_storage = initialize_viterbi(
-                $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
-            )
+            v_storage = initialize_viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
-            forward_backward($hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends)
+            forward_backward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100
         benchs["forward_backward!"] = @benchmarkable begin
-            forward_backward!(
-                fb_storage, $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
-            )
+            forward_backward!(fb_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 100 setup = (
             fb_storage = initialize_forward_backward(
-                $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
+                $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
             )
         )
     end
@@ -97,8 +87,8 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
         benchs["baum_welch"] = @benchmarkable begin
             baum_welch(
                 $hmm,
-                $obs_seq;
-                control_seq=$control_seq,
+                $obs_seq,
+                $control_seq;
                 seq_ends=$seq_ends,
                 max_iterations=$bw_iter,
                 atol=-Inf,
@@ -110,8 +100,8 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
                 fb_storage,
                 logL_evolution,
                 $hmm,
-                $obs_seq;
-                control_seq=$control_seq,
+                $obs_seq,
+                $control_seq;
                 seq_ends=$seq_ends,
                 max_iterations=$bw_iter,
                 atol=-Inf,
@@ -119,7 +109,7 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
             )
         end evals = 1 samples = 100 setup = (
             fb_storage = initialize_forward_backward(
-                $hmm, $obs_seq; control_seq=$control_seq, seq_ends=$seq_ends
+                $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
             );
             logL_evolution = Float64[];
             sizehint!(logL_evolution, $bw_iter)

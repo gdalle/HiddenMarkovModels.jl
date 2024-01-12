@@ -99,16 +99,16 @@ Finally, we provide a thin wrapper ([`logdensityof`](@ref)) around the forward a
 logdensityof(hmm, obs_seq)
 
 #=
-The same function can also compute joint loglikelihoods $\mathbb{P}(X_{1:T}, Y_{1:T})$ that take the states into account.
+Another function can compute joint loglikelihoods $\mathbb{P}(X_{1:T}, Y_{1:T})$ which take the states into account.
 =#
 
-logdensityof(hmm, obs_seq, state_seq)
+joint_logdensityof(hmm, obs_seq, state_seq)
 
 #=
 For instance, we can check that the output of Viterbi is at least as likely as the true state sequence.
 =#
 
-logdensityof(hmm, obs_seq, best_state_seq)
+joint_logdensityof(hmm, obs_seq, best_state_seq)
 
 # ## Learning
 

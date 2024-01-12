@@ -13,30 +13,30 @@ function test_allocations(
         end
 
         ## Forward
-        forward(hmm, obs_seq; control_seq, seq_ends)  # compile
-        f_storage = HMMs.initialize_forward(hmm, obs_seq; control_seq, seq_ends)
-        allocs = @allocated HMMs.forward!(f_storage, hmm, obs_seq; control_seq, seq_ends)
+        forward(hmm, obs_seq, control_seq; seq_ends)  # compile
+        f_storage = HMMs.initialize_forward(hmm, obs_seq, control_seq; seq_ends)
+        allocs = @allocated HMMs.forward!(f_storage, hmm, obs_seq, control_seq; seq_ends)
         @test allocs == 0
 
         ## Viterbi
-        viterbi(hmm, obs_seq; control_seq, seq_ends)  # compile
-        v_storage = HMMs.initialize_viterbi(hmm, obs_seq; control_seq, seq_ends)
-        allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq; control_seq, seq_ends)
+        viterbi(hmm, obs_seq, control_seq; seq_ends)  # compile
+        v_storage = HMMs.initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
+        allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq, control_seq; seq_ends)
         @test allocs == 0
 
         ## Forward-backward
-        forward_backward(hmm, obs_seq; control_seq, seq_ends)  # compile
-        fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq; control_seq, seq_ends)
+        forward_backward(hmm, obs_seq, control_seq; seq_ends)  # compile
+        fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq, control_seq; seq_ends)
         allocs = @allocated HMMs.forward_backward!(
-            fb_storage, hmm, obs_seq; control_seq, seq_ends
+            fb_storage, hmm, obs_seq, control_seq; seq_ends
         )
         @test allocs == 0
 
         if !isnothing(hmm_guess)
             ## Baum-Welch
-            baum_welch(hmm_guess, obs_seq; control_seq, seq_ends, max_iterations=1)  # compile
+            baum_welch(hmm_guess, obs_seq, control_seq; seq_ends, max_iterations=1)  # compile
             fb_storage = HMMs.initialize_forward_backward(
-                hmm_guess, obs_seq; control_seq, seq_ends
+                hmm_guess, obs_seq, control_seq; seq_ends
             )
             logL_evolution = Float64[]
             sizehint!(logL_evolution, 1)
@@ -45,8 +45,8 @@ function test_allocations(
                 fb_storage,
                 logL_evolution,
                 hmm_guess,
-                obs_seq;
-                control_seq,
+                obs_seq,
+                control_seq;
                 seq_ends,
                 atol=-Inf,
                 max_iterations=1,
