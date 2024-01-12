@@ -35,8 +35,8 @@ obs_distributions(hmm::HMM) = hmm.dists
 function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     (; γ, ξ) = fb_storage

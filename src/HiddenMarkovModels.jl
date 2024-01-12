@@ -23,7 +23,7 @@ using StatsAPI: StatsAPI, fit, fit!
 
 export AbstractHMM, HMM
 export initialization, transition_matrix, obs_distributions
-export fit!, logdensityof
+export fit!, logdensityof, joint_logdensityof
 export viterbi, forward, forward_backward, baum_welch
 export seq_limits
 

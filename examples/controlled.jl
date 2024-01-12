@@ -78,7 +78,7 @@ seq_ends = cumsum(length.(obs_seqs));
 Not much changes from the case with simple time dependency.
 =#
 
-best_state_seq, _ = viterbi(hmm, obs_seq; control_seq, seq_ends)
+best_state_seq, _ = viterbi(hmm, obs_seq, control_seq; seq_ends)
 
 # ## Learning
 
@@ -91,8 +91,8 @@ Meanwhile, the observation coefficients are given by the formula for [weighted l
 function StatsAPI.fit!(
     hmm::ControlledGaussianHMM{T},
     fb_storage::HMMs.ForwardBackwardStorage,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 ) where {T}
     (; γ, ξ) = fb_storage
@@ -129,7 +129,7 @@ hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
 
-hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq; control_seq, seq_ends)
+hmm_est, loglikelihood_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends)
 first(loglikelihood_evolution), last(loglikelihood_evolution)
 
 #=

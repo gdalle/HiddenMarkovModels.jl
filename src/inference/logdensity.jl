@@ -5,11 +5,11 @@ Run the forward algorithm to compute the loglikelihood of `obs_seq` for `hmm`, i
 """
 function DensityInterface.logdensityof(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
-    _, logL = forward(hmm, obs_seq; control_seq, seq_ends)
+    _, logL = forward(hmm, obs_seq, control_seq; seq_ends)
     return logL
 end
 
@@ -18,11 +18,11 @@ $(SIGNATURES)
 
 Run the forward algorithm to compute the the joint loglikelihood of `obs_seq` and `state_seq` for `hmm`.
 """
-function DensityInterface.logdensityof(
+function joint_logdensityof(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
-    state_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    state_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     R = eltype(hmm, obs_seq[1], control_seq[1])

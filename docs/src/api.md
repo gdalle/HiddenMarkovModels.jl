@@ -45,6 +45,7 @@ seq_limits
 
 ```@docs
 logdensityof
+joint_logdensityof
 forward
 viterbi
 forward_backward

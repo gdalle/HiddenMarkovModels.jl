@@ -23,8 +23,8 @@ $(SIGNATURES)
 """
 function initialize_forward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
@@ -43,9 +43,9 @@ function forward!(
     storage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
+    control_seq::AbstractVector,
     t1::Integer,
     t2::Integer;
-    control_seq::AbstractVector,
 )
     (; α, B, c) = storage
 
@@ -89,14 +89,14 @@ $(SIGNATURES)
 function forward!(
     storage,
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
-    (; α, logL, B, c) = storage
+    (; α, logL) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-        logL[k] = forward!(storage, hmm, obs_seq, t1, t2; control_seq)
+        logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
     end
     check_finite(α)
     return nothing
@@ -111,11 +111,11 @@ Return a tuple `(storage.α, sum(storage.logL))` where `storage` is of type [`Fo
 """
 function forward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector;
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq)),
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
-    storage = initialize_forward(hmm, obs_seq; control_seq, seq_ends)
-    forward!(storage, hmm, obs_seq; control_seq, seq_ends)
+    storage = initialize_forward(hmm, obs_seq, control_seq; seq_ends)
+    forward!(storage, hmm, obs_seq, control_seq; seq_ends)
     return storage.α, sum(storage.logL)
 end
