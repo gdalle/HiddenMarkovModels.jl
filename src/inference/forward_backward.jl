@@ -66,7 +66,7 @@ function forward_backward!(
     control_seq::AbstractVector,
     transition_marginals::Bool=true,
 ) where {R}
-    @unpack α, β, c, γ, ξ, B, Bβ = storage
+    (; α, β, c, γ, ξ, B, Bβ) = storage
 
     # Forward (fill B, α, c and logL)
     logL = forward!(storage, hmm, obs_seq, t1, t2; control_seq)
@@ -107,7 +107,7 @@ function forward_backward!(
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
-    @unpack logL, α, β, c, γ, ξ, B, Bβ = storage
+    (; logL, α, β, c, γ, ξ, B, Bβ) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward_backward!(

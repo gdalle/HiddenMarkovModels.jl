@@ -29,7 +29,7 @@ function ChainRulesCore.rrule(
     )
     fb_storage = initialize_forward_backward(hmm, obs_seq; control_seq, seq_ends)
     forward_backward!(fb_storage, hmm, obs_seq; control_seq, seq_ends)
-    @unpack logL, α, β, γ, Bβ = fb_storage
+    (; logL, α, β, γ, Bβ) = fb_storage
     N, T = length(hmm), length(obs_seq)
     R = eltype(α)
 

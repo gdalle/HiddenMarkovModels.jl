@@ -49,7 +49,7 @@ function viterbi!(
     t2::Integer;
     control_seq::AbstractVector,
 ) where {R}
-    @unpack q, logB, ϕ, ψ = storage
+    (; q, logB, ϕ, ψ) = storage
 
     obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
     init = initialization(hmm)
@@ -90,7 +90,7 @@ function viterbi!(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 ) where {R}
-    @unpack q, logL, logB, ϕ, ψ = storage
+    (; q, logL, logB, ϕ, ψ) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = viterbi!(storage, hmm, obs_seq, t1, t2; control_seq)

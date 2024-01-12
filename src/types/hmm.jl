@@ -39,7 +39,7 @@ function StatsAPI.fit!(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 )
-    @unpack γ, ξ = fb_storage
+    (; γ, ξ) = fb_storage
     # Fit states
     hmm.init .= zero(eltype(hmm.init))
     hmm.trans .= zero(eltype(hmm.trans))

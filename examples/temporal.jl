@@ -10,7 +10,6 @@ using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using HMMTest  #src
 using Random
-using SimpleUnPack
 using StatsAPI
 using Test  #src
 
@@ -110,7 +109,7 @@ function StatsAPI.fit!(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 ) where {T}
-    @unpack γ, ξ = fb_storage
+    (; γ, ξ) = fb_storage
     L, N = period(hmm), length(hmm)
 
     hmm.init .= zero(T)

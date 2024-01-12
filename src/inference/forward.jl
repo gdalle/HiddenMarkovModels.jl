@@ -47,7 +47,7 @@ function forward!(
     t2::Integer;
     control_seq::AbstractVector,
 )
-    @unpack α, B, c = storage
+    (; α, B, c) = storage
 
     # Initialization
     Bₜ₁ = view(B, :, t1)
@@ -93,7 +93,7 @@ function forward!(
     control_seq::AbstractVector,
     seq_ends::AbstractVector{Int},
 )
-    @unpack α, logL, B, c = storage
+    (; α, logL, B, c) = storage
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward!(storage, hmm, obs_seq, t1, t2; control_seq)

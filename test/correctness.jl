@@ -5,7 +5,6 @@ using HiddenMarkovModels: LightDiagNormal, LightCategorical
 using HMMTest
 using LinearAlgebra
 using Random: Random, AbstractRNG, default_rng, seed!
-using SimpleUnPack
 using SparseArrays
 using Test
 
