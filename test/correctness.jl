@@ -6,10 +6,10 @@ using HMMTest
 using LinearAlgebra
 using Random: Random, AbstractRNG, default_rng, seed!
 using SparseArrays
+using StableRNGs
 using Test
 
-rng = default_rng()
-seed!(rng, 63)
+rng = StableRNG(63)
 
 ## Settings
 

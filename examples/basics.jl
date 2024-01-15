@@ -9,12 +9,12 @@ using HiddenMarkovModels
 using HMMTest  #src
 using LinearAlgebra
 using Random
+using StableRNGs
 using Test  #src
 
 #-
 
-rng = Random.default_rng()
-Random.seed!(rng, 63);
+rng = StableRNG(63)
 
 # ## Model
 

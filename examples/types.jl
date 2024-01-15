@@ -11,12 +11,12 @@ using LinearAlgebra
 using LogarithmicNumbers
 using Random
 using SparseArrays
+using StableRNGs
 using Test  #src
 
 #-
 
-rng = Random.default_rng()
-Random.seed!(rng, 63);
+rng = StableRNG(63)
 
 # ## Logarithmic numbers
 
