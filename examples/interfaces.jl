@@ -11,13 +11,13 @@ import HiddenMarkovModels as HMMs
 using HMMTest  #src
 using LinearAlgebra
 using Random: Random, AbstractRNG
+using StableRNGs
 using StatsAPI
 using Test  #src
 
 #-
 
-rng = Random.default_rng()
-Random.seed!(rng, 63);
+rng = StableRNG(63)
 
 # ## Custom distributions
 

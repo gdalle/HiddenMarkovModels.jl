@@ -10,13 +10,13 @@ using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using HMMTest  #src
 using Random
+using StableRNGs
 using StatsAPI
 using Test  #src
 
 #-
 
-rng = Random.default_rng()
-Random.seed!(rng, 63);
+rng = StableRNG(63)
 
 # ## Model
 

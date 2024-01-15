@@ -13,14 +13,14 @@ using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using LinearAlgebra
 using Random: Random, AbstractRNG
+using StableRNGs
 using StatsAPI
 using Test  #src
 using Zygote: Zygote
 
 #-
 
-rng = Random.default_rng()
-Random.seed!(rng, 63);
+rng = StableRNG(63)
 
 # ## Data generation
 

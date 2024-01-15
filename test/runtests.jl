@@ -9,22 +9,20 @@ using Test
 Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
-    if VERSION >= v"1.9"
-        @testset "Code formatting" begin
-            @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
-        end
+    @testset "Code formatting" begin
+        @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
+    end
 
-        @testset "Code quality" begin
-            Aqua.test_all(
-                HiddenMarkovModels; ambiguities=false, deps_compat=(check_extras=false,)
-            )
-        end
+    @testset "Code quality" begin
+        Aqua.test_all(
+            HiddenMarkovModels; ambiguities=false, deps_compat=(check_extras=false,)
+        )
+    end
 
-        @testset "Code linting" begin
-            using Distributions
-            using Zygote
-            JET.test_package(HiddenMarkovModels; target_defined_modules=true)
-        end
+    @testset "Code linting" begin
+        using Distributions
+        using Zygote
+        JET.test_package(HiddenMarkovModels; target_defined_modules=true)
     end
 
     @testset "Distributions" begin
