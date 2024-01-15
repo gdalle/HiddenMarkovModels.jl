@@ -48,9 +48,4 @@ include("types/hmm.jl")
 
 include("precompile.jl")
 
-if !isdefined(Base, :get_extension)
-    include("../ext/HiddenMarkovModelsDistributionsExt.jl")
-    include("../ext/HiddenMarkovModelsSparseArraysExt.jl")
-end
-
 end
