@@ -7,7 +7,7 @@ using HMMBase: HMMBase
 using JET: @test_opt, @test_call
 using Random: AbstractRNG
 using Statistics: mean
-using Test: @test, @testset
+using Test: @test, @testset, @test_broken
 
 export test_equal_hmms, test_coherent_algorithms
 export test_identical_hmmbase
