@@ -5,11 +5,14 @@
     dists = [LightDiagNormal(randn(D), ones(D)) for i in 1:N]
     hmm = HMM(init, trans, dists)
     state_seq, obs_seq = rand(hmm, T)
+    obs_mat = reduce(hcat, obs_seq)
 
-    logdensityof(hmm, obs_seq, state_seq)
-    logdensityof(hmm, obs_seq)
-    forward(hmm, obs_seq)
-    viterbi(hmm, obs_seq)
-    forward_backward(hmm, obs_seq)
-    baum_welch(hmm, obs_seq; max_iterations=1)
+    for obs_seq_or_mat in (obs_seq, obs_mat)
+        logdensityof(hmm, obs_seq_or_mat, state_seq)
+        logdensityof(hmm, obs_seq_or_mat)
+        forward(hmm, obs_seq_or_mat)
+        viterbi(hmm, obs_seq_or_mat)
+        forward_backward(hmm, obs_seq_or_mat)
+        baum_welch(hmm, obs_seq_or_mat; max_iterations=1)
+    end
 end

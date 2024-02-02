@@ -1,8 +1,8 @@
 
 function test_identical_hmmbase(
     rng::AbstractRNG,
-    hmm::AbstractHMM,
-    hmm_guess::Union{Nothing,AbstractHMM}=nothing;
+    hmm::AbstractHMM;
+    hmm_guess::Union{Nothing,AbstractHMM}=nothing,
     T::Integer,
     atol::Real=1e-5,
 )

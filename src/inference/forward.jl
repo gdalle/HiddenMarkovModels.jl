@@ -23,12 +23,12 @@ $(SIGNATURES)
 """
 function initialize_forward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
 )
-    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
-    R = eltype(hmm, obs_seq[1], control_seq[1])
+    N, T, K = length(hmm), duration(obs_seq), length(seq_ends)
+    R = eltype(hmm, obs_seq, control_seq, 1)
     α = Matrix{R}(undef, N, T)
     logL = Vector{R}(undef, K)
     B = Matrix{R}(undef, N, T)
@@ -42,8 +42,8 @@ $(SIGNATURES)
 function forward!(
     storage,
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector,
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat,
     t1::Integer,
     t2::Integer;
 )
@@ -51,7 +51,7 @@ function forward!(
 
     # Initialization
     Bₜ₁ = view(B, :, t1)
-    obs_logdensities!(Bₜ₁, hmm, obs_seq[t1], control_seq[t1])
+    obs_logdensities!(Bₜ₁, hmm, obs_seq, control_seq, t1)
     logm = maximum(Bₜ₁)
     Bₜ₁ .= exp.(Bₜ₁ .- logm)
 
@@ -66,11 +66,11 @@ function forward!(
     # Loop
     for t in t1:(t2 - 1)
         Bₜ₊₁ = view(B, :, t + 1)
-        obs_logdensities!(Bₜ₊₁, hmm, obs_seq[t + 1], control_seq[t + 1])
+        obs_logdensities!(Bₜ₊₁, hmm, obs_seq, control_seq, t + 1)
         logm = maximum(Bₜ₊₁)
         Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
 
-        trans = transition_matrix(hmm, control_seq[t])
+        trans = transition_matrix(hmm, control_seq, t)
         αₜ₊₁ = view(α, :, t + 1)
         mul!(αₜ₊₁, trans', view(α, :, t))
         αₜ₊₁ .*= Bₜ₊₁
@@ -89,8 +89,8 @@ $(SIGNATURES)
 function forward!(
     storage,
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
 )
     (; α, logL) = storage
@@ -111,9 +111,9 @@ Return a tuple `(storage.α, sum(storage.logL))` where `storage` is of type [`Fo
 """
 function forward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat=Fill(nothing, duration(obs_seq));
+    seq_ends::AbstractVector{Int}=Fill(duration(obs_seq), 1),
 )
     storage = initialize_forward(hmm, obs_seq, control_seq; seq_ends)
     forward!(storage, hmm, obs_seq, control_seq; seq_ends)

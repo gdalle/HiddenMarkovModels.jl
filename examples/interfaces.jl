@@ -242,6 +242,6 @@ control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:100];  #src
 control_seq = reduce(vcat, control_seqs);  #src
 seq_ends = cumsum(length.(control_seqs));  #src
 
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false)  #src
-test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
-test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, atol=0.05, init=false)  #src
+test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
+test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

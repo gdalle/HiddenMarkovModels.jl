@@ -24,12 +24,12 @@ $(SIGNATURES)
 """
 function initialize_viterbi(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
 )
-    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
-    R = eltype(hmm, obs_seq[1], control_seq[1])
+    N, T, K = length(hmm), duration(obs_seq), length(seq_ends)
+    R = eltype(hmm, obs_seq, control_seq, 1)
     q = Vector{Int}(undef, T)
     logL = Vector{R}(undef, K)
     logB = Matrix{R}(undef, N, T)
@@ -44,20 +44,20 @@ $(SIGNATURES)
 function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector,
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat,
     t1::Integer,
     t2::Integer;
 ) where {R}
     (; q, logB, ϕ, ψ) = storage
 
-    obs_logdensities!(view(logB, :, t1), hmm, obs_seq[t1], control_seq[t1])
+    obs_logdensities!(view(logB, :, t1), hmm, obs_seq, control_seq, t1)
     init = initialization(hmm)
     ϕ[:, t1] .= log.(init) .+ view(logB, :, t1)
 
     for t in (t1 + 1):t2
-        obs_logdensities!(view(logB, :, t), hmm, obs_seq[t], control_seq[t])
-        trans = transition_matrix(hmm, control_seq[t - 1])
+        obs_logdensities!(view(logB, :, t), hmm, obs_seq, control_seq, t)
+        trans = transition_matrix(hmm, control_seq, t - 1)
         for j in 1:length(hmm)
             i_max = 1
             score_max = ϕ[i_max, t - 1] + log(trans[i_max, j])
@@ -86,8 +86,8 @@ $(SIGNATURES)
 function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
 ) where {R}
     (; logL, ϕ) = storage
@@ -108,9 +108,9 @@ Return a tuple `(storage.q, sum(storage.logL))` where `storage` is of type [`Vit
 """
 function viterbi(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat=Fill(nothing, duration(obs_seq));
+    seq_ends::AbstractVector{Int}=Fill(duration(obs_seq), 1),
 )
     storage = initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
     viterbi!(storage, hmm, obs_seq, control_seq; seq_ends)

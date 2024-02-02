@@ -1,17 +1,15 @@
-_dcat(M1, M2) = cat(M1, M2; dims=3)
-
 function _params_and_loglikelihoods(
     hmm::AbstractHMM,
     obs_seq::Vector,
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    control_seq::AbstractVecOrMat=Fill(nothing, duration(obs_seq));
+    seq_ends::AbstractVector{Int}=Fill(duration(obs_seq), 1),
 )
     init = initialization(hmm)
-    trans_by_time = mapreduce(_dcat, eachindex(control_seq)) do t
-        transition_matrix(hmm, control_seq[t])
+    trans_by_time = mapreduce(dcat, 1:duration(obs_seq)) do t
+        transition_matrix(hmm, control_seq, t)
     end
-    logB = mapreduce(hcat, eachindex(obs_seq, control_seq)) do t
-        logdensityof.(obs_distributions(hmm, control_seq[t]), (obs_seq[t],))
+    logB = mapreduce(hcat, 1:duration(obs_seq)) do t
+        logdensityof.(obs_distributions(hmm, control_seq, t), (at_time(obs_seq, t),))
     end
     return init, trans_by_time, logB
 end
@@ -20,9 +18,9 @@ function ChainRulesCore.rrule(
     rc::RuleConfig,
     ::typeof(logdensityof),
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat=Fill(nothing, duration(obs_seq));
+    seq_ends::AbstractVector{Int}=Fill(duration(obs_seq), 1),
 )
     _, pullback = rrule_via_ad(
         rc, _params_and_loglikelihoods, hmm, obs_seq, control_seq; seq_ends
@@ -30,7 +28,7 @@ function ChainRulesCore.rrule(
     fb_storage = initialize_forward_backward(hmm, obs_seq, control_seq; seq_ends)
     forward_backward!(fb_storage, hmm, obs_seq, control_seq; seq_ends)
     (; logL, α, γ, Bβ) = fb_storage
-    N, T = length(hmm), length(obs_seq)
+    N, T = length(hmm), duration(obs_seq)
     R = eltype(α)
 
     Δinit = zeros(R, N)

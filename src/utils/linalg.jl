@@ -27,3 +27,5 @@ function mul_rows_cols!(
     end
     return nothing
 end
+
+dcat(M1::AbstractArray, M2::AbstractArray) = cat(M1, M2; dims=3)

@@ -148,5 +148,5 @@ hcat(hmm_est.dist_coeffs[2], hmm.dist_coeffs[2])
 
 # ## Tests  #src
 
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.08, init=false)  #src
-test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, atol=0.08, init=false)  #src
+test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

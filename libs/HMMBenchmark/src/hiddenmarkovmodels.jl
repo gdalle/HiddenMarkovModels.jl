@@ -24,7 +24,7 @@ function build_benchmarkables(
     instance::Instance,
     algos::Vector{String},
 )
-    (; obs_dim, seq_length, nb_seqs, bw_iter) = instance
+    (; custom_dist, obs_dim, seq_length, nb_seqs, bw_iter) = instance
 
     hmm = build_model(rng, implem; instance)
     data = randn(rng, nb_seqs, seq_length, obs_dim)
@@ -32,10 +32,14 @@ function build_benchmarkables(
     if obs_dim == 1
         obs_seqs = [[data[k, t, 1] for t in 1:seq_length] for k in 1:nb_seqs]
     else
-        obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
+        if custom_dist
+            obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
+        else
+            obs_seqs = [data[k, :, :] for k in 1:nb_seqs]
+        end
     end
     obs_seq = reduce(vcat, obs_seqs)
-    control_seq = fill(nothing, length(obs_seq))
+    control_seq = Fill(nothing, duration(obs_seq))
     seq_ends = cumsum(length.(obs_seqs))
 
     benchs = Dict()

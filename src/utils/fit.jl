@@ -11,7 +11,9 @@ Override for Distributions.jl (in the package extension)
 
     dists[i] = fit(eltype(dists), x, w)
 """
-function fit_in_sequence!(dists::AbstractVector, i::Integer, x, w)
+function fit_in_sequence!(
+    dists::AbstractVector, i::Integer, x::AbstractVecOrMat, w::AbstractVector
+)
     fit!(dists[i], x, w)
     return nothing
 end

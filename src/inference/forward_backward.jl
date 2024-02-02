@@ -28,21 +28,21 @@ $(SIGNATURES)
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
     transition_marginals=true,
 )
-    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
-    R = eltype(hmm, obs_seq[1], control_seq[1])
-    trans = transition_matrix(hmm, control_seq[1])
+    N, T, K = length(hmm), duration(obs_seq), length(seq_ends)
+    R = eltype(hmm, obs_seq, control_seq, 1)
+    trans = transition_matrix(hmm, control_seq, 1)
     M = typeof(mysimilar_mutable(trans, R))
 
     γ = Matrix{R}(undef, N, T)
     ξ = Vector{M}(undef, T)
     if transition_marginals
         for t in 1:T
-            ξ[t] = mysimilar_mutable(transition_matrix(hmm, control_seq[t]), R)
+            ξ[t] = mysimilar_mutable(transition_matrix(hmm, control_seq, t), R)
         end
     end
     logL = Vector{R}(undef, K)
@@ -60,8 +60,8 @@ $(SIGNATURES)
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector,
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat,
     t1::Integer,
     t2::Integer;
     transition_marginals::Bool=true,
@@ -74,7 +74,7 @@ function forward_backward!(
     # Backward
     β[:, t2] .= c[t2]
     for t in (t2 - 1):-1:t1
-        trans = transition_matrix(hmm, control_seq[t])
+        trans = transition_matrix(hmm, control_seq, t)
         Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
         mul!(view(β, :, t), trans, view(Bβ, :, t + 1))
         lmul!(c[t], view(β, :, t))
@@ -87,7 +87,7 @@ function forward_backward!(
     # Transition marginals
     if transition_marginals
         for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t])
+            trans = transition_matrix(hmm, control_seq, t)
             mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
         end
         ξ[t2] .= zero(R)
@@ -102,8 +102,8 @@ $(SIGNATURES)
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat;
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
@@ -127,9 +127,9 @@ Return a tuple `(storage.γ, sum(storage.logL))` where `storage` is of type [`Fo
 """
 function forward_backward(
     hmm::AbstractHMM,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat=Fill(nothing, duration(obs_seq));
+    seq_ends::AbstractVector{Int}=Fill(duration(obs_seq), 1),
 )
     transition_marginals = false
     storage = initialize_forward_backward(

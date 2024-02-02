@@ -51,6 +51,12 @@ function Base.eltype(hmm::AbstractHMM, obs, control)
     return promote_type(init_type, trans_type, logdensity_type)
 end
 
+function Base.eltype(
+    hmm::AbstractHMM, obs_seq::AbstractVecOrMat, control_seq::AbstractVecOrMat, t::Integer
+)
+    return eltype(hmm, at_time(obs_seq, t), at_time(control_seq, t))
+end
+
 """
     initialization(hmm)
 
@@ -66,6 +72,10 @@ Return the matrix of state transition probabilities for `hmm` (possibly when `co
 """
 transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
 
+function transition_matrix(hmm::AbstractHMM, control_seq::AbstractVecOrMat, t::Integer)
+    return transition_matrix(hmm, at_time(control_seq, t))
+end
+
 """
     obs_distributions(hmm)
     obs_distributions(hmm, control)
@@ -80,7 +90,18 @@ These distribution objects should implement
 """
 obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
-function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
+function obs_distributions(hmm::AbstractHMM, control_seq::AbstractVecOrMat, t::Integer)
+    return obs_distributions(hmm, at_time(control_seq, t))
+end
+
+function obs_logdensities!(
+    logb::AbstractVector,
+    hmm::AbstractHMM,
+    obs_seq::AbstractVecOrMat,
+    control_seq::AbstractVecOrMat,
+    t::Integer,
+)
+    obs, control = at_time(obs_seq, t), at_time(control_seq, t)
     dists = obs_distributions(hmm, control)
     @inbounds for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
@@ -93,8 +114,8 @@ end
     fit!(
         hmm::AbstractHMM,
         fb_storage::ForwardBackwardStorage,
-        obs_seq::AbstractVector;
-        control_seq::AbstractVector,
+        obs_seq::AbstractVecOrMat;
+        control_seq::AbstractVecOrMat,
         seq_ends::AbstractVector{Int},
     )
 
@@ -114,7 +135,7 @@ Simulate `hmm` for `T` time steps, or when the sequence `control_seq` is applied
     
 Return a named tuple `(; state_seq, obs_seq)`.
 """
-function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
+function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVecOrMat)
     T = length(control_seq)
     dummy_log_probas = fill(-Inf, length(hmm))
 
@@ -142,7 +163,7 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
     return (; state_seq=state_seq, obs_seq=obs_seq)
 end
 
-function Random.rand(hmm::AbstractHMM, control_seq::AbstractVector)
+function Random.rand(hmm::AbstractHMM, control_seq::AbstractVecOrMat)
     return rand(default_rng(), hmm, control_seq)
 end
 
@@ -161,4 +182,4 @@ end
 
 Return the prior loglikelihood associated with the parameters of `hmm`.
 """
-DensityInterface.logdensityof(hmm::AbstractHMM) = 0
+DensityInterface.logdensityof(hmm::AbstractHMM) = false

@@ -29,6 +29,7 @@ export seq_limits
 
 include("types/abstract_hmm.jl")
 
+include("utils/defaults.jl")
 include("utils/linalg.jl")
 include("utils/check.jl")
 include("utils/probvec_transmat.jl")

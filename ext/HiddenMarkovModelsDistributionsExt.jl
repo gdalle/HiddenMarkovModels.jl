@@ -1,6 +1,6 @@
 module HiddenMarkovModelsDistributionsExt
 
-using HiddenMarkovModels: HiddenMarkovModels
+using HiddenMarkovModels: HiddenMarkovModels, dcat
 using Distributions:
     Distributions,
     Distribution,
@@ -16,12 +16,24 @@ function HiddenMarkovModels.fit_in_sequence!(
 end
 
 function HiddenMarkovModels.fit_in_sequence!(
+    dists::AbstractVector{D}, i::Integer, x_mat::AbstractMatrix, w::AbstractVector
+) where {D<:MultivariateDistribution}
+    return dists[i] = fit(D, x_mat, w)
+end
+
+function HiddenMarkovModels.fit_in_sequence!(
     dists::AbstractVector{D},
     i::Integer,
     x_vecs::AbstractVector{<:AbstractVector},
     w::AbstractVector,
 ) where {D<:MultivariateDistribution}
     return dists[i] = fit(D, reduce(hcat, x_vecs), w)
+end
+
+function HiddenMarkovModels.fit_in_sequence!(
+    dists::AbstractVector{D}, i::Integer, x_tens::AbstractArray{Any,3}, w::AbstractVector
+) where {D<:MatrixDistribution}
+    return dists[i] = fit(D, x_tens, w)
 end
 
 function HiddenMarkovModels.fit_in_sequence!(
@@ -32,7 +44,5 @@ function HiddenMarkovModels.fit_in_sequence!(
 ) where {D<:MatrixDistribution}
     return dists[i] = fit(D, reduce(dcat, x_mats), w)
 end
-
-dcat(M1, M2) = cat(M1, M2; dims=3)
 
 end
