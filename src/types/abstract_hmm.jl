@@ -99,6 +99,8 @@ end
     )
 
 Update `hmm` in-place based on information generated during forward-backward.
+
+This function is allowed to reuse `fb_storage` as a scratch space, so its contents should not be trusted afterwards.
 """
 StatsAPI.fit!  # TODO: complete
 

@@ -41,14 +41,21 @@ function StatsAPI.fit!(
 )
     (; γ, ξ) = fb_storage
     # Fit states
+    @threads for k in eachindex(seq_ends)
+        t1, t2 = seq_limits(seq_ends, k)
+        # use ξ[t2] as scratch space since it is zero anyway
+        scratch = ξ[t2]
+        scratch .= zero(eltype(scratch))
+        for t in t1:(t2 - 1)
+            scratch .+= ξ[t]
+        end
+    end
     hmm.init .= zero(eltype(hmm.init))
     hmm.trans .= zero(eltype(hmm.trans))
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         hmm.init .+= view(γ, :, t1)
-        for t in t1:(t2 - 1)
-            mynonzeros(hmm.trans) .+= mynonzeros(ξ[t])
-        end
+        hmm.trans .+= ξ[t2]
     end
     sum_to_one!(hmm.init)
     foreach(sum_to_one!, eachrow(hmm.trans))
