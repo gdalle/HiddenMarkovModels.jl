@@ -13,6 +13,7 @@ scratchpad.jl
 **/.CondaPkg
 **/__pycache__
 *.ipynb
+*.ipynb_checkpoints
 
 *.csv
 *.txt
@@ -21,6 +22,3 @@ scratchpad.jl
 
 /docs/src/index.md
 /docs/src/examples/*.md
-
-.vscode/
-*.ipynb
