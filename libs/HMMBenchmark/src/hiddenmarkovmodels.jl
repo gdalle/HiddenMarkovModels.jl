@@ -1,44 +1,48 @@
-function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algos)
-    (; sparse, custom_dist, nb_states, obs_dim, seq_length, nb_seqs, bw_iter) =
-        configuration
+struct HiddenMarkovModelsImplem <: Implementation end
 
-    # Model
-    init = ones(nb_states) / nb_states
-    if sparse
-        trans = spdiagm(
-            0 => ones(nb_states) / 2,
-            +1 => ones(nb_states - 1) / 2,
-            -(nb_states - 1) => ones(1) / 2,
-        )
-    else
-        trans = ones(nb_states, nb_states) / nb_states
-    end
+function build_model(rng::AbstractRNG, ::HiddenMarkovModelsImplem; instance::Instance)
+    (; custom_dist, nb_states, obs_dim) = instance
+    (; init, trans, means, stds) = build_params(rng; instance)
 
     if custom_dist
-        dists = [LightDiagNormal(i .* ones(obs_dim), ones(obs_dim)) for i in 1:nb_states]
+        dists = [LightDiagNormal(means[:, i], stds[:, i]) for i in 1:nb_states]
     else
         if obs_dim == 1
-            dists = [Normal(i, 1.0) for i in 1:nb_states]
+            dists = [Normal(means[1, i], stds[1, i]) for i in 1:nb_states]
         else
-            dists = [
-                MvNormal(i .* ones(obs_dim), Diagonal(ones(obs_dim))) for i in 1:nb_states
-            ]
+            dists = [MvNormal(means[:, i], Diagonal(stds[:, i])) for i in 1:nb_states]
         end
     end
-    hmm = HiddenMarkovModels.HMM(init, trans, dists)
 
-    # Data
-    obs_seqs = [rand(rng, hmm, seq_length).obs_seq for _ in 1:nb_seqs]
+    hmm = HiddenMarkovModels.HMM(init, trans, dists)
+    return hmm
+end
+
+function build_benchmarkables(
+    rng::AbstractRNG,
+    implem::HiddenMarkovModelsImplem;
+    instance::Instance,
+    algos::Vector{String},
+)
+    (; obs_dim, seq_length, nb_seqs, bw_iter) = instance
+
+    hmm = build_model(rng, implem; instance)
+    data = randn(rng, nb_seqs, seq_length, obs_dim)
+
+    if obs_dim == 1
+        obs_seqs = [[data[k, t, 1] for t in 1:seq_length] for k in 1:nb_seqs]
+    else
+        obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
+    end
     obs_seq = reduce(vcat, obs_seqs)
     control_seq = fill(nothing, length(obs_seq))
     seq_ends = cumsum(length.(obs_seqs))
 
-    # Benchmarks
     benchs = Dict()
 
     if "rand" in algos
         benchs["rand"] = @benchmarkable begin
-            [rand($hmm, $seq_length).obs_seq for _ in 1:($nb_seqs)]
+            [rand($rng, $hmm, $seq_length).obs_seq for _ in 1:($nb_seqs)]
         end evals = 1 samples = 100
     end
 
@@ -99,7 +103,7 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
             baum_welch!(
                 fb_storage,
                 logL_evolution,
-                $hmm,
+                hmm,
                 $obs_seq,
                 $control_seq;
                 seq_ends=$seq_ends,
@@ -108,8 +112,9 @@ function benchmarkables_hiddenmarkovmodels(rng::AbstractRNG; configuration, algo
                 loglikelihood_increasing=false,
             )
         end evals = 1 samples = 100 setup = (
+            hmm = build_model($rng, $implem; instance=$instance);
             fb_storage = initialize_forward_backward(
-                $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
+                hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
             );
             logL_evolution = Float64[];
             sizehint!(logL_evolution, $bw_iter)

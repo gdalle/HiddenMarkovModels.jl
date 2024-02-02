@@ -1,4 +1,8 @@
-function benchmarkables_dynamax(rng::AbstractRNG; configuration, algos)
-    benchs = BenchmarkGroup()
+struct dynamaxImplem <: Implementation end
+
+function HMMBenchmark.build_benchmarkables(
+    rng::AbstractRNG, implem::dynamaxImplem; instance::Instance, algos::Vector{String}
+)
+    benchs = Dict()
     return benchs
 end

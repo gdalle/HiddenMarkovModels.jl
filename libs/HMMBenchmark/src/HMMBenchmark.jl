@@ -1,5 +1,6 @@
 module HMMBenchmark
 
+using Base.Threads
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
@@ -16,15 +17,20 @@ using HiddenMarkovModels:
     initialize_forward_backward,
     forward_backward!,
     baum_welch!
-using LinearAlgebra: Diagonal, SymTridiagonal
+using LinearAlgebra: BLAS, Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
 using SparseArrays: spdiagm
 
-export Configuration, define_suite, parse_results, print_julia_setup
+export AbstractImplementation, Instance
+export define_suite, parse_results, print_julia_setup
 
-include("configuration.jl")
-include("algos.jl")
+abstract type Implementation end
+Base.string(implem::Implementation) = string(typeof(implem))[begin:(end - length("Implem"))]
+
+include("instance.jl")
+include("params.jl")
+include("hiddenmarkovmodels.jl")
 include("suite.jl")
 
 end

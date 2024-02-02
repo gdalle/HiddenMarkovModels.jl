@@ -1,26 +1,37 @@
-function define_suite(rng::AbstractRNG; configurations, algos)
+function to_namedtuple(x)
+    return NamedTuple(n => getfield(x, n) for n in fieldnames(typeof(x)))
+end
+
+function define_suite(
+    rng::AbstractRNG,
+    implems::Vector{<:Implementation}=[HiddenMarkovModelsImplem()];
+    instances::Vector{<:Instance},
+    algos::Vector{String},
+)
     SUITE = BenchmarkGroup()
-    implem = "HiddenMarkovModels.jl"
-    for configuration in configurations
-        bench_tup = benchmarkables_hiddenmarkovmodels(rng; configuration, algos)
-        for (algo, bench) in pairs(bench_tup)
-            SUITE[implem][string(configuration)][algo] = bench
+    for implem in implems
+        for instance in instances
+            bench_tup = build_benchmarkables(rng, implem; instance, algos)
+            for (algo, bench) in pairs(bench_tup)
+                SUITE[string(implem)][string(instance)][algo] = bench
+            end
         end
     end
     return SUITE
 end
 
-function parse_results(results; path=nothing)
+function parse_results(results; path=nothing, agg=minimum)
+    results = agg(results)
     data = DataFrame()
-    for implem in identity.(keys(results))
-        for configuration_str in identity.(keys(results[implem]))
-            configuration = Configuration(configuration_str)
-            for algo in identity.(keys(results[implem][configuration_str]))
-                perf = results[implem][configuration_str][algo]
+    for implem_str in identity.(keys(results))
+        for instance_str in identity.(keys(results[implem_str]))
+            instance = Instance(instance_str)
+            for algo in identity.(keys(results[implem_str][instance_str]))
+                perf = results[implem_str][instance_str][algo]
                 (; time, gctime, memory, allocs) = perf
                 row = merge(
-                    (; implem, algo),
-                    to_namedtuple(configuration),
+                    (; implem=implem_str, algo),
+                    to_namedtuple(instance),
                     (; time, gctime, memory, allocs),
                 )
                 push!(data, row)
@@ -34,17 +45,4 @@ function parse_results(results; path=nothing)
         end
     end
     return data
-end
-
-function print_julia_setup(; path)
-    open(path, "w") do file
-        redirect_stdout(file) do
-            versioninfo()
-            println("\n# Multithreading\n")
-            println("Julia threads = $(Threads.nthreads())")
-            println("OpenBLAS threads = $(BLAS.get_num_threads())")
-            println("\n# Julia packages\n")
-            Pkg.status()
-        end
-    end
 end
