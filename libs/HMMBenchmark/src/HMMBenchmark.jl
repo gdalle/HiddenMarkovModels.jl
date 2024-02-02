@@ -21,6 +21,7 @@ using LinearAlgebra: BLAS, Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
 using SparseArrays: spdiagm
+using Statistics: mean, median, std
 
 export AbstractImplementation, Instance
 export define_suite, parse_results, print_julia_setup

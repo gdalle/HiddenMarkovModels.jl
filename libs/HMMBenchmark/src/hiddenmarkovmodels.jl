@@ -103,7 +103,7 @@ function build_benchmarkables(
             baum_welch!(
                 fb_storage,
                 logL_evolution,
-                hmm,
+                hmm_guess,
                 $obs_seq,
                 $control_seq;
                 seq_ends=$seq_ends,
@@ -112,9 +112,9 @@ function build_benchmarkables(
                 loglikelihood_increasing=false,
             )
         end evals = 1 samples = 100 setup = (
-            hmm = build_model($rng, $implem; instance=$instance);
+            hmm_guess = build_model($rng, $implem; instance=$instance);
             fb_storage = initialize_forward_backward(
-                hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
+                hmm_guess, $obs_seq, $control_seq; seq_ends=$seq_ends
             );
             logL_evolution = Float64[];
             sizehint!(logL_evolution, $bw_iter)

@@ -20,20 +20,22 @@ function define_suite(
     return SUITE
 end
 
-function parse_results(results; path=nothing, agg=minimum)
-    results = agg(results)
+function parse_results(
+    results; path=nothing, aggregators=[minimum, median, maximum, mean, std]
+)
     data = DataFrame()
     for implem_str in identity.(keys(results))
         for instance_str in identity.(keys(results[implem_str]))
             instance = Instance(instance_str)
             for algo in identity.(keys(results[implem_str][instance_str]))
                 perf = results[implem_str][instance_str][algo]
-                (; time, gctime, memory, allocs) = perf
-                row = merge(
-                    (; implem=implem_str, algo),
-                    to_namedtuple(instance),
-                    (; time, gctime, memory, allocs),
-                )
+                perf_dict = Dict{Symbol,Number}()
+                perf_dict[:samples] = length(perf.times)
+                for agg in aggregators
+                    perf_dict[Symbol("time_$agg")] = agg(perf.times)
+                end
+                row = merge((; implem=implem_str, algo), to_namedtuple(instance))
+                row = merge(row, perf_dict)
                 push!(data, row)
             end
         end

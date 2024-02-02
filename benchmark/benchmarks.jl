@@ -1,9 +1,9 @@
 using BenchmarkTools
 using HMMBenchmark
 using Random
+using StableRNGs
 
-rng = Random.default_rng()
-Random.seed!(rng, 63)
+rng = StableRNG(63)
 
 algos = ["rand", "logdensity", "forward", "viterbi", "forward_backward", "baum_welch"]
 instances = [

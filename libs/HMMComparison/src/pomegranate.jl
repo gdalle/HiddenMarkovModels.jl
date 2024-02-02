@@ -54,27 +54,27 @@ function HMMBenchmark.build_benchmarkables(
 
     if "logdensity" in algos
         benchs["logdensity"] = @benchmarkable begin
-            pycall($(hmm.forward), $obs_tens_py)
+            $(hmm.forward)($obs_tens_py)
         end evals = 1 samples = 100
     end
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
-            pycall($(hmm.forward), $obs_tens_py)
+            $(hmm.forward)($obs_tens_py)
         end evals = 1 samples = 100
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
-            pycall($(hmm.forward_backward), $obs_tens_py)
+            $(hmm.forward_backward)($obs_tens_py)
         end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
-            pycall($(hmm.fit), $obs_tens_py)
+            hmm_guess.fit($obs_tens_py)
         end evals = 1 samples = 100 setup = (
-            hmm = build_model($rng, $implem; instance=$instance)
+            hmm_guess = build_model($rng, $implem; instance=$instance)
         )
     end
 

@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "a1b4318401476bf26277ef3565ca4043fa58d314"
+project_hash = "e05ed926575e94b72904ad898b09f017dc14d96a"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -443,6 +443,12 @@ weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
+
+[[deps.StableRNGs]]
+deps = ["Random", "Test"]
+git-tree-sha1 = "ddc1a7b85e760b5285b50b882fa91e40c603be47"
+uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
+version = "1.0.1"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]

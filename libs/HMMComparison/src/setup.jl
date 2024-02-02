@@ -6,7 +6,7 @@ function print_python_setup(; path)
             println("\n# Python packages\n")
         end
         redirect_stderr(file) do
-            PythonCall.CondaPkg.status()
+            CondaPkg.status()
         end
     end
 end

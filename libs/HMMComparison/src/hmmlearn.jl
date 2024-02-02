@@ -20,9 +20,8 @@ function HMMBenchmark.build_model(
 
     hmm.startprob_ = np.array(init)
     hmm.transmat_ = np.array(trans)
-    hmm.means_ = np.array(means')
-    hmm.means_ = np.array(means')
-    hmm.covars_ = np.array((stds .^ 2)')
+    hmm.means_ = np.array(transpose(means))
+    hmm.covars_ = np.array(transpose(stds .^ 2))
     return hmm
 end
 
@@ -43,33 +42,33 @@ function HMMBenchmark.build_benchmarkables(
 
     if "logdensity" in algos
         benchs["logdensity"] = @benchmarkable begin
-            pycall($(hmm.score), $obs_mat_concat_py, $obs_mat_len_py)
+            $(hmm.score)($obs_mat_concat_py, $obs_mat_len_py)
         end evals = 1 samples = 100
     end
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
-            pycall($(hmm.score), $obs_mat_concat_py, $obs_mat_len_py)
+            $(hmm.score)($obs_mat_concat_py, $obs_mat_len_py)
         end evals = 1 samples = 100
     end
 
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
-            pycall($(hmm.decode), $obs_mat_concat_py, $obs_mat_len_py)
+            $(hmm.decode)($obs_mat_concat_py, $obs_mat_len_py)
         end evals = 1 samples = 100
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
-            pycall($(hmm.predict_proba), $obs_mat_concat_py, $obs_mat_len_py)
+            $(hmm.predict_proba)($obs_mat_concat_py, $obs_mat_len_py)
         end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
-            pycall(hmm.fit, $obs_mat_concat_py, $obs_mat_len_py)
+            hmm_guess.fit($obs_mat_concat_py, $obs_mat_len_py)
         end evals = 1 samples = 100 setup = (
-            hmm = build_model($rng, $implem; instance=$instance)
+            hmm_guess = build_model($rng, $implem; instance=$instance)
         )
     end
 

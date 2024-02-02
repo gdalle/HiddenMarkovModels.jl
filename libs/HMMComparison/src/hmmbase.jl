@@ -27,9 +27,9 @@ function HMMBenchmark.build_benchmarkables(
     data = randn(rng, nb_seqs, seq_length, obs_dim)
 
     if obs_dim == 1
-        obs_mat = reduce(vcat, data[k, :, 1] for k in nb_seqs)
+        obs_mat = reduce(vcat, data[k, :, 1] for k in 1:nb_seqs)
     else
-        obs_mat = reduce(vcat, data[k, :, :] for k in nb_seqs)
+        obs_mat = reduce(vcat, data[k, :, :] for k in 1:nb_seqs)
     end
 
     benchs = BenchmarkGroup()
