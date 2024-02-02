@@ -12,46 +12,38 @@ function test_allocations(
             rand(rng, hmm, control_seq[t1:t2]).obs_seq
         end
 
+        t1, t2 = 1, seq_ends[1]
+
         ## Forward
-        forward(hmm, obs_seq, control_seq; seq_ends)  # compile
         f_storage = HMMs.initialize_forward(hmm, obs_seq, control_seq; seq_ends)
-        allocs = @allocated HMMs.forward!(f_storage, hmm, obs_seq, control_seq; seq_ends)
+        allocs = @ballocated HMMs.forward!(
+            $f_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
+        ) evals = 1 samples = 1
         @test allocs == 0
 
         ## Viterbi
-        viterbi(hmm, obs_seq, control_seq; seq_ends)  # compile
         v_storage = HMMs.initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
-        allocs = @allocated HMMs.viterbi!(v_storage, hmm, obs_seq, control_seq; seq_ends)
+        allocs = @ballocated HMMs.viterbi!(
+            $v_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
+        ) evals = 1 samples = 1
         @test allocs == 0
 
         ## Forward-backward
-        forward_backward(hmm, obs_seq, control_seq; seq_ends)  # compile
         fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq, control_seq; seq_ends)
-        allocs = @allocated HMMs.forward_backward!(
-            fb_storage, hmm, obs_seq, control_seq; seq_ends
-        )
+        allocs = @ballocated HMMs.forward_backward!(
+            $fb_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
+        ) evals = 1 samples = 1
         @test allocs == 0
 
+        ## Baum-Welch
         if !isnothing(hmm_guess)
-            ## Baum-Welch
-            baum_welch(hmm_guess, obs_seq, control_seq; seq_ends, max_iterations=1)  # compile
             fb_storage = HMMs.initialize_forward_backward(
                 hmm_guess, obs_seq, control_seq; seq_ends
             )
-            logL_evolution = Float64[]
-            sizehint!(logL_evolution, 1)
-            hmm_guess = deepcopy(hmm_guess)
-            allocs = @allocated HMMs.baum_welch!(
-                fb_storage,
-                logL_evolution,
-                hmm_guess,
-                obs_seq,
-                control_seq;
-                seq_ends,
-                atol=-Inf,
-                max_iterations=1,
-                loglikelihood_increasing=false,
-            )
+            HMMs.forward_backward!(fb_storage, hmm, obs_seq, control_seq; seq_ends)
+            allocs = @ballocated fit!(
+                $hmm_guess, $fb_storage, $obs_seq, $control_seq; seq_ends=$seq_ends
+            ) evals = 1 samples = 1 setup = (hmm_guess = deepcopy($hmm))
             @test allocs == 0
         end
     end

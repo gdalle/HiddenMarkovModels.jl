@@ -94,7 +94,7 @@ function forward!(
     seq_ends::AbstractVector{Int},
 )
     (; α, logL) = storage
-    for k in eachindex(seq_ends)
+    @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
     end

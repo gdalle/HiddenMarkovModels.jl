@@ -108,7 +108,7 @@ function forward_backward!(
     transition_marginals::Bool=true,
 ) where {R}
     (; logL, γ) = storage
-    for k in eachindex(seq_ends)
+    @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward_backward!(
             storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals

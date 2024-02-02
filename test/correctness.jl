@@ -30,8 +30,8 @@ p_guess = [[0.7, 0.3], [0.3, 0.7]]
 σ = ones(2)
 
 control_seqs = [fill(nothing, rand(rng, T:(2T))) for k in 1:K];
-control_seq = reduce(vcat, control_seqs)
-seq_ends = cumsum(length.(control_seqs))
+control_seq = reduce(vcat, control_seqs);
+seq_ends = cumsum(length.(control_seqs));
 
 ## Uncontrolled
 
