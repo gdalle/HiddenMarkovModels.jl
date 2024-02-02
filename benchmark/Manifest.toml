@@ -155,7 +155,7 @@ deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.HMMBenchmark]]
-deps = ["BenchmarkTools", "CSV", "DataFrames", "Distributions", "HiddenMarkovModels", "LinearAlgebra", "Pkg", "Random", "SparseArrays", "StableRNGs", "Statistics"]
+deps = ["BenchmarkTools", "CSV", "DataFrames", "Distributions", "FillArrays", "HiddenMarkovModels", "LinearAlgebra", "Pkg", "Random", "SparseArrays", "StableRNGs", "Statistics"]
 path = "../libs/HMMBenchmark"
 uuid = "557005d5-2e4a-43f9-8aa7-ba8df2d03179"
 version = "0.1.0"

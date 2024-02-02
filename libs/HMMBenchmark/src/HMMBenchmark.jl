@@ -5,6 +5,7 @@ using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
 using Distributions: Normal, MvNormal
+using FillArrays: Fill
 using HiddenMarkovModels
 using HiddenMarkovModels:
     LightDiagNormal,
