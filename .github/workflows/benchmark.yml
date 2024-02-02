@@ -16,9 +16,13 @@ jobs:
           version: 1
       - uses: julia-actions/julia-buildpkg@latest
       - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+        run: julia -e 'using Pkg; pkg"add LinearAlgebra PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
-        run: julia -e 'using BenchmarkCI, PkgBenchmark; BenchmarkCI.judge(baseline="origin/main", target=BenchmarkConfig(env=Dict("JULIA_NUM_THREADS" => "auto")))'
+        run: julia -e '
+          using BenchmarkCI, PkgBenchmark, LinearAlgebra
+          BLAS.set_num_threads(1)
+          config = BenchmarkConfig(env=Dict("JULIA_NUM_THREADS" => "auto"))
+          BenchmarkCI.judge(baseline="origin/main", target=config)'
       - name: Print judgement
         run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
       - name: Comment judgement
