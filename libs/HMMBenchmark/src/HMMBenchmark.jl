@@ -17,7 +17,7 @@ using HiddenMarkovModels:
     initialize_forward_backward,
     forward_backward!,
     baum_welch!,
-    all_nothing
+    duration
 using LinearAlgebra: BLAS, Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
