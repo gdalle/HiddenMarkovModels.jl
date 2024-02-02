@@ -18,6 +18,8 @@ using StatsAPI
 using Test  #src
 using Zygote: Zygote
 
+Enzyme.API.runtimeActivity!(true)
+
 #-
 
 rng = StableRNG(63)
