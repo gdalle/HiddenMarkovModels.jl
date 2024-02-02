@@ -29,18 +29,22 @@ function build_benchmarkables(
     hmm = build_model(rng, implem; instance)
     data = randn(rng, nb_seqs, seq_length, obs_dim)
 
-    if obs_dim == 1
-        obs_seqs = [[data[k, t, 1] for t in 1:seq_length] for k in 1:nb_seqs]
+    if custom_dist
+        obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
     else
-        if custom_dist
-            obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
+        if obs_dim == 1
+            obs_seqs = [[data[k, t, 1] for t in 1:seq_length] for k in 1:nb_seqs]
         else
             obs_seqs = [collect(data[k, :, :]') for k in 1:nb_seqs]
         end
     end
-    obs_seq = reduce(vcat, obs_seqs)
+    if first(obs_seqs) isa AbstractVector
+        obs_seq = reduce(vcat, obs_seqs)
+    else
+        obs_seq = reduce(hcat, obs_seqs)
+    end
     control_seq = Fill(nothing, duration(obs_seq))
-    seq_ends = cumsum(length.(obs_seqs))
+    seq_ends = cumsum(duration.(obs_seqs))
 
     benchs = Dict()
 
