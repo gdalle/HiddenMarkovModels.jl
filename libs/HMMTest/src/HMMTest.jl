@@ -1,5 +1,6 @@
 module HMMTest
 
+using BenchmarkTools: @ballocated
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using HMMBase: HMMBase

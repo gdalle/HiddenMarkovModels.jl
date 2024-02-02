@@ -91,7 +91,7 @@ function viterbi!(
     seq_ends::AbstractVector{Int},
 ) where {R}
     (; logL, ϕ) = storage
-    for k in eachindex(seq_ends)
+    @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
     end
