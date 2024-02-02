@@ -35,7 +35,7 @@ function build_benchmarkables(
         if custom_dist
             obs_seqs = [[data[k, t, :] for t in 1:seq_length] for k in 1:nb_seqs]
         else
-            obs_seqs = [data[k, :, :] for k in 1:nb_seqs]
+            obs_seqs = [collect(data[k, :, :]') for k in 1:nb_seqs]
         end
     end
     obs_seq = reduce(vcat, obs_seqs)
