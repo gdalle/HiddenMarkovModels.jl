@@ -22,3 +22,6 @@ scratchpad.jl
 
 /docs/src/index.md
 /docs/src/examples/*.md
+
+*.pdf
+*.png

@@ -22,8 +22,13 @@ function define_suite(
     return SUITE
 end
 
+quantile75(x) = quantile(x, 0.75)
+quantile25(x) = quantile(x, 0.25)
+
 function parse_results(
-    results; path=nothing, aggregators=[minimum, median, maximum, mean, std]
+    results;
+    path=nothing,
+    aggregators=[minimum, median, maximum, mean, std, quantile25, quantile75],
 )
     data = DataFrame()
     for implem_str in identity.(keys(results))

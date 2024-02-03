@@ -21,7 +21,7 @@ using LinearAlgebra: BLAS, Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
 using SparseArrays: spdiagm
-using Statistics: mean, median, std
+using Statistics: mean, median, std, quantile
 
 export Implementation, Instance, Params, HiddenMarkovModelsImplem
 export build_params, build_data, build_model, build_benchmarkables
