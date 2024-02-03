@@ -13,7 +13,7 @@ using HMMBenchmark:
     build_model,
     build_benchmarkables
 using LinearAlgebra: Diagonal
-using PythonCall: pyimport, pybuiltins
+using PythonCall: Py, pyimport, pybuiltins, pylist
 using Random: AbstractRNG
 using SparseArrays: spdiagm
 
