@@ -18,10 +18,10 @@ function HMMBenchmark.build_model(
         init_params="",
     )
 
-    hmm.startprob_ = np.array(init)
-    hmm.transmat_ = np.array(trans)
-    hmm.means_ = np.array(transpose(means))
-    hmm.covars_ = np.array(transpose(stds .^ 2))
+    hmm.startprob_ = Py(init).to_numpy()
+    hmm.transmat_ = Py(trans).to_numpy()
+    hmm.means_ = Py(transpose(means)).to_numpy()
+    hmm.covars_ = Py(transpose(stds .^ 2)).to_numpy()
     return hmm
 end
 
@@ -35,7 +35,7 @@ function HMMBenchmark.build_benchmarkables(
     data = randn(rng, nb_seqs, seq_length, obs_dim)
 
     obs_mat_concat = reduce(vcat, data[k, :, :] for k in 1:nb_seqs)
-    obs_mat_concat_py = np.array(obs_mat_concat)
+    obs_mat_concat_py = Py(obs_mat_concat).to_numpy()
     obs_mat_len_py = np.full(nb_seqs, seq_length)
 
     benchs = Dict()

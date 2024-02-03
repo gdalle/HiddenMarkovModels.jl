@@ -3,7 +3,6 @@ struct pomegranateImplem <: Implementation end
 function HMMBenchmark.build_model(
     rng::AbstractRNG, implem::pomegranateImplem; instance::Instance
 )
-    np = pyimport("numpy")
     torch = pyimport("torch")
     torch.set_default_dtype(torch.float64)
     pomegranate_distributions = pyimport("pomegranate.distributions")
@@ -12,14 +11,14 @@ function HMMBenchmark.build_model(
     (; nb_states, bw_iter) = instance
     (; init, trans, means, stds) = build_params(rng; instance)
 
-    starts = torch.tensor(np.array(init))
+    starts = torch.tensor(Py(init).to_numpy())
     ends = torch.ones(nb_states) * 1e-10
-    edges = torch.tensor(np.array(trans))
+    edges = torch.tensor(Py(trans).to_numpy())
 
     distributions = pylist([
         pomegranate_distributions.Normal(;
-            means=torch.tensor(np.array(means[:, i])),
-            covs=torch.square(torch.tensor(np.array(stds[:, i] .^ 2))),
+            means=torch.tensor(Py(means[:, i]).to_numpy()),
+            covs=torch.square(torch.tensor(Py(stds[:, i] .^ 2).to_numpy())),
             covariance_type="diag",
         ) for i in 1:nb_states
     ])
@@ -48,7 +47,7 @@ function HMMBenchmark.build_benchmarkables(
     hmm = build_model(rng, implem; instance)
     data = randn(rng, nb_seqs, seq_length, obs_dim)
 
-    obs_tens_py = torch.tensor(np.array(data))
+    obs_tens_py = torch.tensor(Py(data).to_numpy())
 
     benchs = Dict()
 

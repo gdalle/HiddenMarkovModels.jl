@@ -10,10 +10,10 @@ function HMMBenchmark.build_model(
     (; nb_states, obs_dim) = instance
     (; init, trans, means, stds) = build_params(rng; instance)
 
-    initial_probs = jnp.array(np.array(init))
-    transition_matrix = jnp.array(np.array(trans))
-    emission_means = jnp.array(np.array(transpose(means)))
-    emission_scale_diags = jnp.array(np.array(transpose(stds)))
+    initial_probs = jnp.array(Py(init).to_numpy())
+    transition_matrix = jnp.array(Py(trans).to_numpy())
+    emission_means = jnp.array(Py(transpose(means)).to_numpy())
+    emission_scale_diags = jnp.array(Py(transpose(stds)).to_numpy())
 
     hmm = dynamax_hmm.DiagonalGaussianHMM(nb_states, obs_dim)
     params, props = hmm.initialize(;
@@ -37,51 +37,52 @@ function HMMBenchmark.build_benchmarkables(
     hmm, params, _ = build_model(rng, implem; instance)
     data = randn(rng, nb_seqs, seq_length, obs_dim)
 
-    obs_tens_py = jnp.array(np.array(data))
+    obs_tens_py = jnp.array(Py(data).to_numpy())
 
     benchs = Dict()
 
     if "logdensity" in algos
-        filter_vmap = jax.vmap(hmm.filter; in_axes=pylist([pybuiltins.None, 0]))
+        filter_vmap = jax.jit(jax.vmap(hmm.filter; in_axes=pylist((pybuiltins.None, 0))))
         benchs["logdensity"] = @benchmarkable begin
             $(filter_vmap)($params, $obs_tens_py)
-        end evals = 1 samples = 100 setup = ($(filter_vmap)($params, $obs_tens_py))
+        end evals = 1 samples = 100
     end
 
     if "forward" in algos
-        filter_vmap = jax.vmap(hmm.filter; in_axes=pylist([pybuiltins.None, 0]))
+        filter_vmap = jax.jit(jax.vmap(hmm.filter; in_axes=pylist((pybuiltins.None, 0))))
         benchs["forward"] = @benchmarkable begin
             $(filter_vmap)($params, $obs_tens_py)
-        end evals = 1 samples = 100 setup = ($(filter_vmap)($params, $obs_tens_py))
+        end evals = 1 samples = 100
     end
 
     if "viterbi" in algos
-        most_likely_states_vmap = jax.vmap(
-            hmm.most_likely_states; in_axes=pylist([pybuiltins.None, 0])
+        most_likely_states_vmap = jax.jit(
+            jax.vmap(hmm.most_likely_states; in_axes=pylist((pybuiltins.None, 0)))
         )
         benchs["viterbi"] = @benchmarkable begin
             $(most_likely_states_vmap)($params, $obs_tens_py)
-        end evals = 1 samples = 100 setup = ($(most_likely_states_vmap)(
-            $params, $obs_tens_py
-        ))
+        end evals = 1 samples = 100
     end
 
     if "forward_backward" in algos
-        smoother_vmap = jax.vmap(hmm.smoother; in_axes=pylist([pybuiltins.None, 0]))
+        smoother_vmap = jax.jit(
+            jax.vmap(hmm.smoother; in_axes=pylist((pybuiltins.None, 0)))
+        )
         benchs["forward_backward"] = @benchmarkable begin
             $(smoother_vmap)($params, $obs_tens_py)
-        end evals = 1 samples = 100 setup = ($(smoother_vmap)($params, $obs_tens_py))
+        end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
-            hmm_guess.fit_em(params_guess, props_guess, $obs_tens_py; num_iters=$bw_iter)
+            hmm_guess.fit_em(
+                params_guess, props_guess, $obs_tens_py; num_iters=$bw_iter, verbose=false
+            )
         end evals = 1 samples = 100 setup = (
             tup = build_model($rng, $implem; instance=$instance);
             hmm_guess = tup[1];
             params_guess = tup[2];
-            props_guess = tup[3];
-            hmm_guess.fit_em(params_guess, props_guess, $obs_tens_py; num_iters=$bw_iter)
+            props_guess = tup[3]
         )
     end
 
