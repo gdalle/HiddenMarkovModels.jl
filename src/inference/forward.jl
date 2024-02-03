@@ -107,7 +107,7 @@ $(SIGNATURES)
 
 Apply the forward algorithm to infer the current state after sequence `obs_seq` for `hmm`.
     
-Return a tuple `(storage.α, sum(storage.logL))` where `storage` is of type [`ForwardStorage`](@ref).
+Return a tuple `(storage.α, storage.logL)` where `storage` is of type [`ForwardStorage`](@ref).
 """
 function forward(
     hmm::AbstractHMM,
@@ -117,5 +117,5 @@ function forward(
 )
     storage = initialize_forward(hmm, obs_seq, control_seq; seq_ends)
     forward!(storage, hmm, obs_seq, control_seq; seq_ends)
-    return storage.α, sum(storage.logL)
+    return storage.α, storage.logL
 end

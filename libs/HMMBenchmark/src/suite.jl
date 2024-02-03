@@ -11,7 +11,9 @@ function define_suite(
     SUITE = BenchmarkGroup()
     for implem in implems
         for instance in instances
-            bench_tup = build_benchmarkables(rng, implem; instance, algos)
+            params = build_params(rng, instance)
+            data = build_data(rng, instance)
+            bench_tup = build_benchmarkables(implem, instance, params, data, algos)
             for (algo, bench) in pairs(bench_tup)
                 SUITE[string(implem)][string(instance)][algo] = bench
             end
@@ -47,4 +49,8 @@ function parse_results(
         end
     end
     return data
+end
+
+function read_results(path)
+    return CSV.read(path, DataFrame)
 end

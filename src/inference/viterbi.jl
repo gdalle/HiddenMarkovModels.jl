@@ -104,7 +104,7 @@ $(SIGNATURES)
 
 Apply the Viterbi algorithm to infer the most likely state sequence corresponding to `obs_seq` for `hmm`.
 
-Return a tuple `(storage.q, sum(storage.logL))` where `storage` is of type [`ViterbiStorage`](@ref).
+Return a tuple `(storage.q, storage.logL)` where `storage` is of type [`ViterbiStorage`](@ref).
 """
 function viterbi(
     hmm::AbstractHMM,
@@ -114,5 +114,5 @@ function viterbi(
 )
     storage = initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
     viterbi!(storage, hmm, obs_seq, control_seq; seq_ends)
-    return storage.q, sum(storage.logL)
+    return storage.q, storage.logL
 end

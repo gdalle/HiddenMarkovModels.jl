@@ -1,14 +1,14 @@
 struct dynamaxImplem <: Implementation end
+Base.string(::dynamaxImplem) = "dynamax"
 
-function HMMBenchmark.build_model(
-    rng::AbstractRNG, implem::dynamaxImplem; instance::Instance
-)
-    np = pyimport("numpy")
+function HMMBenchmark.build_model(implem::dynamaxImplem, instance::Instance, params::Params)
+    jax = pyimport("jax")
     jnp = pyimport("jax.numpy")
     dynamax_hmm = pyimport("dynamax.hidden_markov_model")
+    jax.config.update("jax_enable_x64", true)
 
     (; nb_states, obs_dim) = instance
-    (; init, trans, means, stds) = build_params(rng; instance)
+    (; init, trans, means, stds) = params
 
     initial_probs = jnp.array(Py(init).to_numpy())
     transition_matrix = jnp.array(Py(trans).to_numpy())
@@ -16,42 +16,38 @@ function HMMBenchmark.build_model(
     emission_scale_diags = jnp.array(Py(transpose(stds)).to_numpy())
 
     hmm = dynamax_hmm.DiagonalGaussianHMM(nb_states, obs_dim)
-    params, props = hmm.initialize(;
+    dyn_params, dyn_props = hmm.initialize(;
         initial_probs=initial_probs,
         transition_matrix=transition_matrix,
         emission_means=emission_means,
         emission_scale_diags=emission_scale_diags,
     )
 
-    return hmm, params, props
+    return hmm, dyn_params, dyn_props
 end
 
 function HMMBenchmark.build_benchmarkables(
-    rng::AbstractRNG, implem::dynamaxImplem; instance::Instance, algos::Vector{String}
+    implem::dynamaxImplem,
+    instance::Instance,
+    params::Params,
+    data::AbstractArray{<:Real,3},
+    algos::Vector{String},
 )
-    np = pyimport("numpy")
     jax = pyimport("jax")
     jnp = pyimport("jax.numpy")
-    (; obs_dim, seq_length, nb_seqs, bw_iter) = instance
+    jax.config.update("jax_enable_x64", true)
 
-    hmm, params, _ = build_model(rng, implem; instance)
-    data = randn(rng, nb_seqs, seq_length, obs_dim)
+    (; bw_iter) = instance
+    hmm, dyn_params, _ = build_model(implem, instance, params)
 
-    obs_tens_py = jnp.array(Py(data).to_numpy())
+    obs_tens_jax_py = jnp.array(Py(data).to_numpy())
 
     benchs = Dict()
-
-    if "logdensity" in algos
-        filter_vmap = jax.jit(jax.vmap(hmm.filter; in_axes=pylist((pybuiltins.None, 0))))
-        benchs["logdensity"] = @benchmarkable begin
-            $(filter_vmap)($params, $obs_tens_py)
-        end evals = 1 samples = 100
-    end
 
     if "forward" in algos
         filter_vmap = jax.jit(jax.vmap(hmm.filter; in_axes=pylist((pybuiltins.None, 0))))
         benchs["forward"] = @benchmarkable begin
-            $(filter_vmap)($params, $obs_tens_py)
+            $(filter_vmap)($dyn_params, $obs_tens_jax_py)
         end evals = 1 samples = 100
     end
 
@@ -60,7 +56,7 @@ function HMMBenchmark.build_benchmarkables(
             jax.vmap(hmm.most_likely_states; in_axes=pylist((pybuiltins.None, 0)))
         )
         benchs["viterbi"] = @benchmarkable begin
-            $(most_likely_states_vmap)($params, $obs_tens_py)
+            $(most_likely_states_vmap)($dyn_params, $obs_tens_jax_py)
         end evals = 1 samples = 100
     end
 
@@ -69,20 +65,24 @@ function HMMBenchmark.build_benchmarkables(
             jax.vmap(hmm.smoother; in_axes=pylist((pybuiltins.None, 0)))
         )
         benchs["forward_backward"] = @benchmarkable begin
-            $(smoother_vmap)($params, $obs_tens_py)
+            $(smoother_vmap)($dyn_params, $obs_tens_jax_py)
         end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
             hmm_guess.fit_em(
-                params_guess, props_guess, $obs_tens_py; num_iters=$bw_iter, verbose=false
+                dyn_params_guess,
+                dyn_props_guess,
+                $obs_tens_jax_py;
+                num_iters=$bw_iter,
+                verbose=false,
             )
         end evals = 1 samples = 100 setup = (
-            tup = build_model($rng, $implem; instance=$instance);
+            tup = build_model($implem, $instance, $params);
             hmm_guess = tup[1];
-            params_guess = tup[2];
-            props_guess = tup[3]
+            dyn_params_guess = tup[2];
+            dyn_props_guess = tup[3]
         )
     end
 

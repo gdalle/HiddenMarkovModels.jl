@@ -15,14 +15,24 @@ implems = [
     pomegranateImplem(),  #
     dynamaxImplem(),  #
 ]
-algos = ["logdensity", "forward", "viterbi", "forward_backward", "baum_welch"]
-instances = [
-    Instance(;
-        sparse=false, nb_states=5, obs_dim=10, seq_length=1000, nb_seqs=10, bw_iter=10
-    ),
-]
+
+algos = ["forward", "viterbi", "forward_backward", "baum_welch"]
+
+instances = Instance[]
+
+for nb_states in 2:3:24
+    push!(instances, Instance(;
+        custom_dist=true,
+        sparse=false,
+        nb_states=nb_states,
+        obs_dim=5,
+        seq_length=100,
+        nb_seqs=10,
+        bw_iter=10,
+    ))
+end
 
 SUITE = define_suite(rng, implems; instances, algos)
 
 results = BenchmarkTools.run(SUITE; verbose=true)
-data = parse_results(results)
+data = parse_results(results; path=joinpath(@__DIR__, "results.csv"))

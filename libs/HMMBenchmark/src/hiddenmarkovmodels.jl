@@ -1,8 +1,9 @@
 struct HiddenMarkovModelsImplem <: Implementation end
+Base.string(::HiddenMarkovModelsImplem) = "HiddenMarkovModels.jl"
 
-function build_model(rng::AbstractRNG, ::HiddenMarkovModelsImplem; instance::Instance)
+function build_model(::HiddenMarkovModelsImplem, instance::Instance, params::Params)
     (; custom_dist, nb_states, obs_dim) = instance
-    (; init, trans, means, stds) = build_params(rng; instance)
+    (; init, trans, means, stds) = params
 
     if custom_dist
         dists = [LightDiagNormal(means[:, i], stds[:, i]) for i in 1:nb_states]
@@ -19,15 +20,14 @@ function build_model(rng::AbstractRNG, ::HiddenMarkovModelsImplem; instance::Ins
 end
 
 function build_benchmarkables(
-    rng::AbstractRNG,
-    implem::HiddenMarkovModelsImplem;
+    implem::HiddenMarkovModelsImplem,
     instance::Instance,
-    algos::Vector{String},
+    params::Params,
+    data::AbstractArray{<:Real,3},
+    algos::Vector{String};
 )
     (; obs_dim, seq_length, nb_seqs, bw_iter) = instance
-
-    hmm = build_model(rng, implem; instance)
-    data = randn(rng, nb_seqs, seq_length, obs_dim)
+    hmm = build_model(implem, instance, params)
 
     if obs_dim == 1
         obs_seqs = [[data[k, t, 1] for t in 1:seq_length] for k in 1:nb_seqs]
@@ -39,18 +39,6 @@ function build_benchmarkables(
     seq_ends = cumsum(length.(obs_seqs))
 
     benchs = Dict()
-
-    if "rand" in algos
-        benchs["rand"] = @benchmarkable begin
-            [rand($rng, $hmm, $seq_length).obs_seq for _ in 1:($nb_seqs)]
-        end evals = 1 samples = 100
-    end
-
-    if "logdensity" in algos
-        benchs["logdensity"] = @benchmarkable begin
-            logdensityof($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100
-    end
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
@@ -112,7 +100,7 @@ function build_benchmarkables(
                 loglikelihood_increasing=false,
             )
         end evals = 1 samples = 100 setup = (
-            hmm_guess = build_model($rng, $implem; instance=$instance);
+            hmm_guess = build_model($implem, $instance, $params);
             fb_storage = initialize_forward_backward(
                 hmm_guess, $obs_seq, $control_seq; seq_ends=$seq_ends
             );

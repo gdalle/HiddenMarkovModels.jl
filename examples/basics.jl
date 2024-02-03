@@ -54,7 +54,7 @@ In practical applications, the state sequence is not known, which is why we need
 # ## Inference
 
 #=
-The Viterbi algorithm ([`viterbi`](@ref)) returns the most likely state sequence $\hat{X}_{1:T} = \underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}(X_{1:T} \vert Y_{1:T})$, along with the joint loglikelihood $\mathbb{P}(\hat{X}_{1:T}, Y_{1:T})$.
+The Viterbi algorithm ([`viterbi`](@ref)) returns the most likely state sequence $\hat{X}_{1:T} = \underset{X_{1:T}}{\mathrm{argmax}}~\mathbb{P}(X_{1:T} \vert Y_{1:T})$, along with the joint loglikelihood $\mathbb{P}(\hat{X}_{1:T}, Y_{1:T})$ (in a vector of size 1).
 =#
 
 best_state_seq, best_joint_loglikelihood = viterbi(hmm, obs_seq);
@@ -66,7 +66,7 @@ As we can see, it is very close to the true state sequence, but not necessarily 
 vcat(state_seq', best_state_seq')
 
 #=
-The forward algorithm ([`forward`](@ref)) returns a matrix of filtered state marginals $\alpha[i, t] = \mathbb{P}(X_t = i | Y_{1:t})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
+The forward algorithm ([`forward`](@ref)) returns a matrix of filtered state marginals $\alpha[i, t] = \mathbb{P}(X_t = i | Y_{1:t})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence (in a vector of size 1).
 =#
 
 filtered_state_marginals, obs_seq_loglikelihood1 = forward(hmm, obs_seq);
@@ -79,7 +79,7 @@ This is particularly useful to infer the marginal distribution of the last state
 filtered_state_marginals[:, end]
 
 #=
-Conversely, the forward-backward algorithm ([`forward_backward`](@ref)) returns a matrix of smoothed state marginals $\gamma[i, t] = \mathbb{P}(X_t = i | Y_{1:T})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence.
+Conversely, the forward-backward algorithm ([`forward_backward`](@ref)) returns a matrix of smoothed state marginals $\gamma[i, t] = \mathbb{P}(X_t = i | Y_{1:T})$, along with the loglikelihood $\mathbb{P}(Y_{1:T})$ of the observation sequence (in a vector of size 1).
 =#
 
 smoothed_state_marginals, obs_seq_loglikelihood2 = forward_backward(hmm, obs_seq);
@@ -179,7 +179,7 @@ long_obs_seq_concat = reduce(vcat, long_obs_seqs)
 seq_ends = cumsum(length.(long_obs_seqs))
 
 #=
-The outputs of inference algorithms are then concatenated, and the associated loglikelihoods are summed over all sequences.
+The outputs of inference algorithms are then concatenated, and the associated loglikelihoods are split by sequence (in a vector of size `length(seq_ends)`).
 =#
 
 best_state_seq_concat, _ = viterbi(hmm, long_obs_seq_concat; seq_ends);
