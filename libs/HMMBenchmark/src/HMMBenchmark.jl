@@ -21,13 +21,13 @@ using LinearAlgebra: BLAS, Diagonal, SymTridiagonal
 using Pkg: Pkg
 using Random: AbstractRNG
 using SparseArrays: spdiagm
-using Statistics: mean, median, std
+using Statistics: mean, median, std, quantile
 
-export AbstractImplementation, Instance
-export define_suite, parse_results, print_julia_setup
+export Implementation, Instance, Params, HiddenMarkovModelsImplem
+export build_params, build_data, build_model, build_benchmarkables
+export define_suite, parse_results, read_results, print_julia_setup
 
 abstract type Implementation end
-Base.string(implem::Implementation) = string(typeof(implem))[begin:(end - length("Implem"))]
 
 include("instance.jl")
 include("params.jl")

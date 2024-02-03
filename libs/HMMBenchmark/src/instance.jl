@@ -16,3 +16,8 @@ function Instance(s::String)
     vals = parse.(Int, split(s, " ")[2:2:end])
     return Instance(vals...)
 end
+
+function build_data(rng::AbstractRNG, instance::Instance)
+    (; nb_seqs, seq_length, obs_dim) = instance
+    return randn(rng, nb_seqs, seq_length, obs_dim)
+end

@@ -11,7 +11,9 @@ function define_suite(
     SUITE = BenchmarkGroup()
     for implem in implems
         for instance in instances
-            bench_tup = build_benchmarkables(rng, implem; instance, algos)
+            params = build_params(rng, instance)
+            data = build_data(rng, instance)
+            bench_tup = build_benchmarkables(implem, instance, params, data, algos)
             for (algo, bench) in pairs(bench_tup)
                 SUITE[string(implem)][string(instance)][algo] = bench
             end
@@ -20,8 +22,13 @@ function define_suite(
     return SUITE
 end
 
+quantile75(x) = quantile(x, 0.75)
+quantile25(x) = quantile(x, 0.25)
+
 function parse_results(
-    results; path=nothing, aggregators=[minimum, median, maximum, mean, std]
+    results;
+    path=nothing,
+    aggregators=[minimum, median, maximum, mean, std, quantile25, quantile75],
 )
     data = DataFrame()
     for implem_str in identity.(keys(results))
@@ -47,4 +54,8 @@ function parse_results(
         end
     end
     return data
+end
+
+function read_results(path)
+    return CSV.read(path, DataFrame)
 end

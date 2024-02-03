@@ -79,14 +79,14 @@ function test_coherent_algorithms(
         logL_joint = joint_logdensityof(hmm, obs_seq, state_seq, control_seq; seq_ends)
 
         q, logL_viterbi = viterbi(hmm, obs_seq, control_seq; seq_ends)
-        @test logL_viterbi > logL_joint
-        @test logL_viterbi ≈ joint_logdensityof(hmm, obs_seq, q, control_seq; seq_ends)
+        @test sum(logL_viterbi) > logL_joint
+        @test sum(logL_viterbi) ≈ joint_logdensityof(hmm, obs_seq, q, control_seq; seq_ends)
 
         α, logL_forward = forward(hmm, obs_seq, control_seq; seq_ends)
-        @test logL_forward ≈ logL
+        @test sum(logL_forward) .≈ logL
 
         γ, logL_forward_backward = forward_backward(hmm, obs_seq, control_seq; seq_ends)
-        @test logL_forward_backward ≈ logL
+        @test sum(logL_forward_backward) ≈ logL
         @test all(α[:, seq_ends[k]] ≈ γ[:, seq_ends[k]] for k in eachindex(seq_ends))
 
         if !isnothing(hmm_guess)

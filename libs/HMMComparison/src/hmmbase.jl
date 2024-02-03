@@ -1,10 +1,9 @@
 struct HMMBaseImplem <: Implementation end
+Base.string(::HMMBaseImplem) = "HMMBase.jl"
 
-function HMMBenchmark.build_model(
-    rng::AbstractRNG, implem::HMMBaseImplem; instance::Instance
-)
+function HMMBenchmark.build_model(implem::HMMBaseImplem, instance::Instance, params::Params)
     (; nb_states, obs_dim) = instance
-    (; init, trans, means, stds) = build_params(rng; instance)
+    (; init, trans, means, stds) = params
 
     a = init
     A = trans
@@ -19,12 +18,14 @@ function HMMBenchmark.build_model(
 end
 
 function HMMBenchmark.build_benchmarkables(
-    rng::AbstractRNG, implem::HMMBaseImplem; instance::Instance, algos::Vector{String}
+    implem::HMMBaseImplem,
+    instance::Instance,
+    params::Params,
+    data::AbstractArray{<:Real,3},
+    algos::Vector{String},
 )
     (; obs_dim, seq_length, nb_seqs, bw_iter) = instance
-
-    hmm = build_model(rng, implem; instance)
-    data = randn(rng, nb_seqs, seq_length, obs_dim)
+    hmm = build_model(implem, instance, params)
 
     if obs_dim == 1
         obs_mat = reduce(vcat, data[k, :, 1] for k in 1:nb_seqs)
@@ -33,12 +34,6 @@ function HMMBenchmark.build_benchmarkables(
     end
 
     benchs = BenchmarkGroup()
-
-    if "logdensity" in algos
-        benchs["logdensity"] = @benchmarkable begin
-            HMMBase.forward($hmm, $obs_mat)
-        end evals = 1 samples = 100
-    end
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin

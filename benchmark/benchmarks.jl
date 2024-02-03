@@ -5,7 +5,7 @@ using StableRNGs
 
 rng = StableRNG(63)
 
-algos = ["rand", "logdensity", "forward", "viterbi", "forward_backward", "baum_welch"]
+algos = ["forward", "viterbi", "forward_backward", "baum_welch"]
 instances = [
     # compare state numbers
     Instance(; nb_states=4, obs_dim=1),

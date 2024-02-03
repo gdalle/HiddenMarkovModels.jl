@@ -17,12 +17,12 @@ function test_identical_hmmbase(
 
         logL_base = HMMBase.forward(hmm_base, obs_mat)[2]
         logL = logdensityof(hmm, obs_seq; seq_ends)
-        @test logL ≈ 2logL_base
+        @test sum(logL) ≈ 2logL_base
 
         α_base, logL_forward_base = HMMBase.forward(hmm_base, obs_mat)
         α, logL_forward = forward(hmm, obs_seq; seq_ends)
         @test isapprox(α[:, 1:T], α_base') && isapprox(α[:, (T + 1):(2T)], α_base')
-        @test logL_forward ≈ 2logL_forward_base
+        @test sum(logL_forward) ≈ 2logL_forward_base
 
         q_base = HMMBase.viterbi(hmm_base, obs_mat)
         q, logL_viterbi = viterbi(hmm, obs_seq; seq_ends)

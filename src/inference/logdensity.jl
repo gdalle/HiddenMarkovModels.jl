@@ -10,7 +10,7 @@ function DensityInterface.logdensityof(
     seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
 )
     _, logL = forward(hmm, obs_seq, control_seq; seq_ends)
-    return logL
+    return sum(logL)
 end
 
 """
