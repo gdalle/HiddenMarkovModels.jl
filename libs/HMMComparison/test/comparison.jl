@@ -17,7 +17,9 @@ implems = [
 ]
 algos = ["logdensity", "forward", "viterbi", "forward_backward", "baum_welch"]
 instances = [
-    Instance(; sparse=false, nb_states=5, obs_dim=10, seq_length=1000, nb_seqs=10, bw_iter=10)
+    Instance(;
+        sparse=false, nb_states=5, obs_dim=10, seq_length=1000, nb_seqs=10, bw_iter=10
+    ),
 ]
 
 SUITE = define_suite(rng, implems; instances, algos)
