@@ -36,13 +36,13 @@ function initialize_forward_backward(
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     trans = transition_matrix(hmm, control_seq[1])
-    M = typeof(mysimilar_mutable(trans, R))
+    M = typeof(similar(trans, R))
 
     γ = Matrix{R}(undef, N, T)
     ξ = Vector{M}(undef, T)
     if transition_marginals
         for t in 1:T
-            ξ[t] = mysimilar_mutable(transition_matrix(hmm, control_seq[t]), R)
+            ξ[t] = similar(transition_matrix(hmm, control_seq[t]), R)
         end
     end
     logL = Vector{R}(undef, K)
@@ -107,14 +107,13 @@ function forward_backward!(
     seq_ends::AbstractVector{Int},
     transition_marginals::Bool=true,
 ) where {R}
-    (; logL, γ) = storage
+    (; logL) = storage
     @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward_backward!(
             storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
         )
     end
-    check_finite(γ)
     return nothing
 end
 

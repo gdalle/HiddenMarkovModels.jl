@@ -22,11 +22,11 @@ Enzyme.API.runtimeActivity!(true)
 
 #-
 
-rng = StableRNG(63)
+rng = StableRNG(63);
 
 # ## Data generation
 
-init = [0.8, 0.2]
+init = [0.6, 0.4]
 trans = [0.7 0.3; 0.3 0.7]
 means = [-1.0, 1.0]
 dists = Normal.(means)
@@ -41,9 +41,9 @@ seq_ends = cumsum(length.(obs_seqs));
 # ## Forward mode
 
 #=
-Since all of our code is type-generic, it is amenable to forward-mode automatic differentiation with ForwardDiff.jl.
+Since all of our code is type-generic, it is amenable to forward-mode automatic differentiation with [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl).
 
-Because this backend only accepts a single vector input, we wrap all parameters with ComponentArrays.jl, and define a new function to differentiate.
+Because this backend only accepts a single vector input, we wrap all parameters with [ComponentArrays.jl](https://github.com/jonniedie/ComponentArrays.jl), and define a new function to differentiate.
 =#
 
 params = ComponentVector(; init, trans, means)
@@ -64,7 +64,7 @@ grad_f = ForwardDiff.gradient(f, params)
 
 #=
 In the presence of many parameters, reverse mode automatic differentiation of the loglikelihood will be much more efficient.
-The package includes a chain rule for `logdensityof`, which means backends like Zygote.jl can be used out of the box.
+The package includes a chain rule for `logdensityof`, which means backends like [Zygote.jl](https://github.com/FluxML/Zygote.jl) can be used out of the box.
 =#
 
 grad_z = Zygote.gradient(f, params)[1]
@@ -74,7 +74,7 @@ grad_z = Zygote.gradient(f, params)[1]
 grad_f ≈ grad_z
 
 #=
-Enzyme.jl also works natively but we have to avoid the type instability of global variables by providing more information.
+The more efficient [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl) also works natively but we have to avoid the type instability of global variables.
 =#
 
 function f_extended(params::ComponentVector, obs_seq, seq_ends)
@@ -90,7 +90,7 @@ Enzyme.autodiff(
     Enzyme.Active,
     Enzyme.Duplicated(params, shadow_params),
     Enzyme.Const(obs_seq),
-    Enzyme.Const(seq_ends),
+    Enzyme.Duplicated(seq_ends, Enzyme.make_zero(seq_ends)),
 )
 
 grad_e = shadow_params

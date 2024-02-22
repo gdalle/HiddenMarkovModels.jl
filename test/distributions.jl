@@ -50,6 +50,5 @@ end
     @test dist_est.σ ≈ σ atol = 2e-2
     test_fit_allocs(dist, x, w)
     # Logdensity
-    @test logdensityof(dist, x[1]) ≈
-        logdensityof(MvNormal(μ, Diagonal(abs2.(σ))), x[1]) + length(x[1]) * log(sqrt(2π))
+    @test logdensityof(dist, x[1]) ≈ logdensityof(MvNormal(μ, Diagonal(abs2.(σ))), x[1])
 end

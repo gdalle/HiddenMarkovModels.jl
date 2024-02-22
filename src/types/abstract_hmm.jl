@@ -82,27 +82,21 @@ obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
 function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
     dists = obs_distributions(hmm, control)
-    @inbounds for i in eachindex(logb, dists)
+    @inbounds @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
-    check_right_finite(logb)
+    @argcheck all(<(typemax(eltype(logb))), logb)
     return nothing
 end
 
 """
-    fit!(
-        hmm::AbstractHMM,
-        fb_storage::ForwardBackwardStorage,
-        obs_seq::AbstractVector;
-        control_seq::AbstractVector,
-        seq_ends::AbstractVector{Int},
-    )
+$(SIGNATURES)
 
 Update `hmm` in-place based on information generated during forward-backward.
 
 This function is allowed to reuse `fb_storage` as a scratch space, so its contents should not be trusted afterwards.
 """
-StatsAPI.fit!  # TODO: complete
+StatsAPI.fit!
 
 ## Sampling
 
@@ -161,4 +155,4 @@ end
 
 Return the prior loglikelihood associated with the parameters of `hmm`.
 """
-DensityInterface.logdensityof(hmm::AbstractHMM) = 0
+DensityInterface.logdensityof(hmm::AbstractHMM) = false

@@ -2,9 +2,9 @@
 function test_allocations(
     rng::AbstractRNG,
     hmm::AbstractHMM,
-    hmm_guess::Union{Nothing,AbstractHMM}=nothing;
-    control_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
+    hmm_guess::Union{Nothing,AbstractHMM}=nothing,
 )
     @testset "Allocations" begin
         obs_seq = mapreduce(vcat, eachindex(seq_ends)) do k
@@ -15,6 +15,7 @@ function test_allocations(
         t1, t2 = 1, seq_ends[1]
 
         ## Forward
+
         f_storage = HMMs.initialize_forward(hmm, obs_seq, control_seq; seq_ends)
         allocs_f = @ballocated HMMs.forward!(
             $f_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
@@ -22,6 +23,7 @@ function test_allocations(
         @test allocs_f == 0
 
         ## Viterbi
+
         v_storage = HMMs.initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
         allocs_v = @ballocated HMMs.viterbi!(
             $v_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
@@ -29,6 +31,7 @@ function test_allocations(
         @test allocs_v == 0
 
         ## Forward-backward
+
         fb_storage = HMMs.initialize_forward_backward(hmm, obs_seq, control_seq; seq_ends)
         allocs_fb = @ballocated HMMs.forward_backward!(
             $fb_storage, $hmm, $obs_seq, $control_seq, $t1, $t2
@@ -36,6 +39,7 @@ function test_allocations(
         @test allocs_fb == 0
 
         ## Baum-Welch
+
         if !isnothing(hmm_guess)
             fb_storage = HMMs.initialize_forward_backward(
                 hmm_guess, obs_seq, control_seq; seq_ends

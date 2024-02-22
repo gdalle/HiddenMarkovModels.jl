@@ -42,21 +42,20 @@ function literate_title(path)
 end
 
 pages = [
-    "Home" => "index.md",
-    "API reference" => "api.md",
+    "First steps" => [
+        "Home" => "index.md",
+        "Alternatives" => "alternatives.md",
+        "API reference" => "api.md",
+    ],
     "Tutorials" => [
         "Basics" => joinpath("examples", "basics.md"),
         "Types" => joinpath("examples", "types.md"),
         "Interfaces" => joinpath("examples", "interfaces.md"),
-        "Autodiff" => joinpath("examples", "autodiff.md"),
         "Time dependency" => joinpath("examples", "temporal.md"),
         "Control dependency" => joinpath("examples", "controlled.md"),
+        "Autodiff" => joinpath("examples", "autodiff.md"),
     ],
-    "Advanced" => [
-        "Alternatives" => "alternatives.md",
-        "Debugging" => "debugging.md",
-        "Formulas" => "formulas.md",
-    ],
+    "Advanced" => ["Debugging" => "debugging.md", "Formulas" => "formulas.md"],
 ]
 
 fmt = Documenter.HTML(;

@@ -9,6 +9,7 @@ $(EXPORTS)
 """
 module HiddenMarkovModels
 
+using ArgCheck: @argcheck
 using Base: RefValue
 using Base.Threads: @threads
 using ChainRulesCore: ChainRulesCore, NoTangent, RuleConfig, rrule_via_ad
@@ -20,6 +21,7 @@ using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
 using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange
 using StatsAPI: StatsAPI, fit, fit!
+using StatsFuns: log2π
 
 export AbstractHMM, HMM
 export initialization, transition_matrix, obs_distributions
@@ -30,7 +32,7 @@ export seq_limits
 include("types/abstract_hmm.jl")
 
 include("utils/linalg.jl")
-include("utils/check.jl")
+include("utils/valid.jl")
 include("utils/probvec_transmat.jl")
 include("utils/fit.jl")
 include("utils/lightdiagnormal.jl")

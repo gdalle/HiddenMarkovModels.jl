@@ -2,9 +2,9 @@
 function test_type_stability(
     rng::AbstractRNG,
     hmm::AbstractHMM,
-    hmm_guess::Union{Nothing,AbstractHMM}=nothing;
-    control_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
+    hmm_guess::Union{Nothing,AbstractHMM}=nothing,
 )
     @testset "Type stability" begin
         state_seq, obs_seq = rand(rng, hmm, control_seq)

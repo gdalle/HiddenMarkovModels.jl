@@ -1,12 +1,12 @@
 infnorm(x) = maximum(abs, x)
 
-function check_equal_hmms(
+function are_equal_hmms(
     hmm1::AbstractHMM,
-    hmm2::AbstractHMM;
-    control_seq=[nothing],
-    atol::Real=0.1,
-    init::Bool=true,
-    test::Bool=true,
+    hmm2::AbstractHMM,
+    control_seq::AbstractVector;
+    atol::Real,
+    init::Bool,
+    test::Bool,
 )
     equal_check = true
 
@@ -43,24 +43,13 @@ function check_equal_hmms(
     return equal_check
 end
 
-function test_equal_hmms(
-    hmm1::AbstractHMM,
-    hmm2::AbstractHMM;
-    control_seq=[nothing],
-    atol::Real=0.1,
-    init::Bool=true,
-)
-    check_equal_hmms(hmm1, hmm2; control_seq, atol, init, test=true)
-    return nothing
-end
-
 function test_coherent_algorithms(
     rng::AbstractRNG,
     hmm::AbstractHMM,
-    hmm_guess::Union{Nothing,AbstractHMM}=nothing;
-    control_seq::AbstractVector,
+    control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
-    atol::Real=0.1,
+    hmm_guess::Union{Nothing,AbstractHMM}=nothing,
+    atol::Real=0.05,
     init::Bool=true,
 )
     @testset "Coherence" begin
@@ -92,10 +81,8 @@ function test_coherent_algorithms(
         if !isnothing(hmm_guess)
             hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends)
             @test all(>=(0), diff(logL_evolution))
-            @test !check_equal_hmms(
-                hmm, hmm_guess; control_seq=control_seq[1:2], atol, test=false
-            )
-            test_equal_hmms(hmm, hmm_est; control_seq=control_seq[1:2], atol, init)
+            @test !are_equal_hmms(hmm, hmm_guess, control_seq[1:2]; atol, init, test=false)
+            are_equal_hmms(hmm, hmm_est, control_seq[1:2]; atol, init, test=true)
         end
     end
 end

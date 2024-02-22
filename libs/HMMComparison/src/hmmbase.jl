@@ -28,34 +28,43 @@ function HMMBenchmark.build_benchmarkables(
     hmm = build_model(implem, instance, params)
 
     if obs_dim == 1
-        obs_mat = reduce(vcat, data[k, :, 1] for k in 1:nb_seqs)
+        obs_mats = [data[k, :, 1] for k in 1:nb_seqs]
     else
-        obs_mat = reduce(vcat, data[k, :, :] for k in 1:nb_seqs)
+        obs_mats = [data[k, :, :] for k in 1:nb_seqs]
     end
+    obs_mat_concat = reduce(vcat, obs_mats)
 
     benchs = BenchmarkGroup()
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
-            HMMBase.forward($hmm, $obs_mat)
+            @threads for k in eachindex(obs_mats)
+                HMMBase.forward($hmm, $(obs_mats[k]))
+            end
         end evals = 1 samples = 100
     end
 
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
-            HMMBase.viterbi($hmm, $obs_mat)
+            @threads for k in eachindex(obs_mats)
+                HMMBase.viterbi($hmm, $(obs_mats[k]))
+            end
         end evals = 1 samples = 100
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
-            HMMBase.posteriors($hmm, $obs_mat)
+            @threads for k in eachindex(obs_mats)
+                HMMBase.posteriors($hmm, $(obs_mats[k]))
+            end
         end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
-            HMMBase.fit_mle($hmm, $obs_mat; maxiter=$bw_iter, tol=-Inf)
+            @threads for k in eachindex(obs_mats)
+                HMMBase.fit_mle($hmm, $(obs_mats[k]); maxiter=$bw_iter, tol=-Inf)
+            end
         end evals = 1 samples = 100
     end
 

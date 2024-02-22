@@ -17,7 +17,7 @@ using Test  #src
 
 #-
 
-rng = StableRNG(63)
+rng = StableRNG(63);
 
 # ## Custom distributions
 
@@ -28,7 +28,7 @@ They only need to implement three methods:
 - `DensityInterface.logdensityof(dist, obs)` for inference
 - `StatsAPI.fit!(dist, obs_seq, weight_seq)` for learning
 
-In addition, the observation can be arbitrary Julia types.
+In addition, the observations can be arbitrary Julia types.
 So let's construct a distribution that generates stuff.
 =#
 
@@ -37,7 +37,7 @@ struct Stuff{T}
 end
 
 #=
-The distribution will only be a wrapper for a normal distribution on the quantity.
+The associated distribution will only be a wrapper for a normal distribution on the quantity.
 =#
 
 mutable struct StuffDist{T}
@@ -54,7 +54,7 @@ function Random.rand(rng::AbstractRNG, dist::StuffDist)
 end
 
 #=
-It is important to declare to DensityInterface.jl that the custom distribution has a density, thanks to the following trait.
+It is important to declare to [DensityInterface.jl](https://github.com/JuliaMath/DensityInterface.jl) that the custom distribution has a density, thanks to the following trait.
 The logdensity itself can be computed up to an additive constant without issue.
 =#
 
@@ -81,7 +81,7 @@ end
 Let's put it to the test.
 =#
 
-init = [0.8, 0.2]
+init = [0.6, 0.4]
 trans = [0.7 0.3; 0.3 0.7]
 dists = [StuffDist(-1.0), StuffDist(+1.0)]
 hmm = HMM(init, trans, dists);
@@ -103,7 +103,7 @@ viterbi(hmm, obs_seq)
 If we implement `fit!`, Baum-Welch also works seamlessly.
 =#
 
-init_guess = [0.7, 0.3]
+init_guess = [0.5, 0.5]
 trans_guess = [0.6 0.4; 0.4 0.6]
 dists_guess = [StuffDist(-0.5), StuffDist(+0.5)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
@@ -125,6 +125,14 @@ transition_matrix(hmm_est)
 If you want more sophisticated examples, check out [`HiddenMarkovModels.LightDiagNormal`](@ref) and [`HiddenMarkovModels.LightCategorical`](@ref), which are designed to be fast and allocation-free.
 =#
 
+# ## Tests  #src
+
+seq_ends = cumsum(rand(rng, 100:200, 100));  #src
+control_seq = fill(nothing, last(seq_ends));  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
+test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
+test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
+
 # ## Custom HMM structures
 
 #=
@@ -145,9 +153,7 @@ struct PriorHMM{T,D} <: AbstractHMM
 end
 
 #=
-The basic requirements for `AbstractHMM` are the following three functions.
-
-While [`initialization`](@ref) will always have the same signature, [`transition_matrix`](@ref) and [`obs_distributions`](@ref) can accept an additional `control` argument, as we will see later on.
+The basic requirements for `AbstractHMM` are the following three functions: [`initialization`](@ref), [`transition_matrix`](@ref) and [`obs_distributions`](@ref).
 =#
 
 HiddenMarkovModels.initialization(hmm::PriorHMM) = hmm.init
@@ -170,7 +176,7 @@ This function takes as inputs:
 
 - the `hmm` itself
 - a `fb_storage` of type [`HiddenMarkovModels.ForwardBackwardStorage`](@ref) containing the results of the forward-backward algorithm.
-- the same inputs as `baum_welch` for multiple sequences (we haven't encountered `control_seq` yet but its role will become clear in other tutorials)
+- the same inputs as `baum_welch` for multiple sequences
 
 The goal is to modify `hmm` in-place, updating parameters with their maximum likelihood estimates given current inference results.
 We will make use of the fields `fb_storage.γ` and `fb_storage.ξ`, which contain the state and transition marginals `γ[i, t]` and `ξ[t][i, j]` at each time step.
@@ -179,8 +185,7 @@ We will make use of the fields `fb_storage.γ` and `fb_storage.ξ`, which contai
 function StatsAPI.fit!(
     hmm::PriorHMM,
     fb_storage::HiddenMarkovModels.ForwardBackwardStorage,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     ## initialize to defaults without observations
@@ -207,19 +212,21 @@ function StatsAPI.fit!(
     end
 
     ## perform a few checks on the model
-    HMMs.check_hmm(hmm)
+    @assert HMMs.valid_hmm(hmm)
     return nothing
 end
 
 #=
-Note that some distributions, such as those from Distributions.jl:
-- do not support in-place fitting
-- might expect different input formats, e.g. higher-order arrays instead of a vector of objects
+!!! warning "When distributions don't comply"
+    Note that some distributions, such as those from Distributions.jl:
+    - do not support in-place fitting
+    - expect different input formats, e.g. matrices instead of a vector of vectors
+    The function [`HiddenMarkovModels.fit_in_sequence!`](@ref) is a replacement for `fit!`,  designed to handle Distributions.jl without committing type piracy.
+    Check out its source code, and overload it for your other distributions too if they do not support in-place fitting.
+=#
 
-The function [`HiddenMarkovModels.fit_in_sequence!`](@ref) is a replacement for `fit!`,  designed to handle Distributions.jl.
-You can overload it for your own objects too if needed.
-
-Now let's see that everything works.
+#=
+Now let's see that everything works, even with our custom distribution from before.
 =#
 
 trans_prior_count = 10
@@ -236,12 +243,10 @@ As we can see, the transition matrix for our Bayesian version is slightly more s
 
 cat(transition_matrix(hmm_est), transition_matrix(prior_hmm_est); dims=3)
 
+#- 
+
+std(vec(transition_matrix(hmm_est))) < std(vec(transition_matrix(hmm)))
+
 # ## Tests  #src
 
-control_seqs = [fill(nothing, rand(rng, 100:200)) for k in 1:100];  #src
-control_seq = reduce(vcat, control_seqs);  #src
-seq_ends = cumsum(length.(control_seqs));  #src
-
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.05, init=false)  #src
-test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
-test_allocations(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+@test std(vec(transition_matrix(hmm_est))) < std(vec(transition_matrix(hmm)))  #src

@@ -17,7 +17,7 @@ struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHM
 
     function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
         hmm = new{typeof(init),typeof(trans),typeof(dists)}(init, trans, dists)
-        check_hmm(hmm)
+        @argcheck valid_hmm(hmm)
         return hmm
     end
 end
@@ -35,8 +35,7 @@ obs_distributions(hmm::HMM) = hmm.dists
 function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     (; γ, ξ) = fb_storage
@@ -64,6 +63,6 @@ function StatsAPI.fit!(
         fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
     # Safety check
-    check_hmm(hmm)
+    @argcheck valid_hmm(hmm)
     return nothing
 end
