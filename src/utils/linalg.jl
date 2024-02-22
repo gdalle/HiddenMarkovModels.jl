@@ -18,6 +18,7 @@ function mul_rows_cols!(
     @argcheck size(B) == size(A) == (length(l), length(r))
     @argcheck nnz(B) == nnz(A)
     for j in axes(B, 2)
+        @argcheck nzrange(B, j) == nzrange(A, j)
         for k in nzrange(B, j)
             i = B.rowval[k]
             B.nzval[k] = l[i] * A.nzval[k] * r[j]

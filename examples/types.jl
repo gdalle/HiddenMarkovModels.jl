@@ -51,7 +51,7 @@ Note that uncertainty on the transition parameters would throw an error because 
 =#
 
 dists_guess = [Normal(-1.0 ± 0.1), Normal(1.0 ± 0.2)]
-hmm_uncertain = HMM(init, trans, dists_guess);
+hmm_uncertain = HMM(init, trans, dists_guess)
 
 #=
 Every quantity we compute with this new HMM will have propagated uncertainties around it.
@@ -98,7 +98,7 @@ trans = sparse([
 
 init = [0.2, 0.6, 0.2]
 dists = [Normal(-2.0), Normal(0.0), Normal(+2.0)]
-hmm = HMM(init, trans, dists);
+hmm = HMM(init, trans, dists)
 
 #=
 When we simulate it, the transitions outside of the nonzero coefficients simply cannot happen.

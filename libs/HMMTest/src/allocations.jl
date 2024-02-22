@@ -46,8 +46,8 @@ function test_allocations(
             )
             HMMs.forward_backward!(fb_storage, hmm, obs_seq, control_seq; seq_ends)
             allocs_bw = @ballocated fit!(
-                $hmm_guess, $fb_storage, $obs_seq, $control_seq; seq_ends=$seq_ends
-            ) evals = 1 samples = 1 setup = (hmm_guess = deepcopy($hmm))
+                hmm_guess_copy, $fb_storage, $obs_seq, $control_seq; seq_ends=$seq_ends
+            ) evals = 1 samples = 1 setup = (hmm_guess_copy = deepcopy($hmm_guess))
             @test_broken allocs_bw == 0
         end
     end

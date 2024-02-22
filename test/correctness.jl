@@ -18,8 +18,8 @@ T, K = 100, 200
 init = [0.4, 0.6]
 init_guess = [0.5, 0.5]
 
-trans = [0.8 0.2; 0.2 0.8]
-trans_guess = [0.7 0.3; 0.3 0.7]
+trans = [0.7 0.3; 0.3 0.7]
+trans_guess = [0.6 0.4; 0.4 0.6]
 
 p = [[0.8, 0.2], [0.2, 0.8]]
 p_guess = [[0.7, 0.3], [0.3, 0.7]]
@@ -58,9 +58,7 @@ end
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
     test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    @test_skip test_coherent_algorithms(
-        rng, hmm, control_seq; seq_ends, hmm_guess, init=false
-    )
+    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
 end
 

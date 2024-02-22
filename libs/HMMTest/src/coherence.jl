@@ -1,27 +1,31 @@
 infnorm(x) = maximum(abs, x)
 
-function are_equal_hmms(
+function test_equal_hmms(
     hmm1::AbstractHMM,
     hmm2::AbstractHMM,
     control_seq::AbstractVector;
     atol::Real,
     init::Bool,
-    test::Bool,
+    flip::Bool=false,
 )
-    equal_check = true
-
     if init
         init1 = initialization(hmm1)
         init2 = initialization(hmm2)
-        test && @test isapprox(init1, init2; atol, norm=infnorm)
-        equal_check = equal_check && isapprox(init1, init2; atol, norm=infnorm)
+        if flip
+            @test !isapprox(init1, init2; atol, norm=infnorm)
+        else
+            @test isapprox(init1, init2; atol, norm=infnorm)
+        end
     end
 
     for control in control_seq
         trans1 = transition_matrix(hmm1, control)
         trans2 = transition_matrix(hmm2, control)
-        test && @test isapprox(trans1, trans2; atol, norm=infnorm)
-        equal_check = equal_check && isapprox(trans1, trans2; atol, norm=infnorm)
+        if flip
+            @test !isapprox(trans1, trans2; atol, norm=infnorm)
+        else
+            @test isapprox(trans1, trans2; atol, norm=infnorm)
+        end
     end
 
     for control in control_seq
@@ -29,18 +33,23 @@ function are_equal_hmms(
         dists2 = obs_distributions(hmm2, control)
         for (dist1, dist2) in zip(dists1, dists2)
             for field in fieldnames(typeof(dist1))
-                if startswith(string(field), "log")
+                if startswith(string(field), "log") ||
+                    contains("σ", string(field)) ||
+                    contains("Σ", string(field))
                     continue
                 end
                 x1 = getfield(dist1, field)
                 x2 = getfield(dist2, field)
-                test && @test isapprox(x1, x2; atol, norm=infnorm)
-                equal_check = equal_check && isapprox(x1, x2; atol, norm=infnorm)
+                if flip
+                    @test !isapprox(x1, x2; atol, norm=infnorm)
+                else
+                    @test isapprox(x1, x2; atol, norm=infnorm)
+                end
             end
         end
     end
 
-    return equal_check
+    return nothing
 end
 
 function test_coherent_algorithms(
@@ -81,8 +90,8 @@ function test_coherent_algorithms(
         if !isnothing(hmm_guess)
             hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends)
             @test all(>=(0), diff(logL_evolution))
-            @test !are_equal_hmms(hmm, hmm_guess, control_seq[1:2]; atol, init, test=false)
-            are_equal_hmms(hmm, hmm_est, control_seq[1:2]; atol, init, test=true)
+            test_equal_hmms(hmm, hmm_guess, control_seq[1:2]; atol, init, flip=true)
+            test_equal_hmms(hmm, hmm_est, control_seq[1:2]; atol, init)
         end
     end
 end

@@ -26,6 +26,13 @@ function Base.copy(hmm::HMM)
     return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
 end
 
+function Base.show(io::IO, hmm::HMM)
+    return print(
+        io,
+        "Hidden Markov Model with:\n - initialization: $(hmm.init)\n - transition matrix: $(hmm.trans)\n - observation distributions: $(hmm.dists)",
+    )
+end
+
 initialization(hmm::HMM) = hmm.init
 transition_matrix(hmm::HMM) = hmm.trans
 obs_distributions(hmm::HMM) = hmm.dists

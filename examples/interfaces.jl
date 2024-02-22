@@ -105,7 +105,7 @@ If we implement `fit!`, Baum-Welch also works seamlessly.
 
 init_guess = [0.5, 0.5]
 trans_guess = [0.6 0.4; 0.4 0.6]
-dists_guess = [StuffDist(-0.5), StuffDist(+0.5)]
+dists_guess = [StuffDist(-0.7), StuffDist(+0.7)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #-

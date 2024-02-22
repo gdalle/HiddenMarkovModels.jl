@@ -50,14 +50,8 @@ function test_identical_hmmbase(
             @test isapprox(
                 logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
             )
-            are_equal_hmms(
-                hmm_est,
-                HMM(hmm_est_base.a, hmm_est_base.A, hmm_est_base.B),
-                [nothing];
-                atol,
-                init=true,
-                test=true,
-            )
+            hmm_est_base_converted = HMM(hmm_est_base.a, hmm_est_base.A, hmm_est_base.B)
+            test_equal_hmms(hmm_est, hmm_est_base_converted, [nothing]; atol, init=true)
         end
     end
 end
