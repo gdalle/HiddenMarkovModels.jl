@@ -161,13 +161,13 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.HMMBenchmark]]
 deps = ["BenchmarkTools", "CSV", "DataFrames", "Distributions", "HiddenMarkovModels", "InteractiveUtils", "LinearAlgebra", "Pkg", "Random", "SparseArrays", "StableRNGs", "Statistics"]
-path = "/home/gdalle/Work/GitHub/Julia/HiddenMarkovModels.jl/benchmark/../libs/HMMBenchmark"
+path = "../libs/HMMBenchmark"
 uuid = "557005d5-2e4a-43f9-8aa7-ba8df2d03179"
 version = "0.1.0"
 
 [[deps.HiddenMarkovModels]]
 deps = ["ArgCheck", "ChainRulesCore", "DensityInterface", "DocStringExtensions", "FillArrays", "LinearAlgebra", "PrecompileTools", "Random", "SparseArrays", "StatsAPI", "StatsFuns"]
-path = "/home/gdalle/Work/GitHub/Julia/HiddenMarkovModels.jl/benchmark/.."
+path = ".."
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 version = "0.4.0"
 weakdeps = ["Distributions"]
