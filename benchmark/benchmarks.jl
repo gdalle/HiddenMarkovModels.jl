@@ -1,8 +1,3 @@
-using Pkg
-Pkg.activate(@__DIR__)
-Pkg.develop(; path=joinpath(@__DIR__, ".."))
-Pkg.develop(; path=joinpath(@__DIR__, "..", "libs", "HMMBenchmark"))
-
 using BenchmarkTools
 using HMMBenchmark
 using Random
