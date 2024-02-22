@@ -45,10 +45,10 @@ We compare features among the following Python packages:
 | Algorithms[^1]            | V, FB, BW, VI        | FB, BW                | FB, V, BW, GD        |
 | Number types              | NumPy formats        | PyTorch formats       | JAX formats          |
 | Observation types         | number or vector     | number or vector      | number or vector     |
-| Observation distributions | discrete or Gaussian | pomegranate catalogue | discrete or Gaussian |
+| Observation distributions | hmmlearn catalogue   | pomegranate catalogue | dynamax catalogue    |
 | Multiple sequences        | yes                  | yes                   | yes                  |
 | Priors / structures       | yes                  | no                    | yes                  |
-| Control dependency        | no                   | no                    | no                   |
+| Control dependency        | no                   | no                    | yes                  |
 | Automatic differentiation | no                   | yes                   | yes                  |
 | Linear algebra speedup    | yes                  | yes                   | yes                  |
 | Numerical stability       | scaling / log        | log                   | log                  |
