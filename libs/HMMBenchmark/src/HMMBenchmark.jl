@@ -1,6 +1,7 @@
 module HMMBenchmark
 
-using Base.Threads
+using Base.Threads: Threads
+using InteractiveUtils: InteractiveUtils
 using BenchmarkTools: @benchmarkable, BenchmarkGroup
 using CSV: CSV
 using DataFrames: DataFrame
@@ -33,5 +34,6 @@ include("instance.jl")
 include("params.jl")
 include("hiddenmarkovmodels.jl")
 include("suite.jl")
+include("setup.jl")
 
 end

@@ -47,7 +47,9 @@ function DensityInterface.logdensityof(dist::LightCategorical, k::Integer)
     return dist.logp[k]
 end
 
-function StatsAPI.fit!(dist::LightCategorical{T1}, x, w) where {T1}
+function StatsAPI.fit!(
+    dist::LightCategorical{T1}, x::AbstractVector{<:Integer}, w::AbstractVector
+) where {T1}
     @argcheck 1 <= minimum(x) <= maximum(x) <= length(dist.p)
     w_tot = sum(w)
     dist.p .= zero(T1)
