@@ -2,7 +2,7 @@ using DataFrames
 using Plots
 using HMMComparison
 
-data = read_results(joinpath(@__DIR__, "results.csv"))
+data = read_results(joinpath(@__DIR__, "results", "results.csv"))
 
 sort!(data, [:algo, :implem, :nb_states])
 
@@ -13,7 +13,7 @@ implems = [
     "pomegranate",  #
     "dynamax",  #
 ]
-algos = ["forward", "baum_welch"]
+algos = ["viterbi", "forward", "forward_backward", "baum_welch"]
 
 markershapes = [:star5, :circle, :diamond, :hexagon, :pentagon, :utriangle]
 
@@ -24,6 +24,7 @@ for algo in algos
         yscale=:log,
         xlabel="nb states",
         ylabel="runtime (s)",
+        xticks=unique(data[!, :nb_states]),
         legend=:outerright,
         margin=5Plots.mm,
     )
@@ -33,10 +34,6 @@ for algo in algos
             pl,
             subdata[!, :nb_states],
             subdata[!, :time_median] ./ 1e9;
-            yerror=(
-                (subdata[!, :time_median] .- subdata[!, :time_quantile25]) ./ 1e9,
-                (subdata[!, :time_quantile75] .- subdata[!, :time_median]) ./ 1e9,
-            ),
             label=implem,
             markershape=markershapes[i],
             markerstrokecolor=:auto,
@@ -46,5 +43,5 @@ for algo in algos
         )
     end
     display(pl)
-    savefig(pl, joinpath(@__DIR__, "$(algo).png"))
+    savefig(pl, joinpath(@__DIR__, "results", "$(algo).pdf"))
 end

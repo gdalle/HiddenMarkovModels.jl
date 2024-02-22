@@ -5,11 +5,11 @@ function build_model(::HiddenMarkovModelsImplem, instance::Instance, params::Par
     (; custom_dist, nb_states, obs_dim) = instance
     (; init, trans, means, stds) = params
 
-    if custom_dist
-        dists = [LightDiagNormal(means[:, i], stds[:, i]) for i in 1:nb_states]
+    if obs_dim == 1
+        dists = [Normal(means[1, i], stds[1, i]) for i in 1:nb_states]
     else
-        if obs_dim == 1
-            dists = [Normal(means[1, i], stds[1, i]) for i in 1:nb_states]
+        if custom_dist
+            dists = [LightDiagNormal(means[:, i], stds[:, i]) for i in 1:nb_states]
         else
             dists = [MvNormal(means[:, i], Diagonal(stds[:, i])) for i in 1:nb_states]
         end
@@ -43,10 +43,12 @@ function build_benchmarkables(
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
             forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 10
+    end
+    if "forward!" in algos
         benchs["forward!"] = @benchmarkable begin
             forward!(f_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100 setup = (
+        end evals = 1 samples = 10 setup = (
             f_storage = initialize_forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
@@ -54,10 +56,12 @@ function build_benchmarkables(
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
             viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 10
+    end
+    if "viterbi!" in algos
         benchs["viterbi!"] = @benchmarkable begin
             viterbi!(v_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100 setup = (
+        end evals = 1 samples = 10 setup = (
             v_storage = initialize_viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
@@ -65,10 +69,12 @@ function build_benchmarkables(
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
             forward_backward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 10
+    end
+    if "forward_backward!" in algos
         benchs["forward_backward!"] = @benchmarkable begin
             forward_backward!(fb_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
-        end evals = 1 samples = 100 setup = (
+        end evals = 1 samples = 10 setup = (
             fb_storage = initialize_forward_backward(
                 $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
             )
@@ -86,7 +92,9 @@ function build_benchmarkables(
                 atol=-Inf,
                 loglikelihood_increasing=false,
             )
-        end evals = 1 samples = 100
+        end evals = 1 samples = 10
+    end
+    if "baum_welch!" in algos
         benchs["baum_welch!"] = @benchmarkable begin
             baum_welch!(
                 fb_storage,
@@ -99,7 +107,7 @@ function build_benchmarkables(
                 atol=-Inf,
                 loglikelihood_increasing=false,
             )
-        end evals = 1 samples = 100 setup = (
+        end evals = 1 samples = 10 setup = (
             hmm_guess = build_model($implem, $instance, $params);
             fb_storage = initialize_forward_backward(
                 hmm_guess, $obs_seq, $control_seq; seq_ends=$seq_ends

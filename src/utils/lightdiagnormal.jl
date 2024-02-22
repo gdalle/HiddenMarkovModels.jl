@@ -41,7 +41,9 @@ function Base.rand(rng::AbstractRNG, dist::LightDiagNormal{T1,T2}) where {T1,T2}
     return dist.σ .* randn(rng, T, length(dist)) .+ dist.μ
 end
 
-function DensityInterface.logdensityof(dist::LightDiagNormal{T1,T2,T3}, x) where {T1,T2,T3}
+function DensityInterface.logdensityof(
+    dist::LightDiagNormal{T1,T2,T3}, x::AbstractVector
+) where {T1,T2,T3}
     l = zero(promote_type(T1, T2, T3, eltype(x)))
     l -= sum(dist.logσ) + log2π * length(x) / 2
     @inbounds @simd for i in eachindex(x, dist.μ, dist.σ)
@@ -50,7 +52,9 @@ function DensityInterface.logdensityof(dist::LightDiagNormal{T1,T2,T3}, x) where
     return l
 end
 
-function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
+function StatsAPI.fit!(
+    dist::LightDiagNormal{T1,T2}, x::AbstractVector{<:AbstractVector}, w::AbstractVector
+) where {T1,T2}
     w_tot = sum(w)
     dist.μ .= zero(T1)
     dist.σ .= zero(T2)
