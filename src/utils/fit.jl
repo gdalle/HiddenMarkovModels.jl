@@ -9,7 +9,7 @@ Default behavior:
 
 Override for Distributions.jl (in the package extension)
 
-    dists[i] = fit(eltype(dists), x, w)
+    dists[i] = fit(eltype(dists), turn_into_vector(x), w)
 """
 function fit_in_sequence!(dists::AbstractVector, i::Integer, x, w)
     fit!(dists[i], x, w)
