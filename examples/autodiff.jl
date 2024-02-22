@@ -168,7 +168,7 @@ Enzyme.jl requires preallocated storage for the gradients, which we happily prov
 
 ∇parameters_enzyme = Enzyme.make_zero(parameters)
 ∇obs_enzyme = Enzyme.make_zero(obs_seq)
-∇control_enzyme = Enzyme.make_zero(control_seq)
+∇control_enzyme = Enzyme.make_zero(control_seq);
 
 #=
 The syntax is a bit more complex, see the Enzyme.jl docs for details.
