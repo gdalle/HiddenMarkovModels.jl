@@ -16,14 +16,14 @@ using Test  #src
 
 #-
 
-rng = StableRNG(63)
+rng = StableRNG(63);
 
 # ## Model
 
 #=
 We focus on the particular case of a periodic HMM with period `L`.
 It has only one initialization vector, but `L` transition matrices and `L` vectors of observation distributions.
-Once again we need to subtype `AbstractHMM`.
+As in [Custom HMM structures](@ref), we need to subtype `AbstractHMM`.
 =#
 
 struct PeriodicHMM{T<:Number,D,L} <: AbstractHMM
@@ -54,7 +54,7 @@ end
 
 # ## Simulation
 
-init = [0.8, 0.2]
+init = [0.6, 0.4]
 trans_per = ([0.7 0.3; 0.3 0.7], [0.3 0.7; 0.7 0.3])
 dists_per = ([Normal(-1.0), Normal(-2.0)], [Normal(+1.0), Normal(+2.0)])
 hmm = PeriodicHMM(init, trans_per, dists_per);
@@ -65,16 +65,18 @@ Since the behavior of the model depends on control variables, we need to pass th
 
 control_seq = 1:10
 state_seq, obs_seq = rand(rng, hmm, control_seq);
-obs_seq'
-@test mean(obs_seq[1:2:end]) < 0 < mean(obs_seq[2:2:end])  #src
 
 #=
 The observations mostly alternate between positive and negative values, which is coherent with negative observation means at odd times and positive observation means at even times.
+=#
 
+obs_seq'
+
+#=
 We now generate several sequences of variable lengths, for inference and learning tasks.
 =#
 
-control_seqs = [1:rand(100:200) for k in 1:1000]
+control_seqs = [1:rand(rng, 100:200) for k in 1:1000]
 obs_seqs = [rand(rng, hmm, control_seqs[k]).obs_seq for k in eachindex(control_seqs)];
 
 obs_seq = reduce(vcat, obs_seqs)
@@ -84,7 +86,7 @@ seq_ends = cumsum(length.(obs_seqs));
 # ## Inference
 
 #=
-All three inference algorithms work in the same way, except that we need to provide the control sequence as a keyword argument.
+All three inference algorithms work in the same way, except that we need to provide the control sequence as the last positional argument.
 =#
 
 best_state_seq, _ = viterbi(hmm, obs_seq, control_seq; seq_ends)
@@ -98,7 +100,7 @@ vcat(obs_seq', best_state_seq')
 # ## Learning
 
 #=
-When estimating parameters for a custom subtype of `AbstractHMM`, we have to override the fitting procedure after forward-backward (with an additional `control_seq` keyword argument).
+When estimating parameters for a custom subtype of `AbstractHMM`, we have to override the fitting procedure after forward-backward, with an additional `control_seq` positional argument.
 The key is to split the observations according to which periodic parameter they belong to.
 =#
 
@@ -140,7 +142,7 @@ function StatsAPI.fit!(
     end
 
     for l in 1:L
-        HMMs.check_hmm(hmm; control=l)
+        @assert HMMs.valid_hmm(hmm, l)
     end
     return nothing
 end
@@ -173,13 +175,14 @@ cat(transition_matrix(hmm_est, 2), transition_matrix(hmm, 2); dims=3)
 
 #-
 
-hcat(obs_distributions(hmm_est, 1), obs_distributions(hmm, 1))
+map(mean, hcat(obs_distributions(hmm_est, 1), obs_distributions(hmm, 1)))
 
 #-
 
-hcat(obs_distributions(hmm_est, 2), obs_distributions(hmm, 2))
+map(mean, hcat(obs_distributions(hmm_est, 2), obs_distributions(hmm, 2)))
 
 # ## Tests  #src
 
-test_coherent_algorithms(rng, hmm, hmm_guess; control_seq, seq_ends, atol=0.1, init=false)  #src
-test_type_stability(rng, hmm, hmm_guess; control_seq, seq_ends)  #src
+@test mean(obs_seq[1:2:end]) < 0 < mean(obs_seq[2:2:end])  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, atol=0.09, init=false)  #src
+test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

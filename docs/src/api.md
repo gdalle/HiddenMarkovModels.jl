@@ -6,7 +6,7 @@ HiddenMarkovModels
 
 ## Sequence formatting
 
-Most algorithms below ingest the data with three (keyword) arguments: `obs_seq`, `control_seq` and `seq_ends`.
+Most algorithms below ingest the data with two positional arguments `obs_seq` (mandatory) and `control_seq` (optional), and a keyword argument `seq_ends` (optional).
 
 - If the data consists of a single sequence, `obs_seq` and `control_seq` are the corresponding vectors of observations and controls, and you don't need to provide `seq_ends`.
 - If the data consists of multiple sequences, `obs_seq` and `control_seq` are concatenations of several vectors, whose end indices are given by `seq_ends`. Starting from separate sequences `obs_seqs` and `control_seqs`, you can run the following snippet:

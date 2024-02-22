@@ -20,9 +20,12 @@ struct LightDiagNormal{
     logσ::V3
 end
 
-function LightDiagNormal(μ::AbstractVector, σ::AbstractVector)
-    check_positive(σ)
-    return LightDiagNormal(μ, σ, log.(σ))
+function LightDiagNormal(μ::AbstractVector{T1}, σ::AbstractVector{T2}) where {T1,T2}
+    logσ = log.(σ)
+    @argcheck all(isfinite, μ)
+    @argcheck all(isfinite, σ)
+    @argcheck all(isfinite, logσ)
+    return LightDiagNormal(μ, σ, logσ)
 end
 
 function Base.show(io::IO, dist::LightDiagNormal)
@@ -38,29 +41,30 @@ function Base.rand(rng::AbstractRNG, dist::LightDiagNormal{T1,T2}) where {T1,T2}
     return dist.σ .* randn(rng, T, length(dist)) .+ dist.μ
 end
 
-function DensityInterface.logdensityof(dist::LightDiagNormal, x)
-    b = -sum(dist.logσ)
-    c =
-        -sum(
-            abs2(x[i] - dist.μ[i]) / (2 * abs2(dist.σ[i])) for
-            i in eachindex(x, dist.μ, dist.σ)
-        )
-    return b + c
+function DensityInterface.logdensityof(dist::LightDiagNormal{T1,T2,T3}, x) where {T1,T2,T3}
+    l = zero(promote_type(T1, T2, T3, eltype(x)))
+    l -= sum(dist.logσ) + log2π * length(x) / 2
+    @inbounds @simd for i in eachindex(x, dist.μ, dist.σ)
+        l -= abs2(x[i] - dist.μ[i]) / (2 * abs2(dist.σ[i]))
+    end
+    return l
 end
 
 function StatsAPI.fit!(dist::LightDiagNormal{T1,T2}, x, w) where {T1,T2}
     w_tot = sum(w)
     dist.μ .= zero(T1)
     dist.σ .= zero(T2)
-    for (xᵢ, wᵢ) in zip(x, w)
-        dist.μ .+= xᵢ .* wᵢ
-        dist.σ .+= abs2.(xᵢ) .* wᵢ
+    @inbounds @simd for i in eachindex(x, w)
+        dist.μ .+= x[i] .* w[i]
     end
     dist.μ ./= w_tot
-    dist.σ ./= w_tot
-    dist.σ .-= min.(abs2.(dist.μ), dist.σ)
-    dist.σ .= sqrt.(dist.σ)
+    @inbounds @simd for i in eachindex(x, w)
+        dist.σ .+= abs2.(x[i] .- dist.μ) .* w[i]
+    end
+    dist.σ .= sqrt.(dist.σ ./ w_tot)
     dist.logσ .= log.(dist.σ)
-    check_positive(dist.σ)
+    @argcheck all(isfinite, dist.μ)
+    @argcheck all(isfinite, dist.σ)
+    @argcheck all(isfinite, dist.logσ)
     return nothing
 end

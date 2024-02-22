@@ -36,8 +36,8 @@ Take a look at the [documentation](https://gdalle.github.io/HiddenMarkovModels.j
 
 [Hidden Markov Models](https://en.wikipedia.org/wiki/Hidden_Markov_model) (HMMs) are a widely used modeling framework in signal processing, bioinformatics and plenty of other fields.
 They explain an observation sequence $(Y_t)$ by assuming the existence of a latent Markovian state sequence $(X_t)$ whose current value determines the distribution of observations.
-In our framework, both the state and the observation sequence are also allowed to depend on a known control sequence $(U_t)$.
-Each of the problems below has an efficient solution algorithm which our package implements:
+In some scenarios, the state and the observation sequence are also allowed to depend on a known control sequence $(U_t)$.
+Each of the problems below has an efficient solution algorithm, available here:
 
 | Problem    | Goal                                   | Algorithm        |
 | ---------- | -------------------------------------- | ---------------- |
@@ -46,6 +46,10 @@ Each of the problems below has an efficient solution algorithm which our package
 | Smoothing  | All state marginals                    | Forward-backward |
 | Decoding   | Most likely state sequence             | Viterbi          |
 | Learning   | Maximum likelihood parameter           | Baum-Welch       |
+
+Take a look at this tutorial to know more about the math:
+
+> [_A tutorial on hidden Markov models and selected applications in speech recognition_](https://ieeexplore.ieee.org/document/18626), Rabiner (1989)
 
 ## Main features
 

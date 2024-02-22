@@ -27,7 +27,7 @@ function baum_welch!(
     max_iterations::Integer,
     loglikelihood_increasing::Bool,
 )
-    for iteration in 1:max_iterations
+    for _ in 1:max_iterations
         forward_backward!(fb_storage, hmm, obs_seq, control_seq; seq_ends)
         push!(logL_evolution, logdensityof(hmm) + sum(fb_storage.logL))
         fit!(hmm, fb_storage, obs_seq, control_seq; seq_ends)
@@ -73,7 +73,19 @@ function baum_welch(
         seq_ends,
         atol,
         max_iterations,
-        loglikelihood_increasing,
+        loglikelihood_increasing=false,
     )
     return hmm, logL_evolution
+end
+
+## Fallback
+
+function StatsAPI.fit!(
+    hmm::AbstractHMM,
+    fb_storage::ForwardBackwardStorage,
+    obs_seq::AbstractVector,
+    control_seq::AbstractVector;
+    seq_ends::AbstractVector{Int},
+)
+    return fit!(hmm, fb_storage, obs_seq; seq_ends)
 end

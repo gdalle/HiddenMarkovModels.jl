@@ -1,5 +1,6 @@
 module HMMComparison
 
+using Base.Threads: @threads
 using BenchmarkTools: BenchmarkGroup, @benchmarkable
 using CondaPkg: CondaPkg
 using Distributions: Normal, MvNormal

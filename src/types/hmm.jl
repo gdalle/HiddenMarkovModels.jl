@@ -17,13 +17,20 @@ struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHM
 
     function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
         hmm = new{typeof(init),typeof(trans),typeof(dists)}(init, trans, dists)
-        check_hmm(hmm)
+        @argcheck valid_hmm(hmm)
         return hmm
     end
 end
 
 function Base.copy(hmm::HMM)
     return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
+end
+
+function Base.show(io::IO, hmm::HMM)
+    return print(
+        io,
+        "Hidden Markov Model with:\n - initialization: $(hmm.init)\n - transition matrix: $(hmm.trans)\n - observation distributions: [$(join(hmm.dists, ", "))]",
+    )
 end
 
 initialization(hmm::HMM) = hmm.init
@@ -35,8 +42,7 @@ obs_distributions(hmm::HMM) = hmm.dists
 function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
-    obs_seq::AbstractVector,
-    control_seq::AbstractVector;
+    obs_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
     (; γ, ξ) = fb_storage
@@ -64,6 +70,6 @@ function StatsAPI.fit!(
         fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
     # Safety check
-    check_hmm(hmm)
+    @argcheck valid_hmm(hmm)
     return nothing
 end

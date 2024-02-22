@@ -1,24 +1,3 @@
-function valid_prob_vec(p::AbstractVector; atol=1e-2)
-    return (minimum(p) >= 0) && isapprox(sum(p), 1; atol=atol)
-end
-
-function is_square(A::AbstractMatrix)
-    return size(A, 1) == size(A, 2)
-end
-
-function valid_trans_mat(A::AbstractMatrix; atol=1e-2)
-    if !is_square(A)
-        return false
-    else
-        for row in eachrow(A)
-            if !valid_prob_vec(row; atol=atol)
-                return false
-            end
-        end
-        return true
-    end
-end
-
 """
     rand_prob_vec([rng, ::Type{R},] N)
 

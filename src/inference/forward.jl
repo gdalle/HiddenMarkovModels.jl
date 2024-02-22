@@ -80,6 +80,7 @@ function forward!(
         logL += -log(c[t + 1]) + logm
     end
 
+    @argcheck isfinite(logL)
     return logL
 end
 
@@ -93,12 +94,11 @@ function forward!(
     control_seq::AbstractVector;
     seq_ends::AbstractVector{Int},
 )
-    (; α, logL) = storage
+    (; logL) = storage
     @threads for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
     end
-    check_finite(α)
     return nothing
 end
 

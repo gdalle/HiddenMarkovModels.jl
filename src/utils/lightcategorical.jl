@@ -16,8 +16,8 @@ struct LightCategorical{T1,T2,V1<:AbstractVector{T1},V2<:AbstractVector{T2}}
     logp::V2
 end
 
-function LightCategorical(p::AbstractVector)
-    check_prob_vec(p)
+function LightCategorical(p::AbstractVector{T}) where {T}
+    @argcheck valid_prob_vec(p)
     return LightCategorical(p, log.(p))
 end
 
@@ -48,13 +48,14 @@ function DensityInterface.logdensityof(dist::LightCategorical, k::Integer)
 end
 
 function StatsAPI.fit!(dist::LightCategorical{T1}, x, w) where {T1}
+    @argcheck 1 <= minimum(x) <= maximum(x) <= length(dist.p)
     w_tot = sum(w)
     dist.p .= zero(T1)
-    for (xᵢ, wᵢ) in zip(x, w)
-        dist.p[xᵢ] += wᵢ
+    @inbounds @simd for i in eachindex(x, w)
+        dist.p[x[i]] += w[i]
     end
     dist.p ./= w_tot
     dist.logp .= log.(dist.p)
-    check_prob_vec(dist.p)
+    @argcheck valid_prob_vec(dist.p)
     return nothing
 end
