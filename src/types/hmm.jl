@@ -29,7 +29,7 @@ end
 function Base.show(io::IO, hmm::HMM)
     return print(
         io,
-        "Hidden Markov Model with:\n - initialization: $(hmm.init)\n - transition matrix: $(hmm.trans)\n - observation distributions: $(hmm.dists)",
+        "Hidden Markov Model with:\n - initialization: $(hmm.init)\n - transition matrix: $(hmm.trans)\n - observation distributions: [$(join(hmm.dists, ", "))]",
     )
 end
 

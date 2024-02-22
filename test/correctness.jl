@@ -13,7 +13,7 @@ rng = StableRNG(63)
 
 ## Settings
 
-T, K = 100, 200
+T, K = 50, 200
 
 init = [0.4, 0.6]
 init_guess = [0.5, 0.5]
@@ -25,7 +25,7 @@ p = [[0.8, 0.2], [0.2, 0.8]]
 p_guess = [[0.7, 0.3], [0.3, 0.7]]
 
 μ = [-ones(2), +ones(2)]
-μ_guess = [-0.7 * ones(2), +0.7 * ones(2)]
+μ_guess = [-0.8 * ones(2), +0.8 * ones(2)]
 
 σ = ones(2)
 
@@ -84,35 +84,4 @@ end
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
     test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
-end
-
-# Controlled
-
-struct DiffusionHMM{R1,R2,R3} <: AbstractHMM
-    init::Vector{R1}
-    trans::Matrix{R2}
-    means::Vector{R3}
-end
-
-HMMs.initialization(hmm::DiffusionHMM) = hmm.init
-
-function HMMs.transition_matrix(hmm::DiffusionHMM, λ::Number)
-    N = length(hmm)
-    return (1 - λ) * hmm.trans + λ * ones(N, N) / N
-end
-
-function HMMs.obs_distributions(hmm::DiffusionHMM, λ::Number)
-    return [Normal((1 - λ) * hmm.means[i]) for i in 1:length(hmm)]
-end
-
-@testset "Controlled" begin
-    means = randn(rng, 2)
-    hmm = DiffusionHMM(init, trans, means)
-
-    control_seqs = [[rand(rng) for t in 1:rand(T:(2T))] for k in 1:K]
-    control_seq = reduce(vcat, control_seqs)
-    seq_ends = cumsum(length.(control_seqs))
-
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends)
 end

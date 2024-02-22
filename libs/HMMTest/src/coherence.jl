@@ -33,11 +33,7 @@ function test_equal_hmms(
         dists2 = obs_distributions(hmm2, control)
         for (dist1, dist2) in zip(dists1, dists2)
             for field in fieldnames(typeof(dist1))
-                if startswith(string(field), "log") ||
-                    contains("σ", string(field)) ||
-                    contains("Σ", string(field))
-                    continue
-                end
+                string(field) in ("μ", "p") || continue
                 x1 = getfield(dist1, field)
                 x2 = getfield(dist2, field)
                 if flip

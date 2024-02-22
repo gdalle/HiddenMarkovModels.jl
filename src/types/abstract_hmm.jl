@@ -21,7 +21,7 @@ Any `AbstractHMM` which satisfies the interface can be given to the following fu
 - [`forward`](@ref)
 - [`viterbi`](@ref)
 - [`forward_backward`](@ref)
-- [`baum_welch`](@ref) (if `fit!` is implemented)
+- [`baum_welch`](@ref) (if `[fit!](@ref)` is implemented)
 """
 abstract type AbstractHMM end
 
@@ -80,12 +80,14 @@ These distribution objects should implement
 """
 obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
 
-function obs_logdensities!(logb::AbstractVector, hmm::AbstractHMM, obs, control)
+function obs_logdensities!(
+    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
+) where {T}
     dists = obs_distributions(hmm, control)
     @inbounds @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
-    @argcheck all(<(typemax(eltype(logb))), logb)
+    @argcheck maximum(logb) < typemax(T)
     return nothing
 end
 

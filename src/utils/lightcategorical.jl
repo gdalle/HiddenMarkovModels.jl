@@ -48,10 +48,11 @@ function DensityInterface.logdensityof(dist::LightCategorical, k::Integer)
 end
 
 function StatsAPI.fit!(dist::LightCategorical{T1}, x, w) where {T1}
+    @argcheck 1 <= minimum(x) <= maximum(x) <= length(dist.p)
     w_tot = sum(w)
     dist.p .= zero(T1)
-    for (xᵢ, wᵢ) in zip(x, w)
-        dist.p[xᵢ] += wᵢ
+    @inbounds @simd for i in eachindex(x, w)
+        dist.p[x[i]] += w[i]
     end
     dist.p ./= w_tot
     dist.logp .= log.(dist.p)

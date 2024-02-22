@@ -97,7 +97,7 @@ trans = sparse([
 #-
 
 init = [0.2, 0.6, 0.2]
-dists = [Normal(-2.0), Normal(0.0), Normal(+2.0)]
+dists = [Normal(1.0), Normal(2.0), Normal(3.0)]
 hmm = HMM(init, trans, dists)
 
 #=
@@ -129,7 +129,7 @@ trans_guess = sparse([
     0 0.6 0.4
     0.4 0 0.6
 ])
-dists_guess = [Normal(-1.5), Normal(0.0), Normal(+1.5)]
+dists_guess = [Normal(1.2), Normal(2.2), Normal(3.2)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #-
