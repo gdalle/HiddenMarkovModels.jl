@@ -92,7 +92,10 @@ function obs_logdensities!(
 end
 
 """
-$(SIGNATURES)
+    StatsAPI.fit!(
+        hmm, fb_storage::ForwardBackwardStorage,
+        obs_seq, [control_seq]; seq_ends,
+    )
 
 Update `hmm` in-place based on information generated during forward-backward.
 
