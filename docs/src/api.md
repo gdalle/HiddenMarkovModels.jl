@@ -111,7 +111,7 @@ HiddenMarkovModels.LightCategorical
 HiddenMarkovModels.log_initialization
 HiddenMarkovModels.log_transition_matrix
 HiddenMarkovModels.mul_rows_cols!
-HiddenMarkovModels.argmaxplus_mul!
+HiddenMarkovModels.argmaxplus_transmul!
 ```
 
 ## Index
