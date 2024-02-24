@@ -36,6 +36,13 @@ transition_matrix
 obs_distributions
 ```
 
+Optional log versions:
+
+```@docs
+log_initialization
+log_transition_matrix
+```
+
 ## Utils
 
 ```@docs
@@ -97,11 +104,19 @@ HiddenMarkovModels.baum_welch!
 ## Misc
 
 ```@docs
+HiddenMarkovModels.valid_hmm
 HiddenMarkovModels.rand_prob_vec
 HiddenMarkovModels.rand_trans_mat
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.LightCategorical
 HiddenMarkovModels.fit_in_sequence!
+```
+
+## Internals
+
+```@docs
+HiddenMarkovModels.mul_rows_cols!
+HiddenMarkovModels.argmaxplus_mul!
 ```
 
 ## Index

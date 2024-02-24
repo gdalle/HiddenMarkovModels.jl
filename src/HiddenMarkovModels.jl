@@ -19,7 +19,7 @@ using FillArrays: Fill
 using LinearAlgebra: dot, ldiv!, lmul!, mul!
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
-using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange, rowvals
 using StatsAPI: StatsAPI, fit, fit!
 using StatsFuns: log2π
 

@@ -6,6 +6,7 @@ Here we explain why playing with different number and array types can be useful 
 
 using Distributions
 using HiddenMarkovModels
+using HiddenMarkovModels: log_transition_matrix  #src
 using HMMTest  #src
 using LinearAlgebra
 using LogarithmicNumbers
@@ -148,6 +149,8 @@ Another useful array type is [StaticArrays.jl](https://github.com/JuliaArrays/St
 =#
 
 # ## Tests  #src
+
+@test nnz(log_transition_matrix(hmm)) == nnz(transition_matrix(hmm))  #src
 
 seq_ends = cumsum(rand(rng, 100:200, 100));  #src
 control_seqs = fill(nothing, length(seq_ends));  #src

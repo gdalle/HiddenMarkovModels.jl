@@ -15,14 +15,23 @@ function valid_dists(d::AbstractVector)
     return true
 end
 
+"""
+    valid_hmm(hmm)
+
+Perform some checks to rule out obvious inconsistencies with an `AbstractHMM` object.
+"""
 function valid_hmm(hmm::AbstractHMM, control=nothing)
     init = initialization(hmm)
     trans = transition_matrix(hmm, control)
     dists = obs_distributions(hmm, control)
-    return (
-        length(init) == length(dists) == size(trans, 1) == size(trans, 2) &&
-        valid_prob_vec(init) &&
-        valid_trans_mat(trans) &&
-        valid_dists(dists)
-    )
+    if !(length(init) == length(dists) == size(trans, 1) == size(trans, 2))
+        return false
+    elseif !valid_prob_vec(init)
+        return false
+    elseif !valid_trans_mat(trans)
+        return false
+    elseif !valid_dists(dists)
+        return false
+    end
+    return true
 end

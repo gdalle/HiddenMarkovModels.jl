@@ -19,10 +19,10 @@ rng = StableRNG(63);
 # ## Model
 
 #=
-The package provides a versatile [`HMM`](@ref) type with three attributes:
-- a vector of state initialization probabilities
-- a matrix of state transition probabilities
-- a vector of observation distributions, one for each state
+The package provides a versatile [`HMM`](@ref) type with three main attributes:
+- a vector `init` of state initialization probabilities
+- a matrix `trans` of state transition probabilities
+- a vector `dists` of observation distributions, one for each state
 
 Any scalar- or vector-valued distribution from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) can be used for the last part, as well as [Custom distributions](@ref).
 =#

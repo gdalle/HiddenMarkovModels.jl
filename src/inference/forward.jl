@@ -71,8 +71,8 @@ function forward!(
         Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
 
         trans = transition_matrix(hmm, control_seq[t])
-        αₜ₊₁ = view(α, :, t + 1)
-        mul!(αₜ₊₁, trans', view(α, :, t))
+        αₜ, αₜ₊₁ = view(α, :, t), view(α, :, t + 1)
+        mul!(αₜ₊₁, transpose(trans), αₜ)
         αₜ₊₁ .*= Bₜ₊₁
         c[t + 1] = inv(sum(αₜ₊₁))
         lmul!(c[t + 1], αₜ₊₁)
