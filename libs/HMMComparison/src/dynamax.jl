@@ -48,7 +48,7 @@ function HMMBenchmark.build_benchmarkables(
         filter_vmap = jax.jit(jax.vmap(hmm.filter; in_axes=pylist((pybuiltins.None, 0))))
         benchs["forward"] = @benchmarkable begin
             $(filter_vmap)($dyn_params, $obs_tens_jax_py)
-        end evals = 1 samples = 10
+        end evals = 1 samples = 100
     end
 
     if "viterbi" in algos
@@ -57,7 +57,7 @@ function HMMBenchmark.build_benchmarkables(
         )
         benchs["viterbi"] = @benchmarkable begin
             $(most_likely_states_vmap)($dyn_params, $obs_tens_jax_py)
-        end evals = 1 samples = 10
+        end evals = 1 samples = 100
     end
 
     if "forward_backward" in algos
@@ -66,7 +66,7 @@ function HMMBenchmark.build_benchmarkables(
         )
         benchs["forward_backward"] = @benchmarkable begin
             $(smoother_vmap)($dyn_params, $obs_tens_jax_py)
-        end evals = 1 samples = 10
+        end evals = 1 samples = 100
     end
 
     if "baum_welch" in algos
@@ -78,7 +78,7 @@ function HMMBenchmark.build_benchmarkables(
                 num_iters=$bw_iter,
                 verbose=false,
             )
-        end evals = 1 samples = 10 setup = (
+        end evals = 1 samples = 100 setup = (
             tup = build_model($implem, $instance, $params);
             hmm_guess = tup[1];
             dyn_params_guess = tup[2];

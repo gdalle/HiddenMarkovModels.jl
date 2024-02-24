@@ -10,13 +10,19 @@ $(TYPEDFIELDS)
 struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHMM
     "initial state probabilities"
     init::V
-    "state transition matrix"
+    "state transition probabilities"
     trans::M
     "observation distributions"
     dists::VD
+    "logarithms of initial state probabilities"
+    loginit::V
+    "logarithms of state transition probabilities"
+    logtrans::M
 
     function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
-        hmm = new{typeof(init),typeof(trans),typeof(dists)}(init, trans, dists)
+        hmm = new{typeof(init),typeof(trans),typeof(dists)}(
+            init, trans, dists, elementwise_log(init), elementwise_log(trans)
+        )
         @argcheck valid_hmm(hmm)
         return hmm
     end
@@ -34,7 +40,9 @@ function Base.show(io::IO, hmm::HMM)
 end
 
 initialization(hmm::HMM) = hmm.init
+log_initialization(hmm::HMM) = hmm.loginit
 transition_matrix(hmm::HMM) = hmm.trans
+log_transition_matrix(hmm::HMM) = hmm.logtrans
 obs_distributions(hmm::HMM) = hmm.dists
 
 ## Fitting
@@ -69,6 +77,9 @@ function StatsAPI.fit!(
     for i in 1:length(hmm)
         fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
+    # Update logs
+    hmm.loginit .= log.(hmm.init)
+    mynonzeros(hmm.logtrans) .= log.(mynonzeros(hmm.trans))
     # Safety check
     @argcheck valid_hmm(hmm)
     return nothing

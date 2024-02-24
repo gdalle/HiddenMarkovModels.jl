@@ -59,12 +59,33 @@ Return the vector of initial state probabilities for `hmm`.
 function initialization end
 
 """
+    log_initialization(hmm)
+
+Return the vector of initial state log-probabilities for `hmm`.
+
+Falls back on `initialization`.
+"""
+log_initialization(hmm::AbstractHMM) = elementwise_log(initialization(hmm))
+
+"""
     transition_matrix(hmm)
     transition_matrix(hmm, control)
 
 Return the matrix of state transition probabilities for `hmm` (possibly when `control` is applied).
 """
-transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
+function transition_matrix end
+
+"""
+    log_transition_matrix(hmm)
+    log_transition_matrix(hmm, control)
+
+Return the matrix of state transition log-probabilities for `hmm` (possibly when `control` is applied).
+
+Falls back on `transition_matrix`.
+"""
+function log_transition_matrix(hmm::AbstractHMM, control)
+    return elementwise_log(transition_matrix(hmm, control))
+end
 
 """
     obs_distributions(hmm)
@@ -78,18 +99,13 @@ These distribution objects should implement
 - `DensityInterface.logdensityof(dist, obs)` for inference
 - `StatsAPI.fit!(dist, obs_seq, weight_seq)` for learning
 """
-obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
+function obs_distributions end
 
-function obs_logdensities!(
-    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
-) where {T}
-    dists = obs_distributions(hmm, control)
-    @inbounds @simd for i in eachindex(logb, dists)
-        logb[i] = logdensityof(dists[i], obs)
-    end
-    @argcheck maximum(logb) < typemax(T)
-    return nothing
-end
+## Fallbacks for no control
+
+transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
+log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
+obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
 
 """
     StatsAPI.fit!(
@@ -102,6 +118,19 @@ Update `hmm` in-place based on information generated during forward-backward.
 This function is allowed to reuse `fb_storage` as a scratch space, so its contents should not be trusted afterwards.
 """
 StatsAPI.fit!
+
+## Fill logdensities
+
+function obs_logdensities!(
+    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
+) where {T}
+    dists = obs_distributions(hmm, control)
+    @inbounds @simd for i in eachindex(logb, dists)
+        logb[i] = logdensityof(dists[i], obs)
+    end
+    @argcheck maximum(logb) < typemax(T)
+    return nothing
+end
 
 ## Sampling
 

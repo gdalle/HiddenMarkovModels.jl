@@ -26,8 +26,7 @@ function test_identical_hmmbase(
 
         q_base = HMMBase.viterbi(hmm_base, obs_mat)
         q, logL_viterbi = viterbi(hmm, obs_seq; seq_ends)
-        # Viterbi decoding can vary in case of (infrequent) ties
-        @test mean(q[1:T] .== q_base) > 0.9 && mean(q[(T + 1):(2T)] .== q_base) > 0.9
+        @test all(q[1:T] .== q_base) && all(q[(T + 1):(2T)] .== q_base)
 
         γ_base = HMMBase.posteriors(hmm_base, obs_mat)
         γ, logL_forward_backward = forward_backward(hmm, obs_seq; seq_ends)

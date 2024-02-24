@@ -6,8 +6,8 @@
     hmm = HMM(init, trans, dists)
     state_seq, obs_seq = rand(hmm, T)
 
-    logdensityof(hmm, obs_seq, state_seq)
     logdensityof(hmm, obs_seq)
+    joint_logdensityof(hmm, obs_seq, state_seq)
     forward(hmm, obs_seq)
     viterbi(hmm, obs_seq)
     forward_backward(hmm, obs_seq)

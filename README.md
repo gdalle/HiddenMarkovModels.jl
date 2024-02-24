@@ -24,8 +24,8 @@ Then, you can create your first model as follows:
 
 ```julia
 using Distributions, HiddenMarkovModels
-init = [0.4, 0.6]
-trans = [0.9 0.1; 0.2 0.8]
+init = [0.6, 0.4]
+trans = [0.7 0.3; 0.2 0.8]
 dists = [Normal(-1.0), Normal(1.0)]
 hmm = HMM(init, trans, dists)
 ```

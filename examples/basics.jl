@@ -19,16 +19,16 @@ rng = StableRNG(63);
 # ## Model
 
 #=
-The package provides a versatile [`HMM`](@ref) type with three attributes:
-- a vector of state initialization probabilities
-- a matrix of state transition probabilities
-- a vector of observation distributions, one for each state
+The package provides a versatile [`HMM`](@ref) type with three main attributes:
+- a vector `init` of state initialization probabilities
+- a matrix `trans` of state transition probabilities
+- a vector `dists` of observation distributions, one for each state
 
 Any scalar- or vector-valued distribution from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) can be used for the last part, as well as [Custom distributions](@ref).
 =#
 
 init = [0.6, 0.4]
-trans = [0.7 0.3; 0.3 0.7]
+trans = [0.7 0.3; 0.2 0.8]
 dists = [MvNormal([-0.5, -0.8], I), MvNormal([0.5, 0.8], I)]
 hmm = HMM(init, trans, dists)
 
@@ -142,7 +142,7 @@ Since it is a local optimization procedure, it requires a starting point that is
 =#
 
 init_guess = [0.5, 0.5]
-trans_guess = [0.6 0.4; 0.4 0.6]
+trans_guess = [0.6 0.4; 0.3 0.7]
 dists_guess = [MvNormal([-0.4, -0.7], I), MvNormal([0.4, 0.7], I)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 

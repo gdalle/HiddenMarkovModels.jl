@@ -82,7 +82,7 @@ Let's put it to the test.
 =#
 
 init = [0.6, 0.4]
-trans = [0.7 0.3; 0.3 0.7]
+trans = [0.7 0.3; 0.2 0.8]
 dists = [StuffDist(-1.0), StuffDist(+1.0)]
 hmm = HMM(init, trans, dists);
 
@@ -104,8 +104,8 @@ If we implement `fit!`, Baum-Welch also works seamlessly.
 =#
 
 init_guess = [0.5, 0.5]
-trans_guess = [0.6 0.4; 0.4 0.6]
-dists_guess = [StuffDist(-0.7), StuffDist(+0.7)]
+trans_guess = [0.6 0.4; 0.3 0.7]
+dists_guess = [StuffDist(-1.1), StuffDist(+1.1)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #-

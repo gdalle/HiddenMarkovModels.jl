@@ -16,10 +16,10 @@ using ChainRulesCore: ChainRulesCore, NoTangent, RuleConfig, rrule_via_ad
 using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, logdensityof
 using DocStringExtensions
 using FillArrays: Fill
-using LinearAlgebra: dot, ldiv!, lmul!, mul!
+using LinearAlgebra: Transpose, dot, ldiv!, lmul!, mul!, parent
 using PrecompileTools: @compile_workload
 using Random: Random, AbstractRNG, default_rng
-using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange
+using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange, rowvals
 using StatsAPI: StatsAPI, fit, fit!
 using StatsFuns: log2π
 

@@ -94,14 +94,24 @@ HiddenMarkovModels.forward_backward!
 HiddenMarkovModels.baum_welch!
 ```
 
-## Misc
+## Miscellaneous
 
 ```@docs
+HiddenMarkovModels.valid_hmm
 HiddenMarkovModels.rand_prob_vec
 HiddenMarkovModels.rand_trans_mat
+HiddenMarkovModels.fit_in_sequence!
+```
+
+## Internals
+
+```@docs
 HiddenMarkovModels.LightDiagNormal
 HiddenMarkovModels.LightCategorical
-HiddenMarkovModels.fit_in_sequence!
+HiddenMarkovModels.log_initialization
+HiddenMarkovModels.log_transition_matrix
+HiddenMarkovModels.mul_rows_cols!
+HiddenMarkovModels.argmaxplus_transmul!
 ```
 
 ## Index

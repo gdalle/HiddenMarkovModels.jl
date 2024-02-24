@@ -85,3 +85,16 @@ end
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
     test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
 end
+
+@testset "Normal (sparse)" begin
+    dists = [Normal(μ[1][1]), Normal(μ[2][1])]
+    dists_guess = [Normal(μ_guess[1][1]), Normal(μ_guess[2][1])]
+
+    hmm = HMM(init, sparse(trans), dists)
+    hmm_guess = HMM(init_guess, trans_guess, dists_guess)
+
+    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+    @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+end

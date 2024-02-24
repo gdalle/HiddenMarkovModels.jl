@@ -6,6 +6,7 @@ Here we explain why playing with different number and array types can be useful 
 
 using Distributions
 using HiddenMarkovModels
+using HiddenMarkovModels: log_transition_matrix  #src
 using HMMTest  #src
 using LinearAlgebra
 using LogarithmicNumbers
@@ -40,7 +41,7 @@ To give an example, let us first generate some data from a vanilla HMM.
 =#
 
 init = [0.6, 0.4]
-trans = [0.7 0.3; 0.3 0.7]
+trans = [0.7 0.3; 0.2 0.8]
 dists = [Normal(-1.0), Normal(1.0)]
 hmm = HMM(init, trans, dists)
 state_seq, obs_seq = rand(rng, hmm, 100);
@@ -56,6 +57,10 @@ hmm_uncertain = HMM(init, trans, dists_guess)
 #=
 Every quantity we compute with this new HMM will have propagated uncertainties around it.
 =#
+
+logdensityof(hmm, obs_seq)
+
+#-
 
 logdensityof(hmm_uncertain, obs_seq)
 
@@ -129,7 +134,7 @@ trans_guess = sparse([
     0 0.6 0.4
     0.4 0 0.6
 ])
-dists_guess = [Normal(1.2), Normal(2.2), Normal(3.2)]
+dists_guess = [Normal(1.1), Normal(2.1), Normal(3.1)]
 hmm_guess = HMM(init_guess, trans_guess, dists_guess);
 
 #-
@@ -149,10 +154,12 @@ Another useful array type is [StaticArrays.jl](https://github.com/JuliaArrays/St
 
 # ## Tests  #src
 
+@test nnz(log_transition_matrix(hmm)) == nnz(transition_matrix(hmm))  #src
+
 seq_ends = cumsum(rand(rng, 100:200, 100));  #src
-control_seqs = fill(nothing, length(seq_ends));  #src
+control_seq = fill(nothing, last(seq_ends));  #src
 test_identical_hmmbase(rng, hmm, 100; hmm_guess)  #src
-test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false, atol=0.08)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 # https://github.com/JuliaSparse/SparseArrays.jl/issues/469  #src
 @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
