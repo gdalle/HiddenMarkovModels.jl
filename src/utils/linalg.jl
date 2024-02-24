@@ -7,10 +7,6 @@ mynnz(x::AbstractArray) = length(mynonzeros(x))
 
 elementwise_log(x::AbstractArray) = log.(x)
 
-function elementwise_log(A::SparseMatrixCSC)
-    return SparseMatrixCSC(A.m, A.n, A.colptr, A.rowval, log.(A.nzval))
-end
-
 """
     mul_rows_cols!(B, l, A, r)
 
@@ -61,31 +57,6 @@ function argmaxplus_mul!(
     for j in axes(A, 2)
         for i in axes(A, 1)
             z = A[i, j] + x[j]
-            if z > y[i]
-                y[i] = z
-                ind[i] = j
-            end
-        end
-    end
-    return y
-end
-
-function argmaxplus_mul!(
-    y::AbstractVector{R},
-    ind::AbstractVector{<:Integer},
-    A::SparseMatrixCSC,
-    x::AbstractVector,
-) where {R}
-    @argcheck axes(A, 1) == eachindex(y)
-    @argcheck axes(A, 2) == eachindex(x)
-    y .= typemin(R)
-    ind .= 0
-    Anz = nonzeros(A)
-    Arv = rowvals(A)
-    for j in axes(A, 2)
-        for k in nzrange(A, j)
-            i, a = Arv[k], Anz[k]
-            z = a + x[j]
             if z > y[i]
                 y[i] = z
                 ind[i] = j

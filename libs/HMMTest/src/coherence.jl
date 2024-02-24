@@ -21,7 +21,9 @@ function test_equal_hmms(
     for control in control_seq
         trans1 = transition_matrix(hmm1, control)
         trans2 = transition_matrix(hmm2, control)
-        @test HMMs.mynnz(trans1) == HMMs.mynnz(trans2)
+        if typeof(trans1) == typeof(trans2)
+            @test HMMs.mynnz(trans1) == HMMs.mynnz(trans2)
+        end
         if flip
             @test !isapprox(trans1, trans2; atol, norm=infnorm)
         else

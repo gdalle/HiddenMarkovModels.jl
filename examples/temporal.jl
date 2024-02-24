@@ -55,7 +55,7 @@ end
 # ## Simulation
 
 init = [0.6, 0.4]
-trans_per = ([0.7 0.3; 0.3 0.7], [0.3 0.7; 0.7 0.3])
+trans_per = ([0.7 0.3; 0.2 0.8], [0.3 0.7; 0.8 0.2])
 dists_per = ([Normal(-1.0), Normal(-2.0)], [Normal(+1.0), Normal(+2.0)])
 hmm = PeriodicHMM(init, trans_per, dists_per);
 
@@ -152,8 +152,8 @@ Now let's test our procedure with a reasonable guess.
 =#
 
 init_guess = [0.7, 0.3]
-trans_per_guess = ([0.6 0.4; 0.4 0.6], [0.4 0.6; 0.6 0.4])
-dists_per_guess = ([Normal(-0.7), Normal(-1.7)], [Normal(+0.7), Normal(+1.7)])
+trans_per_guess = ([0.6 0.4; 0.3 0.7], [0.4 0.6; 0.7 0.3])
+dists_per_guess = ([Normal(-1.1), Normal(-2.1)], [Normal(+1.1), Normal(+2.1)])
 hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess);
 
 #=

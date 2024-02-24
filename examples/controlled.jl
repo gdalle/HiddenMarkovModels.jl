@@ -55,8 +55,8 @@ In this case, the transition matrix does not depend on the control.
 # ## Simulation
 
 d = 3
-init = [0.8, 0.2]
-trans = [0.7 0.3; 0.3 0.7]
+init = [0.6, 0.4]
+trans = [0.7 0.3; 0.2 0.8]
 dist_coeffs = [-ones(d), ones(d)]
 hmm = ControlledGaussianHMM(init, trans, dist_coeffs);
 
@@ -123,9 +123,9 @@ end
 Now we put it to the test.
 =#
 
-init_guess = [0.7, 0.3]
-trans_guess = [0.6 0.4; 0.4 0.6]
-dist_coeffs_guess = [-0.7 * ones(d), 0.7 * ones(d)]
+init_guess = [0.5, 0.5]
+trans_guess = [0.6 0.4; 0.3 0.7]
+dist_coeffs_guess = [-1.1 * ones(d), 1.1 * ones(d)]
 hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
@@ -137,7 +137,7 @@ first(loglikelihood_evolution), last(loglikelihood_evolution)
 How did we perform?
 =#
 
-cat(transition_matrix(hmm_est), transition_matrix(hmm); dims=3)
+cat(hmm_est.trans, hmm.trans; dims=3)
 
 #-
 
