@@ -103,8 +103,9 @@ function obs_distributions end
 
 ## Fallbacks for no control
 
-transition_matrix(hmm::AbstractHMM, control) = transition_matrix(hmm)
-obs_distributions(hmm::AbstractHMM, control) = obs_distributions(hmm)
+transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
+log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
+obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
 
 """
     StatsAPI.fit!(

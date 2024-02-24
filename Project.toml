@@ -1,7 +1,7 @@
 name = "HiddenMarkovModels"
 uuid = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 authors = ["Guillaume Dalle"]
-version = "0.4.2"
+version = "0.5.0"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"

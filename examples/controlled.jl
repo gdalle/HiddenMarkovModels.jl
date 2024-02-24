@@ -32,14 +32,15 @@ struct ControlledGaussianHMM{T} <: AbstractHMM
 end
 
 #=
-In state $i$ with a vector of controls $u$, our observation is given by the linear model $y \sim \mathcal{N}(\beta_i^\top u, 1)$. 
+In state $i$ with a vector of controls $u$, our observation is given by the linear model $y \sim \mathcal{N}(\beta_i^\top u, 1)$.
+Controls must be provided to both `transition_matrix` and `obs_distributions` even if they are only used by one.
 =#
 
 function HMMs.initialization(hmm::ControlledGaussianHMM)
     return hmm.init
 end
 
-function HMMs.transition_matrix(hmm::ControlledGaussianHMM)
+function HMMs.transition_matrix(hmm::ControlledGaussianHMM, control::AbstractVector)
     return hmm.trans
 end
 
