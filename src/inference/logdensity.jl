@@ -34,8 +34,7 @@ function joint_logdensityof(
         logL += loginit[state_seq[t1]]
         # Transitions
         for t in t1:(t2 - 1)
-            logtrans = log.(transition_matrix(hmm, control_seq[t]))
-            # logtrans = log_transition_matrix(hmm, control_seq[t])
+            logtrans = log_transition_matrix(hmm, control_seq[t])
             logL += logtrans[state_seq[t], state_seq[t + 1]]
         end
         # Observations
