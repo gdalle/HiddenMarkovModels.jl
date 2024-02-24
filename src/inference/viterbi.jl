@@ -62,7 +62,7 @@ function viterbi!(
         logtrans = log_transition_matrix(hmm, control_seq[t - 1])
         ϕₜ, ϕₜ₋₁ = view(ϕ, :, t), view(ϕ, :, t - 1)
         ψₜ = view(ψ, :, t)
-        argmaxplus_mul!(ϕₜ, ψₜ, transpose(logtrans), ϕₜ₋₁)
+        argmaxplus_transmul!(ϕₜ, ψₜ, logtrans, ϕₜ₋₁)
         ϕₜ .+= logBₜ
     end
 

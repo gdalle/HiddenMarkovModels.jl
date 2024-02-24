@@ -79,7 +79,7 @@ function StatsAPI.fit!(
     end
     # Update logs
     hmm.loginit .= log.(hmm.init)
-    hmm.logtrans .= log.(hmm.trans)
+    mynonzeros(hmm.logtrans) .= log.(mynonzeros(hmm.trans))
     # Safety check
     @argcheck valid_hmm(hmm)
     return nothing

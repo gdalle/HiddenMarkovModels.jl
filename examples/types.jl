@@ -154,7 +154,7 @@ Another useful array type is [StaticArrays.jl](https://github.com/JuliaArrays/St
 
 # ## Tests  #src
 
-@test_broken nnz(log_transition_matrix(hmm)) == nnz(transition_matrix(hmm))  #src
+@test nnz(log_transition_matrix(hmm)) == nnz(transition_matrix(hmm))  #src
 
 seq_ends = cumsum(rand(rng, 100:200, 100));  #src
 control_seq = fill(nothing, last(seq_ends));  #src

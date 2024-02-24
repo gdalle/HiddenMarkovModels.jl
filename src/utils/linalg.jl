@@ -7,6 +7,10 @@ mynnz(x::AbstractArray) = length(mynonzeros(x))
 
 elementwise_log(x::AbstractArray) = log.(x)
 
+function elementwise_log(A::SparseMatrixCSC)
+    return SparseMatrixCSC(A.m, A.n, A.colptr, A.rowval, log.(A.nzval))
+end
+
 """
     mul_rows_cols!(B, l, A, r)
 
@@ -40,26 +44,51 @@ function mul_rows_cols!(
 end
 
 """
-    argmaxplus_mul!(y, ind, A, x)
+    argmaxplus_transmul!(y, ind, A, x)
 
-Perform the in-place multiplication `A * x` _in the sense of max-plus algebra_, store the result in `y`, and store the index of the maximum for each row in `ind`.
+Perform the in-place multiplication `transpose(A) * x` _in the sense of max-plus algebra_, store the result in `y`, and store the index of the maximum for each component of `y` in `ind`.
 """
-function argmaxplus_mul!(
+function argmaxplus_transmul!(
     y::AbstractVector{R},
     ind::AbstractVector{<:Integer},
     A::AbstractMatrix,
     x::AbstractVector,
 ) where {R}
-    @argcheck axes(A, 1) == eachindex(y)
-    @argcheck axes(A, 2) == eachindex(x)
+    @argcheck axes(A, 1) == eachindex(x)
+    @argcheck axes(A, 2) == eachindex(y)
     y .= typemin(R)
     ind .= 0
     for j in axes(A, 2)
         for i in axes(A, 1)
-            z = A[i, j] + x[j]
-            if z > y[i]
-                y[i] = z
-                ind[i] = j
+            z = A[i, j] + x[i]
+            if z > y[j]
+                y[j] = z
+                ind[j] = i
+            end
+        end
+    end
+    return y
+end
+
+function argmaxplus_transmul!(
+    y::AbstractVector{R},
+    ind::AbstractVector{<:Integer},
+    A::SparseMatrixCSC,
+    x::AbstractVector,
+) where {R}
+    @argcheck axes(A, 1) == eachindex(x)
+    @argcheck axes(A, 2) == eachindex(y)
+    Anz = nonzeros(A)
+    Arv = rowvals(A)
+    y .= typemin(R)
+    ind .= 0
+    for j in axes(A, 2)
+        for k in nzrange(A, j)
+            i = Arv[k]
+            z = Anz[k] + x[i]
+            if z > y[j]
+                y[j] = z
+                ind[j] = i
             end
         end
     end
