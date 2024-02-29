@@ -41,7 +41,7 @@ function HMMBenchmark.build_benchmarkables(
             @threads for k in eachindex($obs_mats)
                 HMMBase.forward($hmm, $obs_mats[k])
             end
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "viterbi" in algos
@@ -49,7 +49,7 @@ function HMMBenchmark.build_benchmarkables(
             @threads for k in eachindex($obs_mats)
                 HMMBase.viterbi($hmm, $obs_mats[k])
             end
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "forward_backward" in algos
@@ -57,13 +57,13 @@ function HMMBenchmark.build_benchmarkables(
             @threads for k in eachindex($obs_mats)
                 HMMBase.posteriors($hmm, $obs_mats[k])
             end
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
             HMMBase.fit_mle($hmm, $obs_mat_concat; maxiter=$bw_iter, tol=-Inf)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     return benchs

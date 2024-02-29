@@ -41,16 +41,16 @@ algos = ["forward", "viterbi", "forward_backward", "baum_welch"]
 
 instances = Instance[]
 
-for nb_states in 2:2:16
+for nb_states in 2:2:10
     push!(
         instances,
         Instance(;
-            custom_dist=true,
+            custom_dist=false,
             sparse=false,
             nb_states=nb_states,
             obs_dim=1,
-            seq_length=200,
-            nb_seqs=100,
+            seq_length=100,
+            nb_seqs=50,
             bw_iter=5,
         ),
     )

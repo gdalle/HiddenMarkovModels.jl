@@ -6,7 +6,7 @@ rng = Random.default_rng()
 
 @testset "HMMComparison" begin
     instance = Instance(;
-        custom_dist=false, sparse=false, nb_states=5, obs_dim=10, seq_length=25, nb_seqs=10
+        custom_dist=true, sparse=false, nb_states=5, obs_dim=10, seq_length=25, nb_seqs=10
     )
     params = build_params(rng, instance)
     data = build_data(rng, instance)
