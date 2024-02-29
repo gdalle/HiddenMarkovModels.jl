@@ -18,7 +18,7 @@ algos = ["viterbi", "forward", "forward_backward", "baum_welch"]
 markers = [:star5, :circle, :diamond, :hexagon, :pentagon]
 linestyles = [nothing, :dot, :dash, :dashdot, :dashdotdot]
 
-fig = Figure(size=(900, 700))
+fig = Figure(; size=(900, 700))
 ax = nothing
 for (k, algo) in enumerate(algos)
     ax = Axis(
@@ -28,9 +28,9 @@ for (k, algo) in enumerate(algos)
         ylabel="runtime (s)",
         yscale=log10,
         xticks=unique(data[!, :nb_states]),
-        yminorticksvisible = true,
-        yminorgridvisible = true,
-        yminorticks = IntervalsBetween(5)
+        yminorticksvisible=true,
+        yminorgridvisible=true,
+        yminorticks=IntervalsBetween(5),
     )
 
     for (i, implem) in enumerate(implems)
@@ -47,6 +47,6 @@ for (k, algo) in enumerate(algos)
         )
     end
 end
-Legend(fig[3, 1:2], ax, orientation = :horizontal)
+Legend(fig[3, 1:2], ax; orientation=:horizontal)
 fig
-save(joinpath(@__DIR__, "results", "benchmark.pdf"), fig)
+save(joinpath(@__DIR__, "results", "benchmark.svg"), fig)
