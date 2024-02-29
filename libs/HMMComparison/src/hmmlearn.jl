@@ -45,25 +45,25 @@ function HMMBenchmark.build_benchmarkables(
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
             $(hmm.score)($obs_mat_concat_py, $obs_mat_len_py)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
             $(hmm.decode)($obs_mat_concat_py, $obs_mat_len_py)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
             $(hmm.predict_proba)($obs_mat_concat_py, $obs_mat_len_py)
-        end evals = 1 samples = 100
+        end evals = 1 samples = 20
     end
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
             hmm_guess.fit($obs_mat_concat_py, $obs_mat_len_py)
-        end evals = 1 samples = 100 setup = (
+        end evals = 1 samples = 20 setup = (
             hmm_guess = build_model($implem, $instance, $params)
         )
     end

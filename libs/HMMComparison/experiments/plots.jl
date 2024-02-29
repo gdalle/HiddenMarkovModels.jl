@@ -1,5 +1,5 @@
 using DataFrames
-using Plots
+using CairoMakie
 using HMMComparison
 
 data = read_results(joinpath(@__DIR__, "results", "results.csv"))
@@ -15,33 +15,38 @@ implems = [
 ]
 algos = ["viterbi", "forward", "forward_backward", "baum_welch"]
 
-markershapes = [:star5, :circle, :diamond, :hexagon, :pentagon, :utriangle]
+markers = [:star5, :circle, :diamond, :hexagon, :pentagon]
+linestyles = [nothing, :dot, :dash, :dashdot, :dashdotdot]
 
-for algo in algos
-    pl = plot(;
+fig = Figure(size=(900, 700))
+ax = nothing
+for (k, algo) in enumerate(algos)
+    ax = Axis(
+        fig[fld1(k, 2), mod1(k, 2)];
         title=algo,
-        size=(800, 400),
-        yscale=:log,
         xlabel="nb states",
         ylabel="runtime (s)",
+        yscale=log10,
         xticks=unique(data[!, :nb_states]),
-        legend=:outerright,
-        margin=5Plots.mm,
+        yminorticksvisible = true,
+        yminorgridvisible = true,
+        yminorticks = IntervalsBetween(5)
     )
+
     for (i, implem) in enumerate(implems)
         subdata = data[(data[!, :algo] .== algo) .& (data[!, :implem] .== implem), :]
-        plot!(
-            pl,
+        scatterlines!(
+            ax,
             subdata[!, :nb_states],
             subdata[!, :time_median] ./ 1e9;
-            label=implem,
-            markershape=markershapes[i],
-            markerstrokecolor=:auto,
-            markersize=5,
-            linestyle=:auto,
             linewidth=2,
+            linestyle=linestyles[i],
+            marker=markers[i],
+            markersize=15,
+            label=implem,
         )
     end
-    display(pl)
-    savefig(pl, joinpath(@__DIR__, "results", "$(algo).pdf"))
 end
+Legend(fig[3, 1:2], ax, orientation = :horizontal)
+fig
+save(joinpath(@__DIR__, "results", "benchmark.pdf"), fig)
