@@ -19,7 +19,7 @@ markers = [:star5, :circle, :diamond, :hexagon, :pentagon]
 linestyles = [nothing, :dot, :dash, :dashdot, :dashdotdot]
 
 fig = Figure(; size=(900, 700))
-ax = nothing
+axes = []
 for (k, algo) in enumerate(algos)
     ax = Axis(
         fig[fld1(k, 2), mod1(k, 2)];
@@ -46,7 +46,8 @@ for (k, algo) in enumerate(algos)
             label=implem,
         )
     end
+    push!(axes, ax)
 end
-Legend(fig[3, 1:2], ax; orientation=:horizontal)
+Legend(fig[3, 1:2], first(axes); orientation=:horizontal)
 fig
 save(joinpath(@__DIR__, "results", "benchmark.svg"), fig)

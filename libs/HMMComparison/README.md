@@ -1,6 +1,19 @@
 # HMMComparison
 
-To re-run the experiments from the JOSS paper, clone the repository, start a Julia REPL and run
+To re-run the experiments from the JOSS paper, clone the repository:
+
+```bash
+git clone https://github.com/gdalle/HiddenMarkovModels.jl
+cd HiddenMarkovModels.jl
+```
+
+Start a single-threaded Julia REPL in the comparison environment:
+
+```bash
+julia -t 1 --project=libs/HMMComparison
+```
+
+Then run the following files:
 
 ```julia
 include("libs/HMMComparison/experiments/measurements.jl")
