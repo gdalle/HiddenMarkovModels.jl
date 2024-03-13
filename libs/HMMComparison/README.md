@@ -3,6 +3,8 @@
 To re-run the experiments from the JOSS paper, clone the repository, start a Julia REPL and run
 
 ```julia
+using Pkg
+Pkg.activate("libs/HMMComparison/")
 include("libs/HMMComparison/experiments/measurements.jl")
 include("libs/HMMComparison/experiments/plots.jl")
 ```

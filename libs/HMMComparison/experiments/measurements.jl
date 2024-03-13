@@ -1,8 +1,3 @@
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.develop(; path=joinpath(@__DIR__, "..", "..", ".."))
-Pkg.develop(; path=joinpath(@__DIR__, "..", "..", "HMMBenchmark"))
-
 @assert Base.Threads.nthreads() == 1
 
 # see https://superfastpython.com/numpy-number-blas-threads/

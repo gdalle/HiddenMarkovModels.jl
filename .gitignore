@@ -6,7 +6,9 @@
 /docs/build/
 /docs/Manifest.toml
 /test/Manifest.toml
-/libs/**/Manifest.toml
+/libs/HMMBenchmark/Manifest.toml
+/libs/HMMTest/Manifest.toml
+/libs/HMMComparison/test/Manifest.toml
 
 scratchpad.jl
 
