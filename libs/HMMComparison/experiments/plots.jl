@@ -51,3 +51,4 @@ end
 Legend(fig[3, 1:2], first(axes); orientation=:horizontal)
 fig
 save(joinpath(@__DIR__, "results", "benchmark.svg"), fig)
+save(joinpath(@__DIR__, "results", "benchmark.png"), fig)
