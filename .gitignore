@@ -17,8 +17,6 @@ scratchpad.jl
 *.ipynb
 *.ipynb_checkpoints
 
-*.csv
-*.txt
 .benchmarkci/
 /benchmark/*.json
 

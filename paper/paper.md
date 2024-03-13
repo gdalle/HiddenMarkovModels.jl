@@ -89,11 +89,11 @@ We compare `HiddenMarkovModels.jl`, `HMMBase.jl`, `hmmlearn`, `pomegranate` and 
 The reason for this low-dimensional choice is to spend most of the time in the generic HMM routines themselves, as opposed to the loglikelihood computations which are problem-specific.
 The data consists of $50$ independent sequences of length $100$ each, with a number of states varying from $2$ to $10$, to which we apply all inference algorithms (with Baum-Welch performing $5$ iterations).
 
-All benchmarks were run from Julia with `BenchmarkTools.jl` [@chenRobustBenchmarkingNoisy2016], calling Python with `PythonCall.jl` [@rowleyPythonCallJlPython2022], and plotting results with `CairoMakie.jl` [@danischMakieJlFlexible2021].
-The comparison code imports `HiddenMarkovModels.jl` version 0.5.0 (commit [9e0b7ab](https://github.com/gdalle/HiddenMarkovModels.jl/commit/9e0b7ab955866523551efbc42813adc4d2b1e3dd)), and it is accessible in the [`libs/HMMComparison/`](https://github.com/gdalle/HiddenMarkovModels.jl/tree/9e0b7ab955866523551efbc42813adc4d2b1e3dd/libs/HMMComparison) subfolder of our GitHub repository.
+All benchmarks were run in Julia version 1.10.2 with `BenchmarkTools.jl` [@chenRobustBenchmarkingNoisy2016], calling Python with `PythonCall.jl` [@rowleyPythonCallJlPython2022], and plotting results with `CairoMakie.jl` [@danischMakieJlFlexible2021].
+The comparison code imports `HiddenMarkovModels.jl` version 0.5.0 (commit [f7cf63b](https://github.com/gdalle/HiddenMarkovModels.jl/commit/f7cf63b48fb4853376071772ce35c55a73f57e5c)), and it is accessible in the [`libs/HMMComparison/`](https://github.com/gdalle/HiddenMarkovModels.jl/tree/f7cf63b48fb4853376071772ce35c55a73f57e5c/libs/HMMComparison) subfolder of our GitHub repository.
 We tried to minimize parallelism effects by running everything on a single thread, and made the assumption that the Julia-to-Python overhead is negligible compared to the algorithm runtime.
 
-![Benchmark of HMM packages](images/benchmark.svg)
+![Benchmark of HMM packages](../libs/HMMComparison/experiments/results/benchmark.svg)
 
 As we can see, `HiddenMarkovModels.jl` is the fastest option in Julia, and the second-fastest overall behind `dynamax` (we think the large runtimes of `dynamax` in Baum-Welch might stem from [incorrect benchmarks](https://github.com/probml/dynamax/issues/359)).
 The key observation is that we achieved this speedup over `HMMBase.jl` while _simultaneously increasing generality_ in half a dozen different ways.

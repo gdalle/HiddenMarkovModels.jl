@@ -1,0 +1,40 @@
+Julia Version 1.10.2
+Commit bd47eca2c8a (2024-03-01 10:14 UTC)
+Build Info:
+  Official https://julialang.org/ release
+Platform Info:
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 12 × Intel(R) Core(TM) i7-8850H CPU @ 2.60GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-15.0.7 (ORCJIT, skylake)
+Threads: 1 default, 0 interactive, 1 GC (on 12 virtual cores)
+Environment:
+  LD_LIBRARY_PATH = :/home/guillaume/Software/gurobi1002/linux64/lib:/home/guillaume/Software/gurobi1002/linux64/lib
+  JULIA_CONDAPKG_BACKEND = System
+  JULIA_CONDAPKG_EXE = /home/guillaume/miniforge3/bin/mamba
+
+# Multithreading
+
+Julia threads = 1
+OpenBLAS threads = 6
+
+# Julia packages
+
+Project HMMComparison v0.1.0
+Status `~/Work/GitHub/Julia/HiddenMarkovModels.jl/libs/HMMComparison/Project.toml`
+  [6e4b80f9] BenchmarkTools v1.5.0
+  [13f3f980] CairoMakie v0.11.9
+  [992eb4ea] CondaPkg v0.2.22
+  [a93c6f00] DataFrames v1.6.1
+  [31c24e10] Distributions v0.25.107
+  [b2b3ca75] HMMBase v1.0.7
+  [557005d5] HMMBenchmark v0.1.0 `../HMMBenchmark`
+  [84ca31d5] HiddenMarkovModels v0.5.0 `../..`
+  [2ab3a3ac] LogExpFunctions v0.3.27
+  [6099a3de] PythonCall v0.9.15
+  [189a3867] Reexport v1.2.2
+  [860ef19b] StableRNGs v1.0.1
+  [37e2e46d] LinearAlgebra
+  [9a3f8284] Random
+  [2f01184e] SparseArrays v1.10.0
