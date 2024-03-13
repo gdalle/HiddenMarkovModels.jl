@@ -1,9 +1,17 @@
-[deps]
-jax = ""
-numpy = ""
-pytorch = ""
+
+[deps.pytorch]
+channel = "pytorch"
+
+[deps.jax]
+channel = "conda-forge"
+
+[deps.numpy]
+channel = "conda-forge"
+
+[deps.cpuonly]
+channel = "pytorch"
 
 [pip.deps]
 dynamax = ""
-hmmlearn = ""
 pomegranate = ""
+hmmlearn = ""
