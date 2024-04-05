@@ -1,23 +1,31 @@
 # This CITATION.cff file was generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
 
-cff-version: 1.2.0
-title: HiddenMarkovModels.jl
-message: >-
-  If you use this software, please cite it using the
-  metadata from this file.
-type: software
+cff-version: "1.2.0"
 authors:
-  - given-names: Guillaume
-    family-names: Dalle
-    orcid: 'https://orcid.org/0000-0003-4866-1687'
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.8128331
-repository-code: 'https://github.com/gdalle/HiddenMarkovModels.jl'
-url: 'https://gdalle.github.io/HiddenMarkovModels.jl/stable/'
-abstract: ' A Julia package for HMM modeling, simulation, inference and learning.'
-keywords:
-  - Julia
-  - Hidden Markov Model
-license: MIT
+- family-names: Dalle
+  given-names: Guillaume
+  orcid: "https://orcid.org/0000-0003-4866-1687"
+doi: 10.5281/zenodo.10931812
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Dalle
+    given-names: Guillaume
+    orcid: "https://orcid.org/0000-0003-4866-1687"
+  date-published: 2024-04-05
+  doi: 10.21105/joss.06436
+  issn: 2475-9066
+  issue: 96
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6436
+  title: "HiddenMarkovModels.jl: generic, fast and reliable state space
+    modeling"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06436"
+  volume: 9
+title: "HiddenMarkovModels.jl: generic, fast and reliable state space
+  modeling"
