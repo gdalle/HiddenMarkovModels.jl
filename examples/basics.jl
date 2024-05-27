@@ -189,7 +189,7 @@ This is important to keep in mind when testing new models.
 In many applications, we have access to various observation sequences of different lengths.
 =#
 
-nb_seqs = 100
+nb_seqs = 300
 long_obs_seqs = [last(rand(rng, hmm, rand(rng, 100:200))) for k in 1:nb_seqs];
 typeof(long_obs_seqs)
 
@@ -259,6 +259,6 @@ hcat(initialization(hmm_est_concat), initialization(hmm))
 
 control_seq = fill(nothing, last(seq_ends));  #src
 test_identical_hmmbase(rng, hmm, 100; hmm_guess)  #src
-test_identical_hmmbase(rng, transpose_hmm(hmm), 100; hmm_guess=transpose_hmm(hmm_guess))  #src
 test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
+test_identical_hmmbase(rng, transpose_hmm(hmm), 100; hmm_guess=transpose_hmm(hmm_guess))  #src
