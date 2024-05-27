@@ -7,7 +7,13 @@ Basic implementation of an HMM.
 
 $(TYPEDFIELDS)
 """
-struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHMM
+struct HMM{
+    V<:AbstractVector,
+    M<:AbstractMatrix,
+    VD<:AbstractVector,
+    Vl<:AbstractVector,
+    Ml<:AbstractMatrix,
+} <: AbstractHMM
     "initial state probabilities"
     init::V
     "state transition probabilities"
@@ -15,13 +21,17 @@ struct HMM{V<:AbstractVector,M<:AbstractMatrix,VD<:AbstractVector} <: AbstractHM
     "observation distributions"
     dists::VD
     "logarithms of initial state probabilities"
-    loginit::V
+    loginit::Vl
     "logarithms of state transition probabilities"
-    logtrans::M
+    logtrans::Ml
 
     function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
-        hmm = new{typeof(init),typeof(trans),typeof(dists)}(
-            init, trans, dists, elementwise_log(init), elementwise_log(trans)
+        log_init = elementwise_log(init)
+        log_trans = elementwise_log(trans)
+        hmm = new{
+            typeof(init),typeof(trans),typeof(dists),typeof(log_init),typeof(log_trans)
+        }(
+            init, trans, dists, log_init, log_trans
         )
         @argcheck valid_hmm(hmm)
         return hmm
