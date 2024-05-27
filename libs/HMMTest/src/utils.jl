@@ -1,5 +1,5 @@
 function transpose_hmm(hmm::HMM)
-    init = initial_distribution(hmm)
+    init = initialization(hmm)
     trans = transition_matrix(hmm)
     dists = obs_distributions(hmm)
     trans_transpose = transpose(convert(typeof(trans), transpose(trans)))
