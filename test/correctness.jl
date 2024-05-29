@@ -112,9 +112,9 @@ end
     test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
 end
 
-@testset "Normal and Laplace" begin  # issue 101
-    dists = [Normal(μ[1][1]), Laplace(μ[2][1])]
-    dists_guess = [Normal(μ_guess[1][1]), Laplace(μ_guess[2][1])]
+@testset "Normal and Exponential" begin  # issue 101
+    dists = [Normal(μ[1][1]), Exponential(1.0)]
+    dists_guess = [Normal(μ_guess[1][1]), Exponential(0.8)]
 
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
