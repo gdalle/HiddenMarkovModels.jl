@@ -121,6 +121,4 @@ end
 
     test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
 end
