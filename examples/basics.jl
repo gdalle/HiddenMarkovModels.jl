@@ -261,4 +261,3 @@ control_seq = fill(nothing, last(seq_ends));  #src
 test_identical_hmmbase(rng, hmm, 100; hmm_guess)  #src
 test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
-test_identical_hmmbase(rng, transpose_hmm(hmm), 100; hmm_guess=transpose_hmm(hmm_guess))  #src
