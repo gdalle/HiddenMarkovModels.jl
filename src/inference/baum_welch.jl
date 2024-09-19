@@ -57,6 +57,7 @@ Return a tuple `(hmm_est, loglikelihood_evolution)` where `hmm_est` is the estim
 - `atol`: minimum loglikelihood increase at an iteration of the algorithm (otherwise the algorithm is deemed to have converged)
 - `max_iterations`: maximum number of iterations of the algorithm
 - `loglikelihood_increasing`: whether to throw an error if the loglikelihood decreases
+- `stopping_criterion`: The stopping criterion (either `:convergence` or `:stability`).
 """
 function baum_welch(
     hmm_guess::AbstractHMM,
