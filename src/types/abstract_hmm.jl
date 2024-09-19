@@ -128,6 +128,8 @@ function obs_logdensities!(
     @inbounds @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
+    logb[findall(i -> i < -log(-nextfloat(-Inf)), logb)] .= -log(-nextfloat(-Inf))
+    logb[findall(i -> i > log(prevfloat(Inf)), logb)] .= log(prevfloat(Inf))
     @argcheck maximum(logb) < typemax(T)
     return nothing
 end
