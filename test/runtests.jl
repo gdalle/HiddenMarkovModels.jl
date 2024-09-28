@@ -21,6 +21,7 @@ Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
 
     @testset "Code linting" begin
         using Distributions
+        using Zygote
         if VERSION >= v"1.10"
             JET.test_package(HiddenMarkovModels; target_defined_modules=true)
         end
