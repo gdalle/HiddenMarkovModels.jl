@@ -94,3 +94,6 @@ function argmaxplus_transmul!(
     end
     return y
 end
+
+concrete_transpose(A::AbstractMatrix) = convert(typeof(A), transpose(A))
+concrete_transpose(A::Transpose) = parent(A)

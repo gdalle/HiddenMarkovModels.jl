@@ -75,6 +75,10 @@ Return the matrix of state transition probabilities for `hmm` (possibly when `co
 """
 function transition_matrix end
 
+function transpose_transition_matrix(hmm::AbstractHMM, control)
+    return transpose(transition_matrix(hmm, control))
+end
+
 """
     log_transition_matrix(hmm)
     log_transition_matrix(hmm, control)
@@ -85,6 +89,10 @@ Falls back on `transition_matrix`.
 """
 function log_transition_matrix(hmm::AbstractHMM, control)
     return elementwise_log(transition_matrix(hmm, control))
+end
+
+function transpose_log_transition_matrix(hmm::AbstractHMM, control)
+    return transpose(log_transition_matrix(hmm, control))
 end
 
 """
@@ -104,7 +112,11 @@ function obs_distributions end
 ## Fallbacks for no control
 
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
+transpose_transition_matrix(hmm::AbstractHMM, ::Nothing) = transpose_transition_matrix(hmm)
 log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
+function transpose_log_transition_matrix(hmm::AbstractHMM, ::Nothing)
+    return transpose_log_transition_matrix(hmm)
+end
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
 
 """

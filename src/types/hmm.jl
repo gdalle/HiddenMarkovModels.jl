@@ -13,6 +13,8 @@ struct HMM{
     VD<:AbstractVector,
     Vl<:AbstractVector,
     Ml<:AbstractMatrix,
+    Mt<:AbstractMatrix,
+    Mlt<:AbstractMatrix,
 } <: AbstractHMM
     "initial state probabilities"
     init::V
@@ -24,14 +26,24 @@ struct HMM{
     loginit::Vl
     "logarithms of state transition probabilities"
     logtrans::Ml
+    transpose_trans::Mt
+    transpose_logtrans::Mlt
 
     function HMM(init::AbstractVector, trans::AbstractMatrix, dists::AbstractVector)
-        log_init = elementwise_log(init)
-        log_trans = elementwise_log(trans)
+        loginit = elementwise_log(init)
+        logtrans = elementwise_log(trans)
+        transpose_trans = concrete_transpose(trans)
+        transpose_logtrans = concrete_transpose(logtrans)
         hmm = new{
-            typeof(init),typeof(trans),typeof(dists),typeof(log_init),typeof(log_trans)
+            typeof(init),
+            typeof(trans),
+            typeof(dists),
+            typeof(loginit),
+            typeof(logtrans),
+            typeof(transpose_trans),
+            typeof(transpose_logtrans),
         }(
-            init, trans, dists, log_init, log_trans
+            init, trans, dists, loginit, logtrans, transpose_trans, transpose_logtrans
         )
         @argcheck valid_hmm(hmm)
         return hmm
@@ -52,7 +64,9 @@ end
 initialization(hmm::HMM) = hmm.init
 log_initialization(hmm::HMM) = hmm.loginit
 transition_matrix(hmm::HMM) = hmm.trans
+transpose_transition_matrix(hmm::HMM) = hmm.transpose_trans
 log_transition_matrix(hmm::HMM) = hmm.logtrans
+transpose_log_transition_matrix(hmm::HMM) = hmm.transpose_logtrans
 obs_distributions(hmm::HMM) = hmm.dists
 
 ## Fitting
@@ -90,6 +104,9 @@ function StatsAPI.fit!(
     # Update logs
     hmm.loginit .= log.(hmm.init)
     mynonzeros(hmm.logtrans) .= log.(mynonzeros(hmm.trans))
+    # Update transposes (could be optimized)
+    copyto!(hmm.transpose_trans, transpose(hmm.trans))
+    copyto!(hmm.transpose_logtrans, transpose(hmm.logtrans))
     # Safety check
     @argcheck valid_hmm(hmm)
     return nothing
