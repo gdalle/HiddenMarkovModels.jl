@@ -112,10 +112,10 @@ function obs_distributions end
 ## Fallbacks for no control
 
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
-transpose_transition_matrix(hmm::AbstractHMM, ::Nothing) = transpose_transition_matrix(hmm)
+transpose_transition_matrix(hmm::AbstractHMM, ::Nothing) = transpose(transition_matrix(hmm))
 log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
 function transpose_log_transition_matrix(hmm::AbstractHMM, ::Nothing)
-    return transpose_log_transition_matrix(hmm)
+    return transpose(log_transition_matrix(hmm))
 end
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
 
