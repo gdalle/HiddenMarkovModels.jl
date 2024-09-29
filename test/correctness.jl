@@ -13,7 +13,7 @@ rng = StableRNG(63)
 
 ## Settings
 
-T, K = 100, 200
+T, K = 100, 500
 
 init = [0.4, 0.6]
 init_guess = [0.5, 0.5]
