@@ -3,7 +3,7 @@ module HMMTestHMMBaseExt
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
 using HMMBase: HMMBase
-using HMMTest: HMMTest
+using HMMTest
 using Random: AbstractRNG
 using Statistics: mean
 using Test: @test, @testset, @test_broken
