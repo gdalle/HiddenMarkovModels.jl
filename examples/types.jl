@@ -158,7 +158,7 @@ Another useful array type is [StaticArrays.jl](https://github.com/JuliaArrays/St
 
 seq_ends = cumsum(rand(rng, 100:200, 1000));  #src
 control_seq = fill(nothing, last(seq_ends));  #src
-test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false, atol=0.08)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 # https://github.com/JuliaSparse/SparseArrays.jl/issues/469  #src
 @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
