@@ -7,7 +7,7 @@ function DensityInterface.logdensityof(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     _, logL = forward(hmm, obs_seq, control_seq; seq_ends)
     return sum(logL)
@@ -23,7 +23,7 @@ function joint_logdensityof(
     obs_seq::AbstractVector,
     state_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     R = eltype(hmm, obs_seq[1], control_seq[1])
     logL = zero(R)

@@ -61,7 +61,7 @@ function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
     obs_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     (; γ, ξ) = fb_storage
     # Fit states

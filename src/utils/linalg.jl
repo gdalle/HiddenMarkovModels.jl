@@ -1,3 +1,5 @@
+const AbstractVectorOrNTuple{T} = Union{AbstractVector{T},NTuple{N,T}} where {N}
+
 sum_to_one!(x) = ldiv!(sum(x), x)
 
 mynonzeros(x::AbstractArray) = x

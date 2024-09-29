@@ -16,7 +16,35 @@ struct ForwardStorage{R}
     c::Vector{R}
 end
 
+"""
+$(TYPEDEF)
+
+# Fields
+
+Only the fields with a description are part of the public API.
+
+$(TYPEDFIELDS)
+"""
+struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
+    "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
+    γ::Matrix{R}
+    "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
+    ξ::Vector{M}
+    "one loglikelihood per observation sequence"
+    logL::Vector{R}
+    B::Matrix{R}
+    α::Matrix{R}
+    c::Vector{R}
+    β::Matrix{R}
+    Bβ::Matrix{R}
+end
+
 Base.eltype(::ForwardStorage{R}) where {R} = R
+Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
+
+const ForwardOrForwardBackwardStorage{R} = Union{
+    ForwardStorage{R},ForwardBackwardStorage{R}
+}
 
 """
 $(SIGNATURES)
@@ -25,7 +53,7 @@ function initialize_forward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
@@ -40,7 +68,7 @@ end
 $(SIGNATURES)
 """
 function forward!(
-    storage,
+    storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
@@ -88,16 +116,23 @@ end
 $(SIGNATURES)
 """
 function forward!(
-    storage,
+    storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     (; logL) = storage
-    @threads for k in eachindex(seq_ends)
-        t1, t2 = seq_limits(seq_ends, k)
-        logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
+    if seq_ends isa NTuple
+        for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
+        end
+    else
+        @threads for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
+        end
     end
     return nothing
 end
@@ -113,7 +148,7 @@ function forward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     storage = initialize_forward(hmm, obs_seq, control_seq; seq_ends)
     forward!(storage, hmm, obs_seq, control_seq; seq_ends)
