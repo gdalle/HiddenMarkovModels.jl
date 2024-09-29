@@ -1,36 +1,11 @@
 """
-$(TYPEDEF)
-
-# Fields
-
-Only the fields with a description are part of the public API.
-
-$(TYPEDFIELDS)
-"""
-struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
-    "posterior state marginals `γ[i,t] = ℙ(X[t]=i | Y[1:T])`"
-    γ::Matrix{R}
-    "posterior transition marginals `ξ[t][i,j] = ℙ(X[t]=i, X[t+1]=j | Y[1:T])`"
-    ξ::Vector{M}
-    "one loglikelihood per observation sequence"
-    logL::Vector{R}
-    B::Matrix{R}
-    α::Matrix{R}
-    c::Vector{R}
-    β::Matrix{R}
-    Bβ::Matrix{R}
-end
-
-Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
-
-"""
 $(SIGNATURES)
 """
 function initialize_forward_backward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
     transition_marginals=true,
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
@@ -100,19 +75,28 @@ end
 $(SIGNATURES)
 """
 function forward_backward!(
-    storage::ForwardBackwardStorage{R},
+    storage::ForwardBackwardStorage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
     transition_marginals::Bool=true,
-) where {R}
+)
     (; logL) = storage
-    @threads for k in eachindex(seq_ends)
-        t1, t2 = seq_limits(seq_ends, k)
-        logL[k] = forward_backward!(
-            storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
-        )
+    if seq_ends isa NTuple
+        for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = forward_backward!(
+                storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
+            )
+        end
+    else
+        @threads for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = forward_backward!(
+                storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
+            )
+        end
     end
     return nothing
 end
@@ -128,7 +112,7 @@ function forward_backward(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     transition_marginals = false
     storage = initialize_forward_backward(

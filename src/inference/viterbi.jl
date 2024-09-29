@@ -26,7 +26,7 @@ function initialize_viterbi(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
@@ -85,12 +85,19 @@ function viterbi!(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 ) where {R}
     (; logL) = storage
-    @threads for k in eachindex(seq_ends)
-        t1, t2 = seq_limits(seq_ends, k)
-        logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
+    if seq_ends isa NTuple
+        for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
+        end
+    else
+        @threads for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
+        end
     end
     return nothing
 end
@@ -106,7 +113,7 @@ function viterbi(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     storage = initialize_viterbi(hmm, obs_seq, control_seq; seq_ends)
     viterbi!(storage, hmm, obs_seq, control_seq; seq_ends)
