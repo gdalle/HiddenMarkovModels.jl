@@ -35,7 +35,7 @@ seq_ends = cumsum(length.(control_seqs));
 
 ## Uncontrolled
 
-@testset "Normal" begin
+@testset verbose = true "Normal" begin
     dists = [Normal(μ[1][1]), Normal(μ[2][1])]
     dists_guess = [Normal(μ_guess[1][1]), Normal(μ_guess[2][1])]
 
@@ -51,7 +51,7 @@ seq_ends = cumsum(length.(control_seqs));
     end
 end
 
-@testset "DiagNormal" begin
+@testset verbose = true "DiagNormal" begin
     dists = [MvNormal(μ[1], Diagonal(abs2.(σ))), MvNormal(μ[2], Diagonal(abs2.(σ)))]
     dists_guess = [
         MvNormal(μ_guess[1], Diagonal(abs2.(σ))), MvNormal(μ_guess[2], Diagonal(abs2.(σ)))
@@ -68,7 +68,7 @@ end
     end
 end
 
-@testset "LightCategorical" begin
+@testset verbose = true "LightCategorical" begin
     dists = [LightCategorical(p[1]), LightCategorical(p[2])]
     dists_guess = [LightCategorical(p_guess[1]), LightCategorical(p_guess[2])]
 
@@ -82,7 +82,7 @@ end
     end
 end
 
-@testset "LightDiagNormal" begin
+@testset verbose = true "LightDiagNormal" begin
     dists = [LightDiagNormal(μ[1], σ), LightDiagNormal(μ[2], σ)]
     dists_guess = [LightDiagNormal(μ_guess[1], σ), LightDiagNormal(μ_guess[2], σ)]
 
@@ -96,7 +96,7 @@ end
     end
 end
 
-@testset "Normal (sparse)" begin
+@testset verbose = true "Normal (sparse)" begin
     dists = [Normal(μ[1][1]), Normal(μ[2][1])]
     dists_guess = [Normal(μ_guess[1][1]), Normal(μ_guess[2][1])]
 
@@ -112,7 +112,7 @@ end
     end
 end
 
-@testset "Normal transposed" begin  # issue 99
+@testset verbose = true "Normal transposed" begin  # issue 99
     dists = [Normal(μ[1][1]), Normal(μ[2][1])]
     dists_guess = [Normal(μ_guess[1][1]), Normal(μ_guess[2][1])]
 
@@ -128,7 +128,7 @@ end
     end
 end
 
-@testset "Normal and Exponential" begin  # issue 101
+@testset verbose = true "Normal and Exponential" begin  # issue 101
     dists = [Normal(μ[1][1]), Exponential(1.0)]
     dists_guess = [Normal(μ_guess[1][1]), Exponential(0.8)]
 

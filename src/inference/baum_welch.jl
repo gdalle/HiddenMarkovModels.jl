@@ -73,7 +73,7 @@ function baum_welch(
         seq_ends,
         atol,
         max_iterations,
-        loglikelihood_increasing=false,
+        loglikelihood_increasing,
     )
     return hmm, logL_evolution
 end
