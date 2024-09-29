@@ -109,7 +109,7 @@ function StatsAPI.fit!(
     fb_storage::HMMs.ForwardBackwardStorage,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 ) where {T}
     (; γ, ξ) = fb_storage
     L, N = period(hmm), length(hmm)
