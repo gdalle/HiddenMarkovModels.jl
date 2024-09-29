@@ -76,7 +76,7 @@ obs_seq'
 We now generate several sequences of variable lengths, for inference and learning tasks.
 =#
 
-control_seqs = [1:rand(rng, 300:500) for k in 1:1000]
+control_seqs = [1:rand(rng, 100:200) for k in 1:1000]
 obs_seqs = [rand(rng, hmm, control_seqs[k]).obs_seq for k in eachindex(control_seqs)];
 
 obs_seq = reduce(vcat, obs_seqs)

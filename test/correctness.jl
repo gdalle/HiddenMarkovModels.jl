@@ -42,10 +42,13 @@ seq_ends = cumsum(length.(control_seqs));
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE == "HMMBase"
+        test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    else
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "DiagNormal" begin
@@ -57,9 +60,12 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE == "HMMBase"
+        test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    else
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "LightCategorical" begin
@@ -69,9 +75,11 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE != "HMMBase"
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "LightDiagNormal" begin
@@ -81,9 +89,11 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE != "HMMBase"
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "Normal (sparse)" begin
@@ -93,10 +103,13 @@ end
     hmm = HMM(init, sparse(trans), dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE == "HMMBase"
+        test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    else
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "Normal transposed" begin  # issue 99
@@ -106,10 +119,13 @@ end
     hmm = transpose_hmm(HMM(init, trans, dists))
     hmm_guess = transpose_hmm(HMM(init_guess, trans_guess, dists_guess))
 
-    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-    test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-    test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    if TEST_SUITE == "HMMBase"
+        test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    else
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+    end
 end
 
 @testset "Normal and Exponential" begin  # issue 101
@@ -119,6 +135,9 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
-    test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+    if TEST_SUITE == "HMMBase"
+        test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    else
+        test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
+    end
 end

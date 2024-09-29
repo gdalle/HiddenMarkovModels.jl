@@ -66,7 +66,7 @@ Simulation requires a vector of controls, each being a vector itself with the ri
 Let us build several sequences of variable lengths.
 =#
 
-control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:300];
+control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:1000];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 obs_seq = reduce(vcat, obs_seqs)
