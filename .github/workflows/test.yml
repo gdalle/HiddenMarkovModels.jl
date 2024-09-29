@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-    tags: ['*']
+    tags: ["*"]
   pull_request:
 concurrency:
   # Skip intermediate builds: always.
@@ -18,10 +18,13 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.9'
-          - '1'
-        os:
-          - ubuntu-latest
+          - "1.9"
+          - "1"
+        test_suite:
+          - "normal"
+          - "hmmbase"
+    env:
+      JULIA_HMM_TEST_SUITE: ${{ matrix.test_suite }}
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
