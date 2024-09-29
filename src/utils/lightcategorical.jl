@@ -52,7 +52,7 @@ function StatsAPI.fit!(
 ) where {T1}
     @argcheck 1 <= minimum(x) <= maximum(x) <= length(dist.p)
     w_tot = sum(w)
-    dist.p .= zero(T1)
+    fill!(dist.p, zero(T1))
     @inbounds @simd for i in eachindex(x, w)
         dist.p[x[i]] += w[i]
     end

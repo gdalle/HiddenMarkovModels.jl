@@ -69,13 +69,13 @@ function StatsAPI.fit!(
         t1, t2 = seq_limits(seq_ends, k)
         # use ξ[t2] as scratch space since it is zero anyway
         scratch = ξ[t2]
-        scratch .= zero(eltype(scratch))
+        fill!(scratch, zero(eltype(scratch)))
         for t in t1:(t2 - 1)
             scratch .+= ξ[t]
         end
     end
-    hmm.init .= zero(eltype(hmm.init))
-    hmm.trans .= zero(eltype(hmm.trans))
+    fill!(hmm.init, zero(eltype(hmm.init)))
+    fill!(hmm.trans, zero(eltype(hmm.trans)))
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         hmm.init .+= view(γ, :, t1)

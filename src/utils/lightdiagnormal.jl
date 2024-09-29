@@ -56,8 +56,8 @@ function StatsAPI.fit!(
     dist::LightDiagNormal{T1,T2}, x::AbstractVector{<:AbstractVector}, w::AbstractVector
 ) where {T1,T2}
     w_tot = sum(w)
-    dist.μ .= zero(T1)
-    dist.σ .= zero(T2)
+    fill!(dist.μ, zero(T1))
+    fill!(dist.σ, zero(T2))
     @inbounds @simd for i in eachindex(x, w)
         dist.μ .+= x[i] .* w[i]
     end
