@@ -42,7 +42,7 @@ seq_ends = cumsum(length.(control_seqs));
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
     test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
@@ -57,7 +57,7 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
 end
@@ -93,7 +93,7 @@ end
     hmm = HMM(init, sparse(trans), dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
     @test_skip test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
@@ -106,7 +106,7 @@ end
     hmm = transpose_hmm(HMM(init, trans, dists))
     hmm_guess = transpose_hmm(HMM(init_guess, trans_guess, dists_guess))
 
-    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
     test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
     test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
@@ -119,6 +119,6 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
-    test_identical_hmmbase(rng, hmm, T; hmm_guess)
+    TEST_SUITE == "HMMBase" && test_identical_hmmbase(rng, hmm, T; hmm_guess)
     test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
 end

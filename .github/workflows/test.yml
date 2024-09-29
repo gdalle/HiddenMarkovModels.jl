@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.test_suite }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,8 +21,8 @@ jobs:
           - "1.9"
           - "1"
         test_suite:
-          - "normal"
-          - "hmmbase"
+          - "Standard"
+          - "HMMBase"
     env:
       JULIA_HMM_TEST_SUITE: ${{ matrix.test_suite }}
     steps:

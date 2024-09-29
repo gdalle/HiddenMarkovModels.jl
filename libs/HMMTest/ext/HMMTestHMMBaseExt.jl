@@ -64,5 +64,4 @@ function HMMTest.test_identical_hmmbase(
     end
 end
 
-
 end
