@@ -186,7 +186,7 @@ function StatsAPI.fit!(
     hmm::PriorHMM,
     fb_storage::HiddenMarkovModels.ForwardBackwardStorage,
     obs_seq::AbstractVector;
-    seq_ends::AbstractVectorOrNTuple{Int},
+    seq_ends,
 )
     ## initialize to defaults without observations
     hmm.init .= 0
