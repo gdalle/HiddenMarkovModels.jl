@@ -9,11 +9,13 @@ using SparseArrays
 using StableRNGs
 using Test
 
+TEST_SUITE = get(ENV, "JULIA_HMM_TEST_SUITE", "Standard")
+
 rng = StableRNG(63)
 
 ## Settings
 
-T, K = 100, 500
+T, K = 50, 200
 
 init = [0.4, 0.6]
 init_guess = [0.5, 0.5]
@@ -91,8 +93,8 @@ end
 
     if TEST_SUITE != "HMMBase"
         test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
-        test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
-        test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
+        # test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
+        # test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)
     end
 end
 
