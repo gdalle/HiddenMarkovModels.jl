@@ -9,6 +9,7 @@ using Test
 TEST_SUITE = get(ENV, "JULIA_HMM_TEST_SUITE", "Standard")
 if TEST_SUITE == "HMMBase"
     Pkg.add("HMMBase")
+    using HMMBase: HMMBase
 end
 
 Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
