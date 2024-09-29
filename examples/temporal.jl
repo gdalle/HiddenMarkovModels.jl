@@ -183,6 +183,6 @@ map(mean, hcat(obs_distributions(hmm_est, 2), obs_distributions(hmm, 2)))
 
 # ## Tests  #src
 
-@test mean(obs_seq[1:2:end]) < 0 < mean(obs_seq[2:2:end])  #src
+@test mean(obs_seqs[1][1:2:end]) < 0 < mean(obs_seqs[1][2:2:end])  #src
 test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

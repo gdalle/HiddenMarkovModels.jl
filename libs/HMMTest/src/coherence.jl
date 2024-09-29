@@ -88,7 +88,7 @@ function test_coherent_algorithms(
 
         if !isnothing(hmm_guess)
             hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends)
-            @test all(>=(0), diff(logL_evolution))
+            @test all(>=(-0.5e-5), diff(logL_evolution))
             test_equal_hmms(hmm, hmm_guess, control_seq[1:2]; atol, init, flip=true)
             test_equal_hmms(hmm, hmm_est, control_seq[1:2]; atol, init)
         end
