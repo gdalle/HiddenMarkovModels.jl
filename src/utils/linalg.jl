@@ -33,9 +33,9 @@ function mul_rows_cols!(
     Brv = rowvals(B)
     Bnz = nonzeros(B)
     Anz = nonzeros(A)
-    for j in axes(B, 2)
+    @simd for j in axes(B, 2)
         @argcheck nzrange(B, j) == nzrange(A, j)
-        for k in nzrange(B, j)
+        @simd for k in nzrange(B, j)
             i = Brv[k]
             Bnz[k] = l[i] * Anz[k] * r[j]
         end
@@ -56,10 +56,10 @@ function argmaxplus_transmul!(
 ) where {R}
     @argcheck axes(A, 1) == eachindex(x)
     @argcheck axes(A, 2) == eachindex(y)
-    y .= typemin(R)
-    ind .= 0
-    for j in axes(A, 2)
-        for i in axes(A, 1)
+    fill!(y, typemin(R))
+    fill!(ind, 0)
+    @simd for j in axes(A, 2)
+        @simd for i in axes(A, 1)
             z = A[i, j] + x[i]
             if z > y[j]
                 y[j] = z
@@ -80,10 +80,10 @@ function argmaxplus_transmul!(
     @argcheck axes(A, 2) == eachindex(y)
     Anz = nonzeros(A)
     Arv = rowvals(A)
-    y .= typemin(R)
-    ind .= 0
-    for j in axes(A, 2)
-        for k in nzrange(A, j)
+    fill!(y, typemin(R))
+    fill!(ind, 0)
+    @simd for j in axes(A, 2)
+        @simd for k in nzrange(A, j)
             i = Arv[k]
             z = Anz[k] + x[i]
             if z > y[j]
