@@ -257,6 +257,8 @@ hcat(initialization(hmm_est_concat), initialization(hmm))
 
 # ## Tests  #src
 
+@test startswith(string(hmm), "Hidden")  #src
+@test length.(values(rand(hmm, T))) == (T, T);  #src
 control_seq = fill(nothing, last(seq_ends));  #src
 test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

@@ -17,8 +17,6 @@ struct ViterbiStorage{R}
     ψ::Matrix{Int}
 end
 
-Base.eltype(::ViterbiStorage{R}) where {R} = R
-
 """
 $(SIGNATURES)
 """

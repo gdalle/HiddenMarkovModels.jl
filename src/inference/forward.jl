@@ -39,7 +39,6 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     Bβ::Matrix{R}
 end
 
-Base.eltype(::ForwardStorage{R}) where {R} = R
 Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
 
 const ForwardOrForwardBackwardStorage{R} = Union{
