@@ -50,7 +50,7 @@ Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
         end
     end
 
-    @testset "Correctness - $TEST_SUITE" begin
+    @testset verbose = true "Correctness - $TEST_SUITE" begin
         include("correctness.jl")
     end
 end

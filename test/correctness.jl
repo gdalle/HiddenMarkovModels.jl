@@ -11,8 +11,6 @@ using Test
 
 TEST_SUITE = get(ENV, "JULIA_HMM_TEST_SUITE", "Standard")
 
-rng = StableRNG(63)
-
 ## Settings
 
 T, K = 100, 200
@@ -31,6 +29,7 @@ p_guess = [[0.7, 0.3], [0.3, 0.7]]
 
 σ = ones(2)
 
+rng = StableRNG(63)
 control_seqs = [fill(nothing, rand(rng, T:(2T))) for k in 1:K];
 control_seq = reduce(vcat, control_seqs);
 seq_ends = cumsum(length.(control_seqs));
@@ -44,6 +43,7 @@ seq_ends = cumsum(length.(control_seqs));
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE == "HMMBase"
         test_identical_hmmbase(rng, hmm, T; hmm_guess)
     else
@@ -62,6 +62,7 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE == "HMMBase"
         test_identical_hmmbase(rng, hmm, T; hmm_guess)
     else
@@ -77,6 +78,7 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE != "HMMBase"
         test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
         test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
@@ -91,6 +93,7 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE != "HMMBase"
         test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)
         test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)
@@ -105,6 +108,7 @@ end
     hmm = HMM(init, sparse(trans), dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE == "HMMBase"
         test_identical_hmmbase(rng, hmm, T; hmm_guess)
     else
@@ -121,6 +125,7 @@ end
     hmm = transpose_hmm(HMM(init, trans, dists))
     hmm_guess = transpose_hmm(HMM(init_guess, trans_guess, dists_guess))
 
+    rng = StableRNG(63)
     if TEST_SUITE == "HMMBase"
         test_identical_hmmbase(rng, hmm, T; hmm_guess)
     else
@@ -137,6 +142,7 @@ end
     hmm = HMM(init, trans, dists)
     hmm_guess = HMM(init_guess, trans_guess, dists_guess)
 
+    rng = StableRNG(63)
     if TEST_SUITE == "HMMBase"
         test_identical_hmmbase(rng, hmm, T; hmm_guess)
     else

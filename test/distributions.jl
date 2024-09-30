@@ -25,7 +25,7 @@ end
     end
     @test val_count ./ length(x) ≈ p atol = 2e-2
     # Fitting
-    dist_est = deepcopy(dist)
+    dist_est = LightCategorical(rand_prob_vec(rng, 10))
     w = ones(length(x))
     fit!(dist_est, x, w)
     @test dist_est.p ≈ p atol = 2e-2
@@ -43,7 +43,7 @@ end
     @test mean(x) ≈ μ atol = 2e-2
     @test std(x) ≈ σ atol = 2e-2
     # Fitting
-    dist_est = deepcopy(dist)
+    dist_est = LightDiagNormal(randn(rng, 10), rand(rng, 10))
     w = ones(length(x))
     fit!(dist_est, x, w)
     @test dist_est.μ ≈ μ atol = 2e-2
