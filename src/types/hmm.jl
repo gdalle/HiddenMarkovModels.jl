@@ -38,10 +38,6 @@ struct HMM{
     end
 end
 
-function Base.copy(hmm::HMM)
-    return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
-end
-
 function Base.show(io::IO, hmm::HMM)
     return print(
         io,
