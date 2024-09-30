@@ -11,6 +11,7 @@ using Enzyme: Enzyme
 using ForwardDiff: ForwardDiff
 using HiddenMarkovModels
 import HiddenMarkovModels as HMMs
+using HMMTest  #src
 using LinearAlgebra
 using Random: Random, AbstractRNG
 using StableRNGs

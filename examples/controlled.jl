@@ -66,7 +66,7 @@ Simulation requires a vector of controls, each being a vector itself with the ri
 Let us build several sequences of variable lengths.
 =#
 
-control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:100];
+control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:1000];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 obs_seq = reduce(vcat, obs_seqs)
@@ -151,5 +151,5 @@ hcat(hmm_est.dist_coeffs[2], hmm.dist_coeffs[2])
 
 @test hmm_est.dist_coeffs[1] ≈ hmm.dist_coeffs[1] atol = 0.05  #src
 @test hmm_est.dist_coeffs[2] ≈ hmm.dist_coeffs[2] atol = 0.05  #src
-test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, atol=0.08, init=false)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

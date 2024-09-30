@@ -125,7 +125,7 @@ function obs_logdensities!(
     logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
 ) where {T}
     dists = obs_distributions(hmm, control)
-    @inbounds @simd for i in eachindex(logb, dists)
+    @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
     @argcheck maximum(logb) < typemax(T)
