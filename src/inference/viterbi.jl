@@ -36,18 +36,16 @@ function initialize_viterbi(
     return ViterbiStorage(q, logL, logB, ϕ, ψ)
 end
 
-"""
-$(SIGNATURES)
-"""
-function viterbi!(
+function _viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
-    t1::Integer,
-    t2::Integer;
+    seq_ends::AbstractVectorOrNTuple{Int},
+    k::Integer,
 ) where {R}
-    (; q, logB, ϕ, ψ) = storage
+    (; q, logB, ϕ, ψ, logL) = storage
+    t1, t2 = seq_limits(seq_ends, k)
 
     logBₜ₁ = view(logB, :, t1)
     obs_logdensities!(logBₜ₁, hmm, obs_seq[t1], control_seq[t1])
@@ -66,13 +64,13 @@ function viterbi!(
 
     ϕₜ₂ = view(ϕ, :, t2)
     q[t2] = argmax(ϕₜ₂)
-    logL = ϕ[q[t2], t2]
+    logL[k] = ϕ[q[t2], t2]
     for t in (t2 - 1):-1:t1
         q[t] = ψ[q[t + 1], t + 1]
     end
 
-    @argcheck isfinite(logL)
-    return logL
+    @argcheck isfinite(logL[k])
+    return nothing
 end
 
 """
@@ -85,16 +83,13 @@ function viterbi!(
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
 ) where {R}
-    (; logL) = storage
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
+            _viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     else
         @threads for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = viterbi!(storage, hmm, obs_seq, control_seq, t1, t2;)
+            _viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     end
     return nothing

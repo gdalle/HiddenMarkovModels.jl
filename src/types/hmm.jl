@@ -61,13 +61,23 @@ function StatsAPI.fit!(
 )
     (; γ, ξ) = fb_storage
     # Fit states
-    @threads for k in eachindex(seq_ends)
-        t1, t2 = seq_limits(seq_ends, k)
-        # use ξ[t2] as scratch space since it is zero anyway
-        scratch = ξ[t2]
-        fill!(scratch, zero(eltype(scratch)))
-        for t in t1:(t2 - 1)
-            scratch .+= ξ[t]
+    if seq_ends isa NTuple
+        for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            scratch = ξ[t2]  # use ξ[t2] as scratch space since it is zero anyway
+            fill!(scratch, zero(eltype(scratch)))
+            for t in t1:(t2 - 1)
+                scratch .+= ξ[t]
+            end
+        end
+    else
+        @threads for k in eachindex(seq_ends)
+            t1, t2 = seq_limits(seq_ends, k)
+            scratch = ξ[t2]  # use ξ[t2] as scratch space since it is zero anyway
+            fill!(scratch, zero(eltype(scratch)))
+            for t in t1:(t2 - 1)
+                scratch .+= ξ[t]
+            end
         end
     end
     fill!(hmm.init, zero(eltype(hmm.init)))
