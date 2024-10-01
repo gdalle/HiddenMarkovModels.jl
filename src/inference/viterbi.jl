@@ -47,7 +47,7 @@ function viterbi!(
     seq_ends::AbstractVectorOrNTuple{Int},
     k::Integer,
 ) where {R}
-    (; q, logB, ϕ, ψ) = storage
+    (; q, logB, ϕ, ψ, logL) = storage
     t1, t2 = seq_limits(seq_ends, k)
 
     logBₜ₁ = view(logB, :, t1)

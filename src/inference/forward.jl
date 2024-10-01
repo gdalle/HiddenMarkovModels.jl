@@ -74,7 +74,7 @@ function forward!(
     seq_ends::AbstractVectorOrNTuple{Int},
     k::Integer,
 )
-    (; α, B, c) = storage
+    (; α, B, c, logL) = storage
     t1, t2 = seq_limits(seq_ends, k)
 
     # Initialization
