@@ -63,10 +63,7 @@ function initialize_forward(
     return ForwardStorage(α, logL, B, c)
 end
 
-"""
-$(SIGNATURES)
-"""
-function forward!(
+function _forward!(
     storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
@@ -124,11 +121,11 @@ function forward!(
 )
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     else
         @threads for k in eachindex(seq_ends)
-            forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     end
     return nothing

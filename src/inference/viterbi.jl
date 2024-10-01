@@ -36,10 +36,7 @@ function initialize_viterbi(
     return ViterbiStorage(q, logL, logB, ϕ, ψ)
 end
 
-"""
-$(SIGNATURES)
-"""
-function viterbi!(
+function _viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
@@ -88,11 +85,11 @@ function viterbi!(
 ) where {R}
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     else
         @threads for k in eachindex(seq_ends)
-            viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     end
     return nothing

@@ -29,10 +29,7 @@ function initialize_forward_backward(
     return ForwardBackwardStorage{R,M}(γ, ξ, logL, B, α, c, β, Bβ)
 end
 
-"""
-$(SIGNATURES)
-"""
-function forward_backward!(
+function _forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
@@ -45,7 +42,7 @@ function forward_backward!(
     t1, t2 = seq_limits(seq_ends, k)
 
     # Forward (fill B, α, c and logL)
-    forward!(storage, hmm, obs_seq, control_seq, t1, t2)
+    _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
 
     # Backward
     β[:, t2] .= c[t2]
@@ -85,13 +82,13 @@ function forward_backward!(
 )
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            forward_backward!(
+            _forward_backward!(
                 storage, hmm, obs_seq, control_seq, seq_ends, k; transition_marginals
             )
         end
     else
         @threads for k in eachindex(seq_ends)
-            forward_backward!(
+            _forward_backward!(
                 storage, hmm, obs_seq, control_seq, seq_ends, k; transition_marginals
             )
         end
