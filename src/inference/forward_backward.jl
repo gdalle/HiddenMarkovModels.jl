@@ -38,7 +38,7 @@ function forward_backward!(
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
     seq_ends::AbstractVectorOrNTuple{Int},
-    k::Integer,
+    k::Integer;
     transition_marginals::Bool=true,
 ) where {R}
     (; α, β, c, γ, ξ, B, Bβ) = storage
