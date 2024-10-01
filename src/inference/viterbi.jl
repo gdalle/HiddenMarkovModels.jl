@@ -36,6 +36,9 @@ function initialize_viterbi(
     return ViterbiStorage(q, logL, logB, ϕ, ψ)
 end
 
+"""
+$(SIGNATURES)
+"""
 function viterbi!(
     storage::ViterbiStorage{R},
     hmm::AbstractHMM,

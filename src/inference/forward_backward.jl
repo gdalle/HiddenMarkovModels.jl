@@ -29,6 +29,9 @@ function initialize_forward_backward(
     return ForwardBackwardStorage{R,M}(γ, ξ, logL, B, α, c, β, Bβ)
 end
 
+"""
+$(SIGNATURES)
+"""
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,

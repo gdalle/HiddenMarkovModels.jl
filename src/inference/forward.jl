@@ -63,6 +63,9 @@ function initialize_forward(
     return ForwardStorage(α, logL, B, c)
 end
 
+"""
+$(SIGNATURES)
+"""
 function forward!(
     storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
