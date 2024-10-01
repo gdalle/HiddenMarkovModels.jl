@@ -46,7 +46,7 @@ function DensityInterface.logdensityof(
 ) where {T1,T2,T3}
     l = zero(promote_type(T1, T2, T3, eltype(x)))
     l -= sum(dist.logσ) + log2π * length(x) / 2
-    @inbounds @simd for i in eachindex(x, dist.μ, dist.σ)
+    @simd for i in eachindex(x, dist.μ, dist.σ)
         l -= abs2(x[i] - dist.μ[i]) / (2 * abs2(dist.σ[i]))
     end
     return l
@@ -56,13 +56,13 @@ function StatsAPI.fit!(
     dist::LightDiagNormal{T1,T2}, x::AbstractVector{<:AbstractVector}, w::AbstractVector
 ) where {T1,T2}
     w_tot = sum(w)
-    dist.μ .= zero(T1)
-    dist.σ .= zero(T2)
-    @inbounds @simd for i in eachindex(x, w)
-        dist.μ .+= x[i] .* w[i]
+    fill!(dist.μ, zero(T1))
+    fill!(dist.σ, zero(T2))
+    @simd for i in eachindex(x, w)
+        axpy!(w[i], x[i], dist.μ)
     end
     dist.μ ./= w_tot
-    @inbounds @simd for i in eachindex(x, w)
+    @simd for i in eachindex(x, w)
         dist.σ .+= abs2.(x[i] .- dist.μ) .* w[i]
     end
     dist.σ .= sqrt.(dist.σ ./ w_tot)

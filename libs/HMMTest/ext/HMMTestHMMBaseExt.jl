@@ -1,5 +1,14 @@
+module HMMTestHMMBaseExt
 
-function test_identical_hmmbase(
+using HiddenMarkovModels
+import HiddenMarkovModels as HMMs
+using HMMBase: HMMBase
+using HMMTest
+using Random: AbstractRNG
+using Statistics: mean
+using Test: @test, @testset, @test_broken
+
+function HMMTest.test_identical_hmmbase(
     rng::AbstractRNG,
     hmm::AbstractHMM,
     T::Integer;
@@ -53,4 +62,6 @@ function test_identical_hmmbase(
             test_equal_hmms(hmm_est, hmm_est_base_converted, [nothing]; atol, init=true)
         end
     end
+end
+
 end

@@ -55,7 +55,7 @@ function test_coherent_algorithms(
     rng::AbstractRNG,
     hmm::AbstractHMM,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
     hmm_guess::Union{Nothing,AbstractHMM}=nothing,
     atol::Real=0.05,
     init::Bool=true,

@@ -5,7 +5,7 @@ function baum_welch_has_converged(
         logL, logL_prev = logL_evolution[end], logL_evolution[end - 1]
         progress = logL - logL_prev
         if loglikelihood_increasing && progress < min(0, -atol)
-            error("Loglikelihood decreased in Baum-Welch")
+            error("Loglikelihood decreased from $logL_prev to $logL in Baum-Welch")
         elseif progress < atol
             return true
         end
@@ -22,7 +22,7 @@ function baum_welch!(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
     atol::Real,
     max_iterations::Integer,
     loglikelihood_increasing::Bool,
@@ -55,7 +55,7 @@ function baum_welch(
     hmm_guess::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
     atol=1e-5,
     max_iterations=100,
     loglikelihood_increasing=true,
@@ -73,7 +73,7 @@ function baum_welch(
         seq_ends,
         atol,
         max_iterations,
-        loglikelihood_increasing=false,
+        loglikelihood_increasing,
     )
     return hmm, logL_evolution
 end
@@ -85,7 +85,7 @@ function StatsAPI.fit!(
     fb_storage::ForwardBackwardStorage,
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     return fit!(hmm, fb_storage, obs_seq; seq_ends)
 end

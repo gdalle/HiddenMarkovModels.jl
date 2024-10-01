@@ -4,7 +4,7 @@ function _params_and_loglikelihoods(
     hmm::AbstractHMM,
     obs_seq::Vector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     init = initialization(hmm)
     trans_by_time = mapreduce(_dcat, eachindex(control_seq)) do t
@@ -22,7 +22,7 @@ function ChainRulesCore.rrule(
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
-    seq_ends::AbstractVector{Int}=Fill(length(obs_seq), 1),
+    seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     _, pullback = rrule_via_ad(
         rc, _params_and_loglikelihoods, hmm, obs_seq, control_seq; seq_ends

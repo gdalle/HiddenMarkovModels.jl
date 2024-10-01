@@ -38,10 +38,6 @@ struct HMM{
     end
 end
 
-function Base.copy(hmm::HMM)
-    return HMM(copy(hmm.init), copy(hmm.trans), copy(hmm.dists))
-end
-
 function Base.show(io::IO, hmm::HMM)
     return print(
         io,
@@ -61,7 +57,7 @@ function StatsAPI.fit!(
     hmm::HMM,
     fb_storage::ForwardBackwardStorage,
     obs_seq::AbstractVector;
-    seq_ends::AbstractVector{Int},
+    seq_ends::AbstractVectorOrNTuple{Int},
 )
     (; γ, ξ) = fb_storage
     # Fit states
@@ -69,13 +65,13 @@ function StatsAPI.fit!(
         t1, t2 = seq_limits(seq_ends, k)
         # use ξ[t2] as scratch space since it is zero anyway
         scratch = ξ[t2]
-        scratch .= zero(eltype(scratch))
+        fill!(scratch, zero(eltype(scratch)))
         for t in t1:(t2 - 1)
             scratch .+= ξ[t]
         end
     end
-    hmm.init .= zero(eltype(hmm.init))
-    hmm.trans .= zero(eltype(hmm.trans))
+    fill!(hmm.init, zero(eltype(hmm.init)))
+    fill!(hmm.trans, zero(eltype(hmm.trans)))
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
         hmm.init .+= view(γ, :, t1)

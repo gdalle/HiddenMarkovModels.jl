@@ -27,6 +27,10 @@ function HiddenMarkovModels.fit_in_sequence!(
     return dists[i] = fit(typeof(dists[i]), reduce(hcat, x_vecs), w)
 end
 
+#=
+
+# Matrix distribution fitting not supported by Distributions.jl at the moment
+
 function HiddenMarkovModels.fit_in_sequence!(
     dists::AbstractVector{<:MatrixDistribution},
     i::Integer,
@@ -37,5 +41,6 @@ function HiddenMarkovModels.fit_in_sequence!(
 end
 
 dcat(M1, M2) = cat(M1, M2; dims=3)
+=#
 
 end
