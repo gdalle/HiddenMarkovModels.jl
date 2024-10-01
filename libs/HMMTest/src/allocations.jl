@@ -6,6 +6,7 @@ function test_allocations(
     seq_ends::AbstractVectorOrNTuple{Int},
     hmm_guess::Union{Nothing,AbstractHMM}=nothing,
 )
+    # making seq_ends a tuple disables multithreading
     seq_ends = ntuple(k -> seq_ends[k], Val(min(2, length(seq_ends))))
     control_seq = control_seq[1:last(seq_ends)]
 
@@ -51,7 +52,7 @@ function test_allocations(
             allocs_bw = @ballocated fit!(
                 hmm_guess_copy, $fb_storage, $obs_seq, $control_seq; seq_ends=$seq_ends
             ) evals = 1 samples = 1 setup = (hmm_guess_copy = deepcopy($hmm_guess))
-            @test_broken allocs_bw == 0
+            @test allocs_bw == 0
         end
     end
 end
