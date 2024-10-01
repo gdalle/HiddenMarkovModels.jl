@@ -63,18 +63,16 @@ function initialize_forward(
     return ForwardStorage(α, logL, B, c)
 end
 
-"""
-$(SIGNATURES)
-"""
 function forward!(
     storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
-    t1::Integer,
-    t2::Integer;
+    seq_ends::AbstractVectorOrNTuple{Int},
+    k::Integer,
 )
     (; α, B, c) = storage
+    t1, t2 = seq_limits(seq_ends, k)
 
     # Initialization
     Bₜ₁ = view(B, :, t1)
@@ -88,7 +86,7 @@ function forward!(
     c[t1] = inv(sum(αₜ₁))
     lmul!(c[t1], αₜ₁)
 
-    logL = -log(c[t1]) + logm
+    logL[k] = -log(c[t1]) + logm
 
     # Loop
     for t in t1:(t2 - 1)
@@ -104,11 +102,11 @@ function forward!(
         c[t + 1] = inv(sum(αₜ₊₁))
         lmul!(c[t + 1], αₜ₊₁)
 
-        logL += -log(c[t + 1]) + logm
+        logL[k] += -log(c[t + 1]) + logm
     end
 
-    @argcheck isfinite(logL)
-    return logL
+    @argcheck isfinite(logL[k])
+    return nothing
 end
 
 """
@@ -121,16 +119,13 @@ function forward!(
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
 )
-    (; logL) = storage
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
+            forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     else
         @threads for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = forward!(storage, hmm, obs_seq, control_seq, t1, t2;)
+            forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
     end
     return nothing

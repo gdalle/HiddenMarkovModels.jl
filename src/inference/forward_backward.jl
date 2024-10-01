@@ -29,22 +29,20 @@ function initialize_forward_backward(
     return ForwardBackwardStorage{R,M}(γ, ξ, logL, B, α, c, β, Bβ)
 end
 
-"""
-$(SIGNATURES)
-"""
 function forward_backward!(
     storage::ForwardBackwardStorage{R},
     hmm::AbstractHMM,
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
-    t1::Integer,
-    t2::Integer;
+    seq_ends::AbstractVectorOrNTuple{Int},
+    k::Integer,
     transition_marginals::Bool=true,
 ) where {R}
     (; α, β, c, γ, ξ, B, Bβ) = storage
+    t1, t2 = seq_limits(seq_ends, k)
 
     # Forward (fill B, α, c and logL)
-    logL = forward!(storage, hmm, obs_seq, control_seq, t1, t2)
+    forward!(storage, hmm, obs_seq, control_seq, t1, t2)
 
     # Backward
     β[:, t2] .= c[t2]
@@ -68,7 +66,7 @@ function forward_backward!(
         ξ[t2] .= zero(R)
     end
 
-    return logL
+    return nothing
 end
 
 """
@@ -82,19 +80,16 @@ function forward_backward!(
     seq_ends::AbstractVectorOrNTuple{Int},
     transition_marginals::Bool=true,
 )
-    (; logL) = storage
     if seq_ends isa NTuple
         for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = forward_backward!(
-                storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
+            forward_backward!(
+                storage, hmm, obs_seq, control_seq, seq_ends, k; transition_marginals
             )
         end
     else
         @threads for k in eachindex(seq_ends)
-            t1, t2 = seq_limits(seq_ends, k)
-            logL[k] = forward_backward!(
-                storage, hmm, obs_seq, control_seq, t1, t2; transition_marginals
+            forward_backward!(
+                storage, hmm, obs_seq, control_seq, seq_ends, k; transition_marginals
             )
         end
     end
