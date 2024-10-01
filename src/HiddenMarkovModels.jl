@@ -38,6 +38,7 @@ include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
 include("utils/limits.jl")
 
+include("inference/predict.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")

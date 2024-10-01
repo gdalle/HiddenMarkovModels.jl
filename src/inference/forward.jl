@@ -63,6 +63,27 @@ function initialize_forward(
     return ForwardStorage(α, logL, B, c)
 end
 
+function _forward_digest_observation!(
+    current_state_marginals::AbstractVector{<:Real},
+    current_obs_likelihoods::AbstractVector{<:Real},
+    hmm::AbstractHMM,
+    obs,
+    control,
+)
+    a, b = current_state_marginals, current_obs_likelihoods
+
+    obs_logdensities!(b, hmm, obs, control)
+    logm = maximum(b)
+    b .= exp.(b .- logm)
+
+    a .*= b
+    c = inv(sum(a))
+    lmul!(c, a)
+
+    logL = -log(c) + logm
+    return c, logL
+end
+
 function _forward!(
     storage::ForwardOrForwardBackwardStorage,
     hmm::AbstractHMM,
@@ -73,73 +94,23 @@ function _forward!(
 )
     (; α, B, c, logL) = storage
     t1, t2 = seq_limits(seq_ends, k)
-
-    # Initialization
-    _initialize!(storage, hmm, t1)
-    logL = zero(eltype(storage))
-
-    init = initialization(hmm)
-    αₜ₁ = view(α, :, t1)
-    αₜ₁ .= init .* Bₜ₁
-    c[t1] = inv(sum(αₜ₁))
-    lmul!(c[t1], αₜ₁)
-
-    logL[k] = -log(c[t1]) + logm
-
-    # Loop
-    for t in t1:(t2 - 1)
-        Bₜ₊₁ = view(B, :, t + 1)
-        obs_logdensities!(Bₜ₊₁, hmm, obs_seq[t + 1], control_seq[t + 1])
-        logm = maximum(Bₜ₊₁)
-        Bₜ₊₁ .= exp.(Bₜ₊₁ .- logm)
-
-        trans = transition_matrix(hmm, control_seq[t])
-        αₜ, αₜ₊₁ = view(α, :, t), view(α, :, t + 1)
-        mul!(αₜ₊₁, transpose(trans), αₜ)
-        αₜ₊₁ .*= Bₜ₊₁
-        c[t + 1] = inv(sum(αₜ₊₁))
-        lmul!(c[t + 1], αₜ₊₁)
-
-        logL[k] += -log(c[t + 1]) + logm
+    logL[k] = zero(eltype(logL))
+    for t in t1:t2
+        αₜ = view(α, :, t)
+        Bₜ = view(B, :, t)
+        if t == t1
+            copyto!(αₜ, initialization(hmm))
+        else
+            αₜ₋₁ = view(α, :, t - 1)
+            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
+        end
+        cₜ, logLₜ = _forward_digest_observation!(αₜ, Bₜ, hmm, obs_seq[t], control_seq[t])
+        c[t] = cₜ
+        logL[k] += logLₜ
     end
 
     @argcheck isfinite(logL[k])
     return nothing
-end
-
-function _initialize!(storage, hmm, t1)
-    (; α) = storage
-    αₜ₁ = view(α, :, t1)
-    αₜ₁ .= initialization(hmm)
-    return nothing
-end
-
-function _predict!(storage, hmm, control_seq, t)
-    (; α) = storage
-    αₜ₋₁, αₜ = view(α, :, t - 1), view(α, :, t)
-
-    trans = transition_matrix(hmm, control_seq[t])
-    mul!(αₜ, transpose(trans), αₜ₋₁)
-
-    return nothing
-end
-
-function _update!(storage, logL, hmm, obs_seq, control_seq, t)
-    (; α, B, c) = storage
-    Bₜ = view(B, :, t)
-    αₜ = view(α, :, t)
-
-    obs_logdensities!(Bₜ, hmm, obs_seq[t], control_seq[t])
-    logm = maximum(Bₜ)
-    Bₜ .= exp.(Bₜ .- logm)
-
-    αₜ .*= Bₜ
-    c[t] = inv(sum(αₜ))
-    lmul!(c[t], αₜ)
-
-    logL += -log(c[t]) + logm
-
-    return logL
 end
 
 """
