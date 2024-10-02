@@ -72,6 +72,9 @@ log_initialization(hmm::AbstractHMM) = elementwise_log(initialization(hmm))
     transition_matrix(hmm, control)
 
 Return the matrix of state transition probabilities for `hmm` (possibly when `control` is applied).
+
+!!! note
+    When processing sequences, the control at time `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`).
 """
 function transition_matrix end
 
@@ -82,6 +85,9 @@ function transition_matrix end
 Return the matrix of state transition log-probabilities for `hmm` (possibly when `control` is applied).
 
 Falls back on `transition_matrix`.
+
+!!! note
+    When processing sequences, the control at time `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`).
 """
 function log_transition_matrix(hmm::AbstractHMM, control)
     return elementwise_log(transition_matrix(hmm, control))
