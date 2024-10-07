@@ -13,7 +13,7 @@
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06436/status.svg)](https://doi.org/10.21105/joss.06436)
 
 
-A Julia package for simulation, inference and learning of Hidden Markov Models.
+A Julia package for simulation, inference and learning of Hidden Markov Models for which the hidden state has discrete rather than continuous values.
 
 ## Getting started
 
