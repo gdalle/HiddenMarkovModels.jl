@@ -112,9 +112,11 @@ function obs_distributions end
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
 log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
-obs_distributions(hmm::AbstractHMM, control, ::Missing) = obs_distributions(hmm, control)
+function obs_distributions(hmm::AbstractHMM, control, ::Union{Nothing,Missing})
+    return obs_distributions(hmm, control)
+end
 
-previous_obs(::AbstractHMM{false}, obs_seq::AbstractVector, t::Integer) = missing
+previous_obs(::AbstractHMM{false}, obs_seq::AbstractVector, t::Integer) = nothing
 previous_obs(::AbstractHMM{true}, obs_seq::AbstractVector, t::Integer) = obs_seq[t - 1]
 
 """
