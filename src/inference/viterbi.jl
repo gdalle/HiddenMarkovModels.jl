@@ -83,7 +83,7 @@ function viterbi!(
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
 ) where {R}
-    if seq_ends isa NTuple
+    if seq_ends isa NTuple{1}
         for k in eachindex(seq_ends)
             _viterbi!(storage, hmm, obs_seq, control_seq, seq_ends, k)
         end
