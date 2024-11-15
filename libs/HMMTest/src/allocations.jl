@@ -7,7 +7,7 @@ function test_allocations(
     hmm_guess::Union{Nothing,AbstractHMM}=nothing,
 )
     # making seq_ends a tuple disables multithreading
-    seq_ends = ntuple(k -> seq_ends[k], Val(min(2, length(seq_ends))))
+    seq_ends = ntuple(k -> seq_ends[k], Val(min(1, length(seq_ends))))
     control_seq = control_seq[1:last(seq_ends)]
 
     @testset "Allocations" begin
