@@ -69,10 +69,11 @@ function _forward_digest_observation!(
     hmm::AbstractHMM,
     obs,
     control,
+    prev_obs,
 )
     a, b = current_state_marginals, current_obs_likelihoods
 
-    obs_logdensities!(b, hmm, obs, control)
+    obs_logdensities!(b, hmm, obs, control, prev_obs)
     logm = maximum(b)
     b .= exp.(b .- logm)
 
@@ -104,7 +105,10 @@ function _forward!(
             αₜ₋₁ = view(α, :, t - 1)
             predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
         end
-        cₜ, logLₜ = _forward_digest_observation!(αₜ, Bₜ, hmm, obs_seq[t], control_seq[t])
+        prev_obs = t == t1 ? missing : previous_obs(hmm, obs_seq, t)
+        cₜ, logLₜ = _forward_digest_observation!(
+            αₜ, Bₜ, hmm, obs_seq[t], control_seq[t], prev_obs
+        )
         c[t] = cₜ
         logL[k] += logLₜ
     end

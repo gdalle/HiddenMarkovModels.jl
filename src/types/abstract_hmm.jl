@@ -23,7 +23,7 @@ Any `AbstractHMM` which satisfies the interface can be given to the following fu
 - [`forward_backward`](@ref)
 - [`baum_welch`](@ref) (if `[fit!](@ref)` is implemented)
 """
-abstract type AbstractHMM end
+abstract type AbstractHMM{ar} end
 
 @inline DensityInterface.DensityKind(::AbstractHMM) = HasDensity()
 
@@ -46,7 +46,7 @@ It is typically a promotion between the element type of the initialization, the 
 function Base.eltype(hmm::AbstractHMM, obs, control)
     init_type = eltype(initialization(hmm))
     trans_type = eltype(transition_matrix(hmm, control))
-    dist = obs_distributions(hmm, control)[1]
+    dist = obs_distributions(hmm, control, obs)[1]
     logdensity_type = typeof(logdensityof(dist, obs))
     return promote_type(init_type, trans_type, logdensity_type)
 end
@@ -112,6 +112,10 @@ function obs_distributions end
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
 log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
+obs_distributions(hmm::AbstractHMM, control, ::Missing) = obs_distributions(hmm, control)
+
+previous_obs(::AbstractHMM{false}, obs_seq::AbstractVector, t::Integer) = missing
+previous_obs(::AbstractHMM{true}, obs_seq::AbstractVector, t::Integer) = obs_seq[t - 1]
 
 """
     StatsAPI.fit!(
@@ -128,9 +132,9 @@ StatsAPI.fit!
 ## Fill logdensities
 
 function obs_logdensities!(
-    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
+    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control, prev_obs
 ) where {T}
-    dists = obs_distributions(hmm, control)
+    dists = obs_distributions(hmm, control, prev_obs)
     @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
@@ -164,13 +168,13 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
         )
     end
 
-    dists1 = obs_distributions(hmm, control_seq[1])
+    dists1 = obs_distributions(hmm, control_seq[1], missing)
     obs1 = rand(rng, dists1[state1])
     obs_seq = Vector{typeof(obs1)}(undef, T)
     obs_seq[1] = obs1
 
     for t in 2:T
-        dists = obs_distributions(hmm, control_seq[t])
+        dists = obs_distributions(hmm, control_seq[t], previous_obs(hmm, obs_seq, t))
         obs_seq[t] = rand(rng, dists[state_seq[t]])
     end
     return (; state_seq=state_seq, obs_seq=obs_seq)
