@@ -47,10 +47,11 @@ function _forward_backward!(
     # Backward
     β[:, t2] .= c[t2]
     for t in (t2 - 1):-1:t1
-        trans = transition_matrix(hmm, control_seq[t])
         Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
-        mul!(view(β, :, t), trans, view(Bβ, :, t + 1))
-        lmul!(c[t], view(β, :, t))
+        βₜ = view(β, :, t)
+        Bβₜ₊₁ = view(Bβ, :, t + 1)
+        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t])
+        lmul!(c[t], βₜ)
     end
     Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
 
