@@ -39,7 +39,7 @@ function joint_logdensityof(
         end
         # Observations
         for t in t1:t2
-            dists = obs_distributions(hmm, control_seq[t])
+            dists = obs_distributions(hmm, control_seq[t], previous_obs(hmm, obs_seq, t))
             logL += logdensityof(dists[state_seq[t]], obs_seq[t])
         end
     end

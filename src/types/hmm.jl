@@ -13,7 +13,7 @@ struct HMM{
     VD<:AbstractVector,
     Vl<:AbstractVector,
     Ml<:AbstractMatrix,
-} <: AbstractHMM
+} <: AbstractHMM{false}
     "initial state probabilities"
     init::V
     "state transition probabilities"
