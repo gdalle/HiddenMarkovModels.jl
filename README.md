@@ -69,6 +69,26 @@ This package is **reliable**.
 It gives the same results as the previous reference package up to numerical accuracy.
 The test suite incorporates quality checks as well as type stability and allocation analysis.
 
+## Citation
+
+If this package is useful to your research, please cite the [JOSS paper](https://joss.theoj.org/papers/10.21105/joss.06436#). Here is the BibTeX key:
+
+```bibtex
+@article{
+    Dalle2024,
+    doi = {10.21105/joss.06436},
+    url = {https://doi.org/10.21105/joss.06436},
+    year = {2024},
+    publisher = {The Open Journal},
+    volume = {9},
+    number = {96},
+    pages = {6436},
+    author = {Guillaume Dalle},
+    title = {HiddenMarkovModels.jl: generic, fast and reliable state space modeling},
+    journal = {Journal of Open Source Software}
+}
+```
+
 ## Contributing
 
 If you spot a bug or want to ask about a new feature, please [open an issue](https://github.com/gdalle/HiddenMarkovModels.jl/issues) on the GitHub repository.
