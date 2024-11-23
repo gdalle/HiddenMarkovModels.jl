@@ -30,11 +30,11 @@ abstract type AbstractHMM{ar} end
 ## Interface
 
 """
-    length(hmm)
+    size(hmm, control)
 
 Return the number of states of `hmm`.
 """
-Base.length(hmm::AbstractHMM) = length(initialization(hmm))
+Base.size(hmm::AbstractHMM, control) = size(transition_matrix(hmm, control), 2)
 
 """
     eltype(hmm, obs, control)
@@ -53,19 +53,23 @@ end
 
 """
     initialization(hmm)
+    initialization(hmm, control)
 
-Return the vector of initial state probabilities for `hmm`.
+Return the vector of initial state probabilities for `hmm` (possibly when `control` is applied).
 """
 function initialization end
 
+initialization(hmm::AbstractHMM, ::Nothing) = initialization(hmm)
+
 """
     log_initialization(hmm)
+    log_initialization(hmm, control)
 
-Return the vector of initial state log-probabilities for `hmm`.
+Return the vector of initial state log-probabilities for `hmm` (possibly when `control` is applied).
 
 Falls back on `initialization`.
 """
-log_initialization(hmm::AbstractHMM) = elementwise_log(initialization(hmm))
+log_initialization(hmm::AbstractHMM, control) = elementwise_log(initialization(hmm, control))
 
 """
     transition_matrix(hmm)
@@ -89,9 +93,7 @@ Falls back on `transition_matrix`.
 !!! note
     When processing sequences, the control at time `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`).
 """
-function log_transition_matrix(hmm::AbstractHMM, control)
-    return elementwise_log(transition_matrix(hmm, control))
-end
+log_transition_matrix(hmm::AbstractHMM, control) = elementwise_log(transition_matrix(hmm, control))
 
 """
     obs_distributions(hmm)
@@ -110,11 +112,9 @@ function obs_distributions end
 ## Fallbacks for no control
 
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
-log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
+log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm) # Is this function needed? If `log_transition_matrix(hmm, nothing)`, then `transition_matrix(hmm, nothing)` returns `transition_matrix(hmm)`.
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
-function obs_distributions(hmm::AbstractHMM, control, ::Union{Nothing,Missing})
-    return obs_distributions(hmm, control)
-end
+obs_distributions(hmm::AbstractHMM, control, ::Union{Nothing,Missing}) = obs_distributions(hmm, control)
 
 previous_obs(::AbstractHMM{false}, obs_seq::AbstractVector, t::Integer) = nothing
 previous_obs(::AbstractHMM{true}, obs_seq::AbstractVector, t::Integer) = obs_seq[t - 1]
@@ -156,9 +156,9 @@ Return a named tuple `(; state_seq, obs_seq)`.
 """
 function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
     T = length(control_seq)
-    dummy_log_probas = fill(-Inf, length(hmm))
+    dummy_log_probas = fill(-Inf, size(hmm, control_seq[1]))
 
-    init = initialization(hmm)
+    init = initialization(hmm, control)
     state_seq = Vector{Int}(undef, T)
     state1 = rand(rng, LightCategorical(init, dummy_log_probas))
     state_seq[1] = state1
@@ -172,7 +172,7 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
 
     dists1 = obs_distributions(hmm, control_seq[1], missing)
     obs1 = rand(rng, dists1[state1])
-    obs_seq = Vector{typeof(obs1)}(undef, T)
+    obs_seq = Vector{typeof(obs1)}(undef, T) # If the `typeof(obs1)` is only known at runtime, does it makes any difference over Vector{Any}?
     obs_seq[1] = obs1
 
     for t in 2:T

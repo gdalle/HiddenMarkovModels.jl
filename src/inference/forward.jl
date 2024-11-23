@@ -54,7 +54,7 @@ function initialize_forward(
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
 )
-    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
+    N, T, K = size(hmm, control_seq[1]), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     α = Matrix{R}(undef, N, T)
     logL = Vector{R}(undef, K)
@@ -100,10 +100,10 @@ function _forward!(
         αₜ = view(α, :, t)
         Bₜ = view(B, :, t)
         if t == t1
-            copyto!(αₜ, initialization(hmm))
+            copyto!(αₜ, initialization(hmm, control_seq[t]))
         else
             αₜ₋₁ = view(α, :, t - 1)
-            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
+            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t]) # If `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`), then the associated control must be at `t+1`, right? If `control_seq[t-1]`, then we're using the control associated with the previous state and not the correct control, aren't we? The transition matrix would be P(X_{t}|X_{t-1},U_{t-1}) and not P(X_{t}|X_{t-1},U_{t}) as it should be. E.g., if `t == t1 + 1`, then `αₜ₋₁ = view(α, :, t1)` and the function would use the transition matrix P(X_{t1+1}|X_{t1},U_{t1}) instead of P(X_{t1+1}|X_{t1},U_{t1+1}). Same at logdensity.jl, line 37; forward_backward.jl, line 53.
         end
         prev_obs = t == t1 ? missing : previous_obs(hmm, obs_seq, t)
         cₜ, logLₜ = _forward_digest_observation!(
