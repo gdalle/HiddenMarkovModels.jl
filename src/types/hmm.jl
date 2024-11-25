@@ -90,7 +90,7 @@ function StatsAPI.fit!(
     sum_to_one!(hmm.init)
     foreach(sum_to_one!, eachrow(hmm.trans))
     # Fit observations
-    for i in 1:length(hmm)
+    for i in 1:size(hmm, nothing)
         fit_in_sequence!(hmm.dists, i, obs_seq, view(γ, i, :))
     end
     # Update logs

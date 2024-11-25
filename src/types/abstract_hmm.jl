@@ -46,8 +46,8 @@ It is typically a promotion between the element type of the initialization, the 
 function Base.eltype(hmm::AbstractHMM, obs, control)
     init_type = eltype(initialization(hmm))
     trans_type = eltype(transition_matrix(hmm, control))
-    dist = obs_distributions(hmm, control, obs)[1]
-    logdensity_type = typeof(logdensityof(dist, obs))
+    dists = obs_distributions(hmm, control, obs)
+    logdensity_type = typeof(logdensityof(dists[1], obs))
     return promote_type(init_type, trans_type, logdensity_type)
 end
 
@@ -59,8 +59,6 @@ Return the vector of initial state probabilities for `hmm` (possibly when `contr
 """
 function initialization end
 
-initialization(hmm::AbstractHMM, ::Nothing) = initialization(hmm)
-
 """
     log_initialization(hmm)
     log_initialization(hmm, control)
@@ -69,7 +67,8 @@ Return the vector of initial state log-probabilities for `hmm` (possibly when `c
 
 Falls back on `initialization`.
 """
-log_initialization(hmm::AbstractHMM, control) = elementwise_log(initialization(hmm, control))
+log_initialization(hmm::AbstractHMM, control) =
+    elementwise_log(initialization(hmm, control))
 
 """
     transition_matrix(hmm)
@@ -93,11 +92,13 @@ Falls back on `transition_matrix`.
 !!! note
     When processing sequences, the control at time `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`).
 """
-log_transition_matrix(hmm::AbstractHMM, control) = elementwise_log(transition_matrix(hmm, control))
+log_transition_matrix(hmm::AbstractHMM, control) =
+    elementwise_log(transition_matrix(hmm, control))
 
 """
     obs_distributions(hmm)
     obs_distributions(hmm, control)
+    obs_distributions(hmm, control, obs)
 
 Return a vector of observation distributions, one for each state of `hmm` (possibly when `control` is applied).
 
@@ -111,10 +112,13 @@ function obs_distributions end
 
 ## Fallbacks for no control
 
+initialization(hmm::AbstractHMM, ::Nothing) = initialization(hmm)
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
 log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm) # Is this function needed? If `log_transition_matrix(hmm, nothing)`, then `transition_matrix(hmm, nothing)` returns `transition_matrix(hmm)`.
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
-obs_distributions(hmm::AbstractHMM, control, ::Union{Nothing,Missing}) = obs_distributions(hmm, control)
+function obs_distributions(hmm::AbstractHMM, control, ::Any)
+    return obs_distributions(hmm, control)
+end
 
 previous_obs(::AbstractHMM{false}, obs_seq::AbstractVector, t::Integer) = nothing
 previous_obs(::AbstractHMM{true}, obs_seq::AbstractVector, t::Integer) = obs_seq[t - 1]
@@ -158,13 +162,13 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
     T = length(control_seq)
     dummy_log_probas = fill(-Inf, size(hmm, control_seq[1]))
 
-    init = initialization(hmm, control)
+    init = initialization(hmm, control_seq[1])
     state_seq = Vector{Int}(undef, T)
     state1 = rand(rng, LightCategorical(init, dummy_log_probas))
     state_seq[1] = state1
 
     @views for t in 1:(T - 1)
-        trans = transition_matrix(hmm, control_seq[t])
+        trans = transition_matrix(hmm, control_seq[t + 1]) # See forward.jl, line 106.
         state_seq[t + 1] = rand(
             rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
         )

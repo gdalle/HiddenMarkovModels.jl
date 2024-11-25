@@ -50,7 +50,7 @@ function _forward_backward!(
         Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
         βₜ = view(β, :, t)
         Bβₜ₊₁ = view(Bβ, :, t + 1)
-        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t+1]) # See forward.jl, line 106.
+        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t + 1]) # See forward.jl, line 106.
         lmul!(c[t], βₜ)
     end
     Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
@@ -61,7 +61,7 @@ function _forward_backward!(
     # Transition marginals
     if transition_marginals
         for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t+1]) # See forward.jl, line 106.
+            trans = transition_matrix(hmm, control_seq[t + 1]) # See forward.jl, line 106.
             mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
         end
         ξ[t2] .= zero(R)

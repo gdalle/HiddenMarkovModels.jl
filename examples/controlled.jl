@@ -22,10 +22,10 @@ rng = StableRNG(63);
 
 #=
 A Markov switching regression is like a classical regression, except that the weights depend on the unobserved state of an HMM.
-We can represent it with the following subtype of `AbstractHMM` (see [Custom HMM structures](@ref)), which has one vector of coefficients $\beta_i$ per state.
+We can represent it with the following subtype of `AbstractHMM{false}` (see [Custom HMM structures](@ref)), which has one vector of coefficients $\beta_i$ per state.
 =#
 
-struct ControlledGaussianHMM{T} <: AbstractHMM
+struct ControlledGaussianHMM{T} <: AbstractHMM{false}
     init::Vector{T}
     trans::Matrix{T}
     dist_coeffs::Vector{Vector{T}}
@@ -36,16 +36,19 @@ In state $i$ with a vector of controls $u$, our observation is given by the line
 Controls must be provided to both `transition_matrix` and `obs_distributions` even if they are only used by one.
 =#
 
+function HMMs.initialization(hmm::ControlledGaussianHMM, control)
+    return hmm.init
+end
 function HMMs.initialization(hmm::ControlledGaussianHMM)
     return hmm.init
 end
 
-function HMMs.transition_matrix(hmm::ControlledGaussianHMM, control::AbstractVector)
+function HMMs.transition_matrix(hmm::ControlledGaussianHMM, control)
     return hmm.trans
 end
 
-function HMMs.obs_distributions(hmm::ControlledGaussianHMM, control::AbstractVector)
-    return [Normal(dot(hmm.dist_coeffs[i], control), 1.0) for i in 1:length(hmm)]
+function HMMs.obs_distributions(hmm::ControlledGaussianHMM, control)
+    return [Normal(dot(hmm.dist_coeffs[i], control), 1.0) for i in 1:size(hmm, control)]
 end
 
 #=
@@ -97,7 +100,7 @@ function StatsAPI.fit!(
     seq_ends,
 ) where {T}
     (; γ, ξ) = fb_storage
-    N = length(hmm)
+    N = size(hmm, control_seq[1])
 
     hmm.init .= 0
     hmm.trans .= 0
