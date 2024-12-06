@@ -29,7 +29,8 @@ rng = StableRNG(63);
 To play around with automatic differentiation, we define a simple controlled HMM.
 =#
 
-struct DiffusionHMM{V1<:AbstractVector,M2<:AbstractMatrix,V3<:AbstractVector} <: AbstractHMM
+struct DiffusionHMM{V1<:AbstractVector,M2<:AbstractMatrix,V3<:AbstractVector} <:
+       AbstractHMM{false}
     init::V1
     trans::M2
     means::V3
@@ -40,15 +41,16 @@ Both its transition matrix and its vector of observation means result from a con
 The coefficient $\lambda$ of this convex combination is given as a control. 
 =#
 
+HMMs.initialization(hmm::DiffusionHMM, λ::Number) = hmm.init
 HMMs.initialization(hmm::DiffusionHMM) = hmm.init
 
 function HMMs.transition_matrix(hmm::DiffusionHMM, λ::Number)
-    N = length(hmm)
+    N = size(hmm.trans, 2)
     return (1 - λ) * hmm.trans + λ * ones(N, N) / N
 end
 
 function HMMs.obs_distributions(hmm::DiffusionHMM, λ::Number)
-    return [Normal((1 - λ) * hmm.means[i] + λ * 0) for i in 1:length(hmm)]
+    return [Normal((1 - λ) * hmm.means[i] + λ * 0) for i in 1:size(hmm, λ)]
 end
 
 #=

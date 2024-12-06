@@ -26,7 +26,7 @@ function initialize_viterbi(
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
 )
-    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
+    N, T, K = size(hmm, control_seq[1]), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     q = Vector{Int}(undef, T)
     logL = Vector{R}(undef, K)
@@ -48,14 +48,16 @@ function _viterbi!(
     t1, t2 = seq_limits(seq_ends, k)
 
     logBₜ₁ = view(logB, :, t1)
-    obs_logdensities!(logBₜ₁, hmm, obs_seq[t1], control_seq[t1])
-    loginit = log_initialization(hmm)
+    obs_logdensities!(logBₜ₁, hmm, obs_seq[t1], control_seq[t1], missing)
+    loginit = log_initialization(hmm, control_seq[t1])
     ϕ[:, t1] .= loginit .+ logBₜ₁
 
     for t in (t1 + 1):t2
         logBₜ = view(logB, :, t)
-        obs_logdensities!(logBₜ, hmm, obs_seq[t], control_seq[t])
-        logtrans = log_transition_matrix(hmm, control_seq[t - 1])
+        obs_logdensities!(
+            logBₜ, hmm, obs_seq[t], control_seq[t], previous_obs(hmm, obs_seq, t)
+        )
+        logtrans = log_transition_matrix(hmm, control_seq[t]) # See forward.jl, line 106.
         ϕₜ, ϕₜ₋₁ = view(ϕ, :, t), view(ϕ, :, t - 1)
         ψₜ = view(ψ, :, t)
         argmaxplus_transmul!(ϕₜ, ψₜ, logtrans, ϕₜ₋₁)
