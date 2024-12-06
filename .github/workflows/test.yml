@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - gd/ar
     tags: ["*"]
   pull_request:
 concurrency:
