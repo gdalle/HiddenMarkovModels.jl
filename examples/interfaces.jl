@@ -138,14 +138,14 @@ test_allocations(rng, hmm, control_seq; seq_ends, hmm_guess)  #src
 #=
 In some scenarios, the vanilla Baum-Welch algorithm is not exactly what we want.
 For instance, we might have a prior on the parameters of our model, which we want to apply during the fitting step of the iterative procedure.
-Then we need to create a new type that satisfies the `AbstractHMM` interface.
+Then we need to create a new type that satisfies the `AbstractHMM{ar}` interface.
 
 Let's make a simpler version of the built-in `HMM`, with a prior saying that each transition has already been observed a certain number of times.
 Such a prior can be very useful to regularize estimation and avoid numerical instabilities.
 It amounts to drawing every row of the transition matrix from a Dirichlet distribution, where each Dirichlet parameter is one plus the number of times the corresponding transition has been observed.
 =#
 
-struct PriorHMM{T,D} <: AbstractHMM
+struct PriorHMM{T,D} <: AbstractHMM{false}
     init::Vector{T}
     trans::Matrix{T}
     dists::Vector{D}
@@ -153,7 +153,7 @@ struct PriorHMM{T,D} <: AbstractHMM
 end
 
 #=
-The basic requirements for `AbstractHMM` are the following three functions: [`initialization`](@ref), [`transition_matrix`](@ref) and [`obs_distributions`](@ref).
+The basic requirements for `AbstractHMM{false}` are the following three functions: [`initialization`](@ref), [`transition_matrix`](@ref) and [`obs_distributions`](@ref).
 =#
 
 HiddenMarkovModels.initialization(hmm::PriorHMM) = hmm.init

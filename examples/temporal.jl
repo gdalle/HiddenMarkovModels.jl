@@ -23,10 +23,10 @@ rng = StableRNG(63);
 #=
 We focus on the particular case of a periodic HMM with period `L`.
 It has only one initialization vector, but `L` transition matrices and `L` vectors of observation distributions.
-As in [Custom HMM structures](@ref), we need to subtype `AbstractHMM`.
+As in [Custom HMM structures](@ref), we need to subtype `AbstractHMM{ar}`.
 =#
 
-struct PeriodicHMM{T<:Number,D,L} <: AbstractHMM
+struct PeriodicHMM{T<:Number,D,L} <: AbstractHMM{false}
     init::Vector{T}
     trans_per::NTuple{L,Matrix{T}}
     dists_per::NTuple{L,Vector{D}}
@@ -100,7 +100,7 @@ vcat(obs_seq', best_state_seq')
 # ## Learning
 
 #=
-When estimating parameters for a custom subtype of `AbstractHMM`, we have to override the fitting procedure after forward-backward, with an additional `control_seq` positional argument.
+When estimating parameters for a custom subtype of `AbstractHMM{false}`, we have to override the fitting procedure after forward-backward, with an additional `control_seq` positional argument.
 The key is to split the observations according to which periodic parameter they belong to.
 =#
 

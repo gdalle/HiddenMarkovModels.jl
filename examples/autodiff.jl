@@ -29,7 +29,8 @@ rng = StableRNG(63);
 To play around with automatic differentiation, we define a simple controlled HMM.
 =#
 
-struct DiffusionHMM{V1<:AbstractVector,M2<:AbstractMatrix,V3<:AbstractVector} <: AbstractHMM
+struct DiffusionHMM{V1<:AbstractVector,M2<:AbstractMatrix,V3<:AbstractVector} <:
+       AbstractHMM{false}
     init::V1
     trans::M2
     means::V3

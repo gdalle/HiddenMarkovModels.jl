@@ -48,13 +48,15 @@ function _viterbi!(
     t1, t2 = seq_limits(seq_ends, k)
 
     logBₜ₁ = view(logB, :, t1)
-    obs_logdensities!(logBₜ₁, hmm, obs_seq[t1], control_seq[t1])
+    obs_logdensities!(logBₜ₁, hmm, obs_seq[t1], control_seq[t1], missing)
     loginit = log_initialization(hmm)
     ϕ[:, t1] .= loginit .+ logBₜ₁
 
     for t in (t1 + 1):t2
         logBₜ = view(logB, :, t)
-        obs_logdensities!(logBₜ, hmm, obs_seq[t], control_seq[t])
+        obs_logdensities!(
+            logBₜ, hmm, obs_seq[t], control_seq[t], previous_obs(hmm, obs_seq, t)
+        )
         logtrans = log_transition_matrix(hmm, control_seq[t - 1])
         ϕₜ, ϕₜ₋₁ = view(ϕ, :, t), view(ϕ, :, t - 1)
         ψₜ = view(ψ, :, t)

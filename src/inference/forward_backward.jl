@@ -10,7 +10,7 @@ function initialize_forward_backward(
 )
     N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
-    trans = transition_matrix(hmm, control_seq[1])
+    trans = transition_matrix(hmm, control_seq[2])
     M = typeof(similar(trans, R))
 
     γ = Matrix{R}(undef, N, T)

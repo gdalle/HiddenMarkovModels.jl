@@ -22,10 +22,10 @@ rng = StableRNG(63);
 
 #=
 A Markov switching regression is like a classical regression, except that the weights depend on the unobserved state of an HMM.
-We can represent it with the following subtype of `AbstractHMM` (see [Custom HMM structures](@ref)), which has one vector of coefficients $\beta_i$ per state.
+We can represent it with the following subtype of `AbstractHMM{false}` (see [Custom HMM structures](@ref)), which has one vector of coefficients $\beta_i$ per state.
 =#
 
-struct ControlledGaussianHMM{T} <: AbstractHMM
+struct ControlledGaussianHMM{T} <: AbstractHMM{false}
     init::Vector{T}
     trans::Matrix{T}
     dist_coeffs::Vector{Vector{T}}
