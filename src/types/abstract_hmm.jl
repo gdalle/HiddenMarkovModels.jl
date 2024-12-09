@@ -36,7 +36,6 @@ Return the number of states of `hmm`.
 """
 Base.length(hmm::AbstractHMM) = length(initialization(hmm))
 
-
 """
     eltype(hmm, obs, control)
 
@@ -54,21 +53,19 @@ end
 
 """
     initialization(hmm)
-    initialization(hmm, control)
 
-Return the vector of initial state probabilities for `hmm` (possibly when `control` is applied).
+Return the vector of initial state probabilities for `hmm`.
 """
 function initialization end
 
 """
     log_initialization(hmm)
 
-Return the vector of initial state log-probabilities for `hmm` (possibly when `control` is applied).
+Return the vector of initial state log-probabilities for `hmm`.
 
 Falls back on `initialization`.
 """
-log_initialization(hmm::AbstractHMM) =
-    elementwise_log(initialization(hmm))
+log_initialization(hmm::AbstractHMM) = elementwise_log(initialization(hmm))
 
 """
     transition_matrix(hmm)
