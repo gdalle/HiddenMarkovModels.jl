@@ -204,7 +204,7 @@ function StatsAPI.fit!(
     hmm.init ./= sum(hmm.init)
     hmm.trans ./= sum(hmm.trans; dims=2)
 
-    for i in 1:size(hmm, nothing)
+    for i in 1:length(hmm)
         ## weigh each sample by the marginal probability of being in state i
         weight_seq = fb_storage.γ[i, :]
         ## fit observation distribution i using those weights
