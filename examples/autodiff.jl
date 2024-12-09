@@ -41,16 +41,15 @@ Both its transition matrix and its vector of observation means result from a con
 The coefficient $\lambda$ of this convex combination is given as a control. 
 =#
 
-HMMs.initialization(hmm::DiffusionHMM, λ::Number) = hmm.init
 HMMs.initialization(hmm::DiffusionHMM) = hmm.init
 
 function HMMs.transition_matrix(hmm::DiffusionHMM, λ::Number)
-    N = size(hmm.trans, 2)
+    N = length(hmm)
     return (1 - λ) * hmm.trans + λ * ones(N, N) / N
 end
 
 function HMMs.obs_distributions(hmm::DiffusionHMM, λ::Number)
-    return [Normal((1 - λ) * hmm.means[i] + λ * 0) for i in 1:size(hmm, λ)]
+    return [Normal((1 - λ) * hmm.means[i] + λ * 0) for i in 1:length(hmm)]
 end
 
 #=

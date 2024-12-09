@@ -30,11 +30,12 @@ abstract type AbstractHMM{ar} end
 ## Interface
 
 """
-    size(hmm, control)
+    length(hmm)
 
 Return the number of states of `hmm`.
 """
-Base.size(hmm::AbstractHMM, control) = size(transition_matrix(hmm, control), 2)
+Base.length(hmm::AbstractHMM) = length(initialization(hmm))
+
 
 """
     eltype(hmm, obs, control)
@@ -61,14 +62,13 @@ function initialization end
 
 """
     log_initialization(hmm)
-    log_initialization(hmm, control)
 
 Return the vector of initial state log-probabilities for `hmm` (possibly when `control` is applied).
 
 Falls back on `initialization`.
 """
-log_initialization(hmm::AbstractHMM, control) =
-    elementwise_log(initialization(hmm, control))
+log_initialization(hmm::AbstractHMM) =
+    elementwise_log(initialization(hmm))
 
 """
     transition_matrix(hmm)
@@ -114,7 +114,7 @@ function obs_distributions end
 
 initialization(hmm::AbstractHMM, ::Nothing) = initialization(hmm)
 transition_matrix(hmm::AbstractHMM, ::Nothing) = transition_matrix(hmm)
-log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm) # Is this function needed? If `log_transition_matrix(hmm, nothing)`, then `transition_matrix(hmm, nothing)` returns `transition_matrix(hmm)`.
+log_transition_matrix(hmm::AbstractHMM, ::Nothing) = log_transition_matrix(hmm)
 obs_distributions(hmm::AbstractHMM, ::Nothing) = obs_distributions(hmm)
 function obs_distributions(hmm::AbstractHMM, control, ::Any)
     return obs_distributions(hmm, control)
@@ -160,15 +160,15 @@ Return a named tuple `(; state_seq, obs_seq)`.
 """
 function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
     T = length(control_seq)
-    dummy_log_probas = fill(-Inf, size(hmm, control_seq[1]))
+    dummy_log_probas = fill(-Inf, length(hmm))
 
-    init = initialization(hmm, control_seq[1])
+    init = initialization(hmm)
     state_seq = Vector{Int}(undef, T)
     state1 = rand(rng, LightCategorical(init, dummy_log_probas))
     state_seq[1] = state1
 
     @views for t in 1:(T - 1)
-        trans = transition_matrix(hmm, control_seq[t + 1]) # See forward.jl, line 106.
+        trans = transition_matrix(hmm, control_seq[t])
         state_seq[t + 1] = rand(
             rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
         )
@@ -176,7 +176,7 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
 
     dists1 = obs_distributions(hmm, control_seq[1], missing)
     obs1 = rand(rng, dists1[state1])
-    obs_seq = Vector{typeof(obs1)}(undef, T) # If the `typeof(obs1)` is only known at runtime, does it makes any difference over Vector{Any}?
+    obs_seq = Vector{typeof(obs1)}(undef, T)
     obs_seq[1] = obs1
 
     for t in 2:T

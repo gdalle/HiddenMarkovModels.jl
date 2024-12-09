@@ -41,17 +41,14 @@ period(::PeriodicHMM{T,D,L}) where {T,D,L} = L
 function HMMs.initialization(hmm::PeriodicHMM)
     return hmm.init
 end
-function HMMs.initialization(hmm::PeriodicHMM, control::Integer)
-    return hmm.init
-end
 
-function HMMs.transition_matrix(hmm::PeriodicHMM, control::Integer)
-    l = (control - 1) % period(hmm) + 1
+function HMMs.transition_matrix(hmm::PeriodicHMM, t::Integer)
+    l = (t - 1) % period(hmm) + 1
     return hmm.trans_per[l]
 end
 
-function HMMs.obs_distributions(hmm::PeriodicHMM, control::Integer)
-    l = (control - 1) % period(hmm) + 1
+function HMMs.obs_distributions(hmm::PeriodicHMM, t::Integer)
+    l = (t - 1) % period(hmm) + 1
     return hmm.dists_per[l]
 end
 
@@ -115,7 +112,7 @@ function StatsAPI.fit!(
     seq_ends,
 ) where {T}
     (; γ, ξ) = fb_storage
-    L, N = period(hmm), size(hmm, control_seq[1])
+    L, N = period(hmm), length(hmm)
 
     hmm.init .= zero(T)
     for l in 1:L

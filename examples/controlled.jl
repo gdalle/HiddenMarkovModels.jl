@@ -36,19 +36,16 @@ In state $i$ with a vector of controls $u$, our observation is given by the line
 Controls must be provided to both `transition_matrix` and `obs_distributions` even if they are only used by one.
 =#
 
-function HMMs.initialization(hmm::ControlledGaussianHMM, control)
-    return hmm.init
-end
 function HMMs.initialization(hmm::ControlledGaussianHMM)
     return hmm.init
 end
 
-function HMMs.transition_matrix(hmm::ControlledGaussianHMM, control)
+function HMMs.transition_matrix(hmm::ControlledGaussianHMM, control::AbstractVector)
     return hmm.trans
 end
 
-function HMMs.obs_distributions(hmm::ControlledGaussianHMM, control)
-    return [Normal(dot(hmm.dist_coeffs[i], control), 1.0) for i in 1:size(hmm, control)]
+function HMMs.obs_distributions(hmm::ControlledGaussianHMM, control::AbstractVector)
+    return [Normal(dot(hmm.dist_coeffs[i], control), 1.0) for i in 1:length(hmm)]
 end
 
 #=
@@ -100,7 +97,7 @@ function StatsAPI.fit!(
     seq_ends,
 ) where {T}
     (; γ, ξ) = fb_storage
-    N = size(hmm, control_seq[1])
+    N = length(hmm)
 
     hmm.init .= 0
     hmm.trans .= 0

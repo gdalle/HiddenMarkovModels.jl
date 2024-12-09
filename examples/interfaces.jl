@@ -166,7 +166,7 @@ If we forget to implement this, the loglikelihood computed in Baum-Welch will be
 =#
 
 function DensityInterface.logdensityof(hmm::PriorHMM)
-    prior = Dirichlet(fill(hmm.trans_prior_count + 1, size(hmm, nothing)))
+    prior = Dirichlet(fill(hmm.trans_prior_count + 1, length(hmm)))
     return sum(logdensityof(prior, row) for row in eachrow(transition_matrix(hmm)))
 end
 

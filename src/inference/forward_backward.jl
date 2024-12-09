@@ -8,7 +8,7 @@ function initialize_forward_backward(
     seq_ends::AbstractVectorOrNTuple{Int},
     transition_marginals=true,
 )
-    N, T, K = size(hmm, control_seq[1]), length(obs_seq), length(seq_ends)
+    N, T, K = length(hmm), length(obs_seq), length(seq_ends)
     R = eltype(hmm, obs_seq[1], control_seq[1])
     trans = transition_matrix(hmm, control_seq[2])
     M = typeof(similar(trans, R))
@@ -50,7 +50,7 @@ function _forward_backward!(
         Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
         βₜ = view(β, :, t)
         Bβₜ₊₁ = view(Bβ, :, t + 1)
-        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t + 1]) # See forward.jl, line 106.
+        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t])
         lmul!(c[t], βₜ)
     end
     Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
@@ -61,7 +61,7 @@ function _forward_backward!(
     # Transition marginals
     if transition_marginals
         for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t + 1]) # See forward.jl, line 106.
+            trans = transition_matrix(hmm, control_seq[t])
             mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
         end
         ξ[t2] .= zero(R)

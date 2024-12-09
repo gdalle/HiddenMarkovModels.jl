@@ -29,12 +29,12 @@ function joint_logdensityof(
     logL = zero(R)
     for k in eachindex(seq_ends)
         t1, t2 = seq_limits(seq_ends, k)
-        # Initialization: P(X_{1}|U_{1})
-        init = initialization(hmm, control_seq[t1])
+        # Initialization
+        init = initialization(hmm)
         logL += log(init[state_seq[t1]])
-        # Transitions: P(X_{t+1}|X_{t},U_{t+1})
+        # Transitions
         for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t + 1]) # See forward.jl, line 106.
+            trans = transition_matrix(hmm, control_seq[t])
             logL += log(trans[state_seq[t], state_seq[t + 1]])
         end
         # Priori: P(Y_{1}|X_{1},U_{1})
