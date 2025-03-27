@@ -69,10 +69,11 @@ function _forward_digest_observation!(
     hmm::AbstractHMM,
     obs,
     control,
+    error_if_not_finite::Bool,
 )
     a, b = current_state_marginals, current_obs_likelihoods
 
-    obs_logdensities!(b, hmm, obs, control)
+    obs_logdensities!(b, hmm, obs, control; error_if_not_finite)
     logm = maximum(b)
     b .= exp.(b .- logm)
 
@@ -90,7 +91,8 @@ function _forward!(
     obs_seq::AbstractVector,
     control_seq::AbstractVector,
     seq_ends::AbstractVectorOrNTuple{Int},
-    k::Integer,
+    k::Integer;
+    error_if_not_finite::Bool,
 )
     (; α, B, c, logL) = storage
     t1, t2 = seq_limits(seq_ends, k)
@@ -104,12 +106,14 @@ function _forward!(
             αₜ₋₁ = view(α, :, t - 1)
             predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
         end
-        cₜ, logLₜ = _forward_digest_observation!(αₜ, Bₜ, hmm, obs_seq[t], control_seq[t])
+        cₜ, logLₜ = _forward_digest_observation!(
+            αₜ, Bₜ, hmm, obs_seq[t], control_seq[t]; error_if_not_finite
+        )
         c[t] = cₜ
         logL[k] += logLₜ
     end
 
-    @argcheck isfinite(logL[k])
+    error_if_not_finite && @argcheck isfinite(logL[k])
     return nothing
 end
 
@@ -122,14 +126,15 @@ function forward!(
     obs_seq::AbstractVector,
     control_seq::AbstractVector;
     seq_ends::AbstractVectorOrNTuple{Int},
+    error_if_not_finite::Bool=true,
 )
     if seq_ends isa NTuple{1}
         for k in eachindex(seq_ends)
-            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k; error_if_not_finite)
         end
     else
         @threads for k in eachindex(seq_ends)
-            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+            _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k; error_if_not_finite)
         end
     end
     return nothing
@@ -147,8 +152,9 @@ function forward(
     obs_seq::AbstractVector,
     control_seq::AbstractVector=Fill(nothing, length(obs_seq));
     seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
+    error_if_not_finite::Bool=true,
 )
     storage = initialize_forward(hmm, obs_seq, control_seq; seq_ends)
-    forward!(storage, hmm, obs_seq, control_seq; seq_ends)
+    forward!(storage, hmm, obs_seq, control_seq; seq_ends, error_if_not_finite)
     return storage.α, storage.logL
 end

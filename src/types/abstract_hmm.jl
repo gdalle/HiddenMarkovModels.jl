@@ -128,13 +128,13 @@ StatsAPI.fit!
 ## Fill logdensities
 
 function obs_logdensities!(
-    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control
+    logb::AbstractVector{T}, hmm::AbstractHMM, obs, control; error_if_not_finite::Bool=true
 ) where {T}
     dists = obs_distributions(hmm, control)
     @simd for i in eachindex(logb, dists)
         logb[i] = logdensityof(dists[i], obs)
     end
-    @argcheck maximum(logb) < typemax(T)
+    error_if_not_finite && @argcheck maximum(logb) < typemax(T)
     return nothing
 end
 
