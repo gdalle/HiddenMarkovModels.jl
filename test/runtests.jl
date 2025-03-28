@@ -53,4 +53,8 @@ Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
     @testset verbose = true "Correctness - $TEST_SUITE" begin
         include("correctness.jl")
     end
+
+    @testset verbose = true "Miscellaneous" begin
+        include("misc.jl")
+    end
 end

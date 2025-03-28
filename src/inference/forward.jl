@@ -68,7 +68,7 @@ function _forward_digest_observation!(
     current_obs_likelihoods::AbstractVector{<:Real},
     hmm::AbstractHMM,
     obs,
-    control,
+    control;
     error_if_not_finite::Bool,
 )
     a, b = current_state_marginals, current_obs_likelihoods
