@@ -42,7 +42,7 @@ function _forward_backward!(
     t1, t2 = seq_limits(seq_ends, k)
 
     # Forward (fill B, α, c and logL)
-    _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k)
+    _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k; error_if_not_finite=true)
 
     # Backward
     β[:, t2] .= c[t2]
