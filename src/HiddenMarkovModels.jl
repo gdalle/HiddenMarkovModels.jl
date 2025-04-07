@@ -17,6 +17,7 @@ using DensityInterface: DensityInterface, DensityKind, HasDensity, NoDensity, lo
 using DocStringExtensions
 using FillArrays: Fill
 using LinearAlgebra: Transpose, axpy!, dot, ldiv!, lmul!, mul!, parent
+using LogExpFunctions: logsumexp
 using Random: Random, AbstractRNG, default_rng
 using SparseArrays: AbstractSparseArray, SparseMatrixCSC, nonzeros, nnz, nzrange, rowvals
 using StatsAPI: StatsAPI, fit, fit!
@@ -38,7 +39,6 @@ include("utils/lightdiagnormal.jl")
 include("utils/lightcategorical.jl")
 include("utils/limits.jl")
 
-include("inference/predict.jl")
 include("inference/forward.jl")
 include("inference/viterbi.jl")
 include("inference/forward_backward.jl")

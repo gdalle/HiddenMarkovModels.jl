@@ -12,8 +12,9 @@ struct ForwardStorage{R}
     α::Matrix{R}
     "one loglikelihood per observation sequence"
     logL::Vector{R}
-    B::Matrix{R}
-    c::Vector{R}
+    logα::Matrix{R}
+    logB::Matrix{R}
+    tmp::Vector{R}
 end
 
 """
@@ -32,11 +33,13 @@ struct ForwardBackwardStorage{R,M<:AbstractMatrix{R}}
     ξ::Vector{M}
     "one loglikelihood per observation sequence"
     logL::Vector{R}
-    B::Matrix{R}
+    logB::Matrix{R}
     α::Matrix{R}
-    c::Vector{R}
-    β::Matrix{R}
-    Bβ::Matrix{R}
+    logα::Matrix{R}
+    logβ::Matrix{R}
+    logγ::Matrix{R}
+    logξ::Vector{M}
+    tmp::Vector{R}
 end
 
 Base.eltype(::ForwardBackwardStorage{R}) where {R} = R
@@ -58,31 +61,10 @@ function initialize_forward(
     R = eltype(hmm, obs_seq[1], control_seq[1])
     α = Matrix{R}(undef, N, T)
     logL = Vector{R}(undef, K)
-    B = Matrix{R}(undef, N, T)
-    c = Vector{R}(undef, T)
-    return ForwardStorage(α, logL, B, c)
-end
-
-function _forward_digest_observation!(
-    current_state_marginals::AbstractVector{<:Real},
-    current_obs_likelihoods::AbstractVector{<:Real},
-    hmm::AbstractHMM,
-    obs,
-    control;
-    error_if_not_finite::Bool,
-)
-    a, b = current_state_marginals, current_obs_likelihoods
-
-    obs_logdensities!(b, hmm, obs, control; error_if_not_finite)
-    logm = maximum(b)
-    b .= exp.(b .- logm)
-
-    a .*= b
-    c = inv(sum(a))
-    lmul!(c, a)
-
-    logL = -log(c) + logm
-    return c, logL
+    logα = Matrix{R}(undef, N, T)
+    logB = Matrix{R}(undef, N, T)
+    tmp = Vector{R}(undef, N)
+    return ForwardStorage(α, logL, logα, logB, tmp)
 end
 
 function _forward!(
@@ -94,23 +76,26 @@ function _forward!(
     k::Integer;
     error_if_not_finite::Bool,
 )
-    (; α, B, c, logL) = storage
+    (; α, logα, logB, logL, tmp) = storage
     t1, t2 = seq_limits(seq_ends, k)
-    logL[k] = zero(eltype(logL))
     for t in t1:t2
-        αₜ = view(α, :, t)
-        Bₜ = view(B, :, t)
+        logαₜ = view(logα, :, t)
+        logBₜ = view(logB, :, t)
+        obs_logdensities!(logBₜ, hmm, obs_seq[t], control_seq[t]; error_if_not_finite)
         if t == t1
-            copyto!(αₜ, initialization(hmm))
+            logαₜ .= log_initialization(hmm) .+ logBₜ
         else
-            αₜ₋₁ = view(α, :, t - 1)
-            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
+            logαₜ₋₁ = view(logα, :, t - 1)
+            logtrans = log_transition_matrix(hmm, control_seq[t - 1])
+            for j in eachindex(logαₜ)
+                tmp .= logαₜ₋₁ .+ view(logtrans, :, j)
+                logαₜ[j] = logsumexp(tmp) + logBₜ[j]
+            end
         end
-        cₜ, logLₜ = _forward_digest_observation!(
-            αₜ, Bₜ, hmm, obs_seq[t], control_seq[t]; error_if_not_finite
-        )
-        c[t] = cₜ
-        logL[k] += logLₜ
+    end
+    logL[k] = logsumexp(view(logα, :, t2))
+    for t in t1:t2
+        α[:, t1:t2] .= exp.(view(logα, :, t) .- logsumexp(view(logα, :, t)))
     end
 
     error_if_not_finite && @argcheck isfinite(logL[k])

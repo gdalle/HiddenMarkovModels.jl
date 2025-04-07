@@ -25,6 +25,13 @@ function mul_rows_cols!(
     return B
 end
 
+function add_rows_cols!(
+    B::AbstractMatrix, l::AbstractVector, A::AbstractMatrix, r::AbstractVector
+)
+    B .= l .+ A .+ transpose(r)
+    return B
+end
+
 function mul_rows_cols!(
     B::SparseMatrixCSC, l::AbstractVector, A::SparseMatrixCSC, r::AbstractVector
 )

@@ -21,12 +21,19 @@ function initialize_forward_backward(
         end
     end
     logL = Vector{R}(undef, K)
-    B = Matrix{R}(undef, N, T)
+    logB = Matrix{R}(undef, N, T)
     α = Matrix{R}(undef, N, T)
-    c = Vector{R}(undef, T)
-    β = Matrix{R}(undef, N, T)
-    Bβ = Matrix{R}(undef, N, T)
-    return ForwardBackwardStorage{R,M}(γ, ξ, logL, B, α, c, β, Bβ)
+    logα = Matrix{R}(undef, N, T)
+    logβ = Matrix{R}(undef, N, T)
+    logγ = Matrix{R}(undef, N, T)
+    logξ = Vector{M}(undef, T)
+    if transition_marginals
+        for t in 1:T
+            logξ[t] = similar(log_transition_matrix(hmm, control_seq[t]), R)
+        end
+    end
+    tmp = Vector{R}(undef, N)
+    return ForwardBackwardStorage{R,M}(γ, ξ, logL, logB, α, logα, logβ, logγ, logξ, tmp)
 end
 
 function _forward_backward!(
@@ -38,32 +45,42 @@ function _forward_backward!(
     k::Integer;
     transition_marginals::Bool=true,
 ) where {R}
-    (; α, β, c, γ, ξ, B, Bβ) = storage
+    (; logα, logβ, logγ, logξ, γ, ξ, logB, tmp) = storage
     t1, t2 = seq_limits(seq_ends, k)
 
-    # Forward (fill B, α, c and logL)
+    # Forward (fill B, logα, and logL)
     _forward!(storage, hmm, obs_seq, control_seq, seq_ends, k; error_if_not_finite=true)
 
     # Backward
-    β[:, t2] .= c[t2]
+    logβ[:, t2] .= zero(R)
     for t in (t2 - 1):-1:t1
-        Bβ[:, t + 1] .= view(B, :, t + 1) .* view(β, :, t + 1)
-        βₜ = view(β, :, t)
-        Bβₜ₊₁ = view(Bβ, :, t + 1)
-        predict_previous_state!(βₜ, hmm, Bβₜ₊₁, control_seq[t])
-        lmul!(c[t], βₜ)
+        logβₜ = view(logβ, :, t)
+        logβₜ₊₁ = view(logβ, :, t + 1)
+        logBₜ₊₁ = view(logB, :, t + 1)
+        logtrans = log_transition_matrix(hmm, control_seq[t])
+        for i in eachindex(logβₜ)
+            tmp .= view(logtrans, i, :) .+ logBₜ₊₁ .+ logβₜ₊₁
+            logβₜ[i] = logsumexp(tmp)
+        end
     end
-    Bβ[:, t1] .= view(B, :, t1) .* view(β, :, t1)
 
     # State marginals
-    γ[:, t1:t2] .= view(α, :, t1:t2) .* view(β, :, t1:t2) ./ view(c, t1:t2)'
+    for t in t1:t2
+        logγ[:, t] .= view(logα, :, t) .+ view(logβ, :, t)
+        logγ[:, t] .-= logsumexp(view(logγ, :, t))
+        γ[:, t] .= exp.(view(logγ, :, t))
+    end
 
     # Transition marginals
     if transition_marginals
         for t in t1:(t2 - 1)
-            trans = transition_matrix(hmm, control_seq[t])
-            mul_rows_cols!(ξ[t], view(α, :, t), trans, view(Bβ, :, t + 1))
+            logtrans = log_transition_matrix(hmm, control_seq[t])
+            tmp .= view(logB, :, t + 1) .+ view(logβ, :, t + 1)
+            add_rows_cols!(logξ[t], view(logα, :, t), logtrans, tmp)
+            logξ[t] .-= logsumexp(logξ[t])
+            ξ[t] .= exp.(logξ[t])
         end
+        logξ[t2] .= log(zero(R))
         ξ[t2] .= zero(R)
     end
 
