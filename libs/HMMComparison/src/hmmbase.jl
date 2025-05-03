@@ -62,7 +62,7 @@ function HMMBenchmark.build_benchmarkables(
 
     if "baum_welch" in algos
         benchs["baum_welch"] = @benchmarkable begin
-            HMMBase.fit_mle($hmm, $obs_mat_concat; maxiter=$bw_iter, tol=-Inf)
+            HMMBase.fit_mle($hmm, $obs_mat_concat; maxiter=($bw_iter), tol=(-Inf))
         end evals = 1 samples = 20
     end
 
