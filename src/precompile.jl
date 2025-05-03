@@ -6,8 +6,9 @@
         init = [0.6, 0.4]
         trans = [0.7 0.3; 0.2 0.8]
         hmm = HMM(init, trans, dists)
-        state_seq, obs_seq = rand(hmm, 10)
-        state_seq2, obs_seq2 = vcat(state_seq, state_seq), vcat(obs_seq, obs_seq)
+
+        state_seq, obs_seq = rand(MersenneTwister(0), hmm, 100)
+        state_seq2, obs_seq2 = repeat(state_seq, 2), repeat(obs_seq, 2)
         seq_ends = [length(obs_seq), 2length(obs_seq)]
 
         joint_logdensityof(hmm, obs_seq, state_seq)
@@ -18,7 +19,7 @@
         viterbi(hmm, obs_seq2; seq_ends)
         forward(hmm, obs_seq)
         forward(hmm, obs_seq2; seq_ends)
-        baum_welch(hmm, obs_seq)
-        baum_welch(hmm, obs_seq2; seq_ends)
+        baum_welch(hmm, obs_seq; max_iterations=2)
+        baum_welch(hmm, obs_seq2; seq_ends, max_iterations=2)
     end
 end
