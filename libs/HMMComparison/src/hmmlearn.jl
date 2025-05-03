@@ -14,7 +14,7 @@ function HMMBenchmark.build_model(
         n_components=nb_states,
         covariance_type="diag",
         n_iter=bw_iter,
-        tol=(-np.inf),
+        tol=-np.inf,
         implementation="scaling",
         init_params="",
     )
