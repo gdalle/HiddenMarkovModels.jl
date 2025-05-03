@@ -42,47 +42,41 @@ function build_benchmarkables(
 
     if "forward" in algos
         benchs["forward"] = @benchmarkable begin
-            forward($hmm, $obs_seq, $control_seq; seq_ends=($seq_ends))
+            forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20
     end
     if "forward!" in algos
         benchs["forward!"] = @benchmarkable begin
-            forward!(f_storage, $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends))
+            forward!(f_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20 setup = (
-            f_storage = initialize_forward(
-                $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends)
-            )
+            f_storage = initialize_forward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
 
     if "viterbi" in algos
         benchs["viterbi"] = @benchmarkable begin
-            viterbi($hmm, $obs_seq, $control_seq; seq_ends=($seq_ends))
+            viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20
     end
     if "viterbi!" in algos
         benchs["viterbi!"] = @benchmarkable begin
-            viterbi!(v_storage, $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends))
+            viterbi!(v_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20 setup = (
-            v_storage = initialize_viterbi(
-                $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends)
-            )
+            v_storage = initialize_viterbi($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         )
     end
 
     if "forward_backward" in algos
         benchs["forward_backward"] = @benchmarkable begin
-            forward_backward($hmm, $obs_seq, $control_seq; seq_ends=($seq_ends))
+            forward_backward($hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20
     end
     if "forward_backward!" in algos
         benchs["forward_backward!"] = @benchmarkable begin
-            forward_backward!(
-                fb_storage, $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends)
-            )
+            forward_backward!(fb_storage, $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends)
         end evals = 1 samples = 20 setup = (
             fb_storage = initialize_forward_backward(
-                $hmm, $obs_seq, $control_seq; seq_ends=($seq_ends)
+                $hmm, $obs_seq, $control_seq; seq_ends=$seq_ends
             )
         )
     end
@@ -93,9 +87,9 @@ function build_benchmarkables(
                 $hmm,
                 $obs_seq,
                 $control_seq;
-                seq_ends=($seq_ends),
-                max_iterations=($bw_iter),
-                atol=(-Inf),
+                seq_ends=$seq_ends,
+                max_iterations=$bw_iter,
+                atol=-Inf,
                 loglikelihood_increasing=false,
             )
         end evals = 1 samples = 20
@@ -108,17 +102,17 @@ function build_benchmarkables(
                 hmm_guess,
                 $obs_seq,
                 $control_seq;
-                seq_ends=($seq_ends),
-                max_iterations=($bw_iter),
-                atol=(-Inf),
+                seq_ends=$seq_ends,
+                max_iterations=$bw_iter,
+                atol=-Inf,
                 loglikelihood_increasing=false,
             )
         end evals = 1 samples = 20 setup = (
-            hmm_guess=build_model($implem, $instance, $params);
-            fb_storage=initialize_forward_backward(
-                hmm_guess, $obs_seq, $control_seq; seq_ends=($seq_ends)
+            hmm_guess = build_model($implem, $instance, $params);
+            fb_storage = initialize_forward_backward(
+                hmm_guess, $obs_seq, $control_seq; seq_ends=$seq_ends
             );
-            logL_evolution=Float64[];
+            logL_evolution = Float64[];
             sizehint!(logL_evolution, $bw_iter)
         )
     end

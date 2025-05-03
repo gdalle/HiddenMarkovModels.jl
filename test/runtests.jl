@@ -17,11 +17,7 @@ Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
 @testset verbose = true "HiddenMarkovModels.jl" begin
     if TEST_SUITE == "Standard"
         @testset "Code formatting" begin
-            if VERSION >= v"1.10"
-                @test JuliaFormatter.format(
-                    HiddenMarkovModels; verbose=false, overwrite=false
-                )
-            end
+            @test JuliaFormatter.format(HiddenMarkovModels; verbose=false, overwrite=false)
         end
 
         @testset "Code quality" begin

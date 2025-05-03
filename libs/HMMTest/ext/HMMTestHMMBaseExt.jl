@@ -49,11 +49,11 @@ function HMMTest.test_identical_hmmbase(
             )
 
             hmm_est_base, hist_base = HMMBase.fit_mle(
-                hmm_guess_base, obs_mat; maxiter=10, tol=(-Inf)
+                hmm_guess_base, obs_mat; maxiter=10, tol=-Inf
             )
             logL_evolution_base = hist_base.logtots
             hmm_est, logL_evolution = baum_welch(
-                hmm_guess, obs_seq; seq_ends, max_iterations=10, atol=(-Inf)
+                hmm_guess, obs_seq; seq_ends, max_iterations=10, atol=-Inf
             )
             @test isapprox(
                 logL_evolution[(begin + 1):end], 2 * logL_evolution_base[begin:(end - 1)]
