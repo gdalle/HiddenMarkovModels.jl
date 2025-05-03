@@ -104,7 +104,7 @@ function _forward!(
             copyto!(αₜ, initialization(hmm))
         else
             αₜ₋₁ = view(α, :, t - 1)
-            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t - 1])
+            predict_next_state!(αₜ, hmm, αₜ₋₁, control_seq[t])
         end
         cₜ, logLₜ = _forward_digest_observation!(
             αₜ, Bₜ, hmm, obs_seq[t], control_seq[t]; error_if_not_finite
@@ -144,7 +144,7 @@ end
 $(SIGNATURES)
 
 Apply the forward algorithm to infer the current state after sequence `obs_seq` for `hmm`.
-    
+
 Return a tuple `(storage.α, storage.logL)` where `storage` is of type [`ForwardStorage`](@ref).
 """
 function forward(

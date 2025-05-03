@@ -55,7 +55,7 @@ function _viterbi!(
     for t in (t1 + 1):t2
         logBₜ = view(logB, :, t)
         obs_logdensities!(logBₜ, hmm, obs_seq[t], control_seq[t])
-        logtrans = log_transition_matrix(hmm, control_seq[t - 1])
+        logtrans = log_transition_matrix(hmm, control_seq[t])
         ϕₜ, ϕₜ₋₁ = view(ϕ, :, t), view(ϕ, :, t - 1)
         ψₜ = view(ψ, :, t)
         argmaxplus_transmul!(ϕₜ, ψₜ, logtrans, ϕₜ₋₁)
