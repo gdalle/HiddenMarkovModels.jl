@@ -8,41 +8,48 @@ function test_equal_hmms(
     init::Bool,
     flip::Bool=false,
 )
-    if init
-        init1 = initialization(hmm1)
-        init2 = initialization(hmm2)
-        if flip
-            @test !isapprox(init1, init2; atol, norm=infnorm)
-        else
-            @test isapprox(init1, init2; atol, norm=infnorm)
+    @testset "Initialization" begin
+        if init
+            init1 = initialization(hmm1)
+            init2 = initialization(hmm2)
+            if flip
+                @test !isapprox(init1, init2; atol, norm=infnorm)
+            else
+                @test isapprox(init1, init2; atol, norm=infnorm)
+            end
         end
     end
 
-    for control in control_seq
-        trans1 = transition_matrix(hmm1, control)
-        trans2 = transition_matrix(hmm2, control)
-        if typeof(trans1) == typeof(trans2)
-            @test HMMs.mynnz(trans1) == HMMs.mynnz(trans2)
-        end
-        if flip
-            @test !isapprox(trans1, trans2; atol, norm=infnorm)
-        else
-            @test isapprox(trans1, trans2; atol, norm=infnorm)
+    @testset "Transition matrix" begin
+        @testset "Control $control" for control in control_seq
+            trans1 = transition_matrix(hmm1, control)
+            trans2 = transition_matrix(hmm2, control)
+            if typeof(trans1) == typeof(trans2)
+                @test HMMs.mynnz(trans1) == HMMs.mynnz(trans2)
+            end
+            if flip
+                @test !isapprox(trans1, trans2; atol, norm=infnorm)
+            else
+                @test isapprox(trans1, trans2; atol, norm=infnorm)
+            end
         end
     end
 
-    for control in control_seq
-        dists1 = obs_distributions(hmm1, control)
-        dists2 = obs_distributions(hmm2, control)
-        for (dist1, dist2) in zip(dists1, dists2)
-            for field in fieldnames(typeof(dist1))
-                string(field) in ("μ", "p") || continue
-                x1 = getfield(dist1, field)
-                x2 = getfield(dist2, field)
-                if flip
-                    @test !isapprox(x1, x2; atol, norm=infnorm)
-                else
-                    @test isapprox(x1, x2; atol, norm=infnorm)
+    @testset "Observation distributions" begin
+        @testset "Control $control" for control in control_seq
+            dists1 = obs_distributions(hmm1, control)
+            dists2 = obs_distributions(hmm2, control)
+            @testset "State $i" for i in eachindex(dists1, dists2)
+                dist1, dist2 = dists1[i], dists2[i]
+                @testset "Field $field" for field in fieldnames(typeof(dist1))
+                    string(field) in ("μ", "p") || continue
+                    x1 = getfield(dist1, field)
+                    x2 = getfield(dist2, field)
+                    if flip
+                        @test !isapprox(x1, x2; atol, norm=infnorm)
+                    else
+                        @test isapprox(x1, x2; atol, norm=infnorm)
+                    end
                 end
             end
         end
@@ -89,8 +96,12 @@ function test_coherent_algorithms(
         if !isnothing(hmm_guess)
             hmm_est, logL_evolution = baum_welch(hmm_guess, obs_seq, control_seq; seq_ends)
             @test all(>=(0), diff(logL_evolution))
-            test_equal_hmms(hmm, hmm_guess, control_seq[1:2]; atol, init, flip=true)
-            test_equal_hmms(hmm, hmm_est, control_seq[1:2]; atol, init)
+            @testset "No flip" begin
+                test_equal_hmms(hmm, hmm_est, control_seq[1:3]; atol, init)
+            end
+            @testset "Flip" begin
+                test_equal_hmms(hmm, hmm_guess, control_seq[1:3]; atol, init, flip=true)
+            end
         end
     end
 end
