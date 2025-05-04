@@ -3,6 +3,7 @@ using Documenter: Documenter
 using HiddenMarkovModels
 using JET
 using JuliaFormatter: JuliaFormatter
+using Literate
 using Pkg
 using Test
 
@@ -13,6 +14,19 @@ if TEST_SUITE == "HMMBase"
 end
 
 Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
+
+examples_path = joinpath(dirname(@__DIR__), "examples")
+examples_script_path = joinpath(@__DIR__, "examples")
+
+for file in readdir(examples_script_path)
+    if endswith(file, ".jl")
+        rm(joinpath(examples_script_path, file))
+    end
+end
+
+for file in readdir(examples_path)
+    Literate.script(joinpath(examples_path, file), examples_script_path)
+end
 
 @testset verbose = true "HiddenMarkovModels.jl" begin
     if TEST_SUITE == "Standard"
@@ -42,8 +56,7 @@ Pkg.develop(; path=joinpath(dirname(@__DIR__), "libs", "HMMTest"))
             include("distributions.jl")
         end
 
-        examples_path = joinpath(dirname(@__DIR__), "examples")
-        for file in readdir(examples_path)
+        for file in readdir(examples_script_path)
             @testset "Example - $file" begin
                 include(joinpath(examples_path, file))
             end

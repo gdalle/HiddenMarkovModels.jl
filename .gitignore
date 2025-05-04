@@ -24,6 +24,7 @@ scratchpad.jl
 
 /docs/src/index.md
 /docs/src/examples/*.md
+/test/examples/*.jl
 
 *.pdf
 *.svg
