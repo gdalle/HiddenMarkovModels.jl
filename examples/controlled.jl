@@ -66,7 +66,7 @@ Simulation requires a vector of controls, each being a vector itself with the ri
 Let us build several sequences of variable lengths.
 =#
 
-control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:2000];
+control_seqs = [[randn(rng, d) for t in 1:rand(100:200)] for k in 1:1000];
 obs_seqs = [rand(rng, hmm, control_seq).obs_seq for control_seq in control_seqs];
 
 obs_seq = reduce(vcat, obs_seqs)
@@ -125,7 +125,7 @@ Now we put it to the test.
 
 init_guess = [0.5, 0.5]
 trans_guess = [0.6 0.4; 0.3 0.7]
-dist_coeffs_guess = [-1.1 * ones(d), 1.1 * ones(d)]
+dist_coeffs_guess = [-2 * ones(d), 2 * ones(d)]
 hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
