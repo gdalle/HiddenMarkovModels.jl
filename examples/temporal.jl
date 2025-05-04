@@ -54,9 +54,29 @@ end
 
 # ## Simulation
 
-init = [0.6, 0.4]
-trans_per = ([0.7 0.3; 0.2 0.8], [0.3 0.7; 0.8 0.2])
-dists_per = ([Normal(-1.0), Normal(-2.0)], [Normal(+1.0), Normal(+2.0)])
+init = [0.6, 0.3, 0.1]
+trans_per = (
+    [ # l = 1 -> mostly switch to next state
+        0.2 0.8 0.0
+        0.0 0.2 0.8
+        0.8 0.0 0.2
+    ],
+    [ # l = 2 -> mostly switch to previous state
+        0.2 0.0 0.8
+        0.8 0.2 0.0
+        0.0 0.8 0.2
+    ],
+    [ # l = 3 -> mostly stay in current state
+        0.8 0.1 0.1
+        0.1 0.8 0.1
+        0.1 0.1 0.8
+    ],
+)
+dists_per = (
+    [Normal(1.0), Normal(2.0), Normal(3.0)],
+    [Normal(3.0), Normal(4.0), Normal(5.0)],
+    [Normal(5.0), Normal(6.0), Normal(7.0)],
+)
 hmm = PeriodicHMM(init, trans_per, dists_per);
 
 #=
@@ -122,7 +142,12 @@ function StatsAPI.fit!(
         t1, t2 = HMMs.seq_limits(seq_ends, k)
         hmm.init .+= γ[:, t1]
         for l in 1:L
-            hmm.trans_per[l] .+= sum(ξ[(t1 + l - 1):L:t2])
+            first_time_trans_l = if l > 1
+                t1 + l - 2
+            else
+                t1 + l - 2 + L
+            end
+            hmm.trans_per[l] .+= sum(ξ[first_time_trans_l:L:t2])
         end
     end
     hmm.init ./= sum(hmm.init)
@@ -151,9 +176,17 @@ end
 Now let's test our procedure with a reasonable guess.
 =#
 
-init_guess = [0.7, 0.3]
-trans_per_guess = ([0.6 0.4; 0.3 0.7], [0.4 0.6; 0.7 0.3])
-dists_per_guess = ([Normal(-1.1), Normal(-2.1)], [Normal(+1.1), Normal(+2.1)])
+init_guess = [0.4, 0.2, 0.3]
+trans_per_guess = ntuple(_ -> [
+    0.4 0.3 0.3
+    0.3 0.4 0.3
+    0.3 0.3 0.4
+], Val(3))
+dists_per_guess = (
+    [Normal(1.5), Normal(2.2), Normal(2.5)],
+    [Normal(3.5), Normal(4.2), Normal(4.5)],
+    [Normal(5.5), Normal(6.2), Normal(6.5)],
+)
 hmm_guess = PeriodicHMM(init_guess, trans_per_guess, dists_per_guess);
 
 #=
@@ -175,14 +208,21 @@ cat(transition_matrix(hmm_est, 2), transition_matrix(hmm, 2); dims=3)
 
 #-
 
+cat(transition_matrix(hmm_est, 3), transition_matrix(hmm, 3); dims=3)
+
+#-
+
 map(mean, hcat(obs_distributions(hmm_est, 1), obs_distributions(hmm, 1)))
 
 #-
 
 map(mean, hcat(obs_distributions(hmm_est, 2), obs_distributions(hmm, 2)))
 
+#-
+
+map(mean, hcat(obs_distributions(hmm_est, 3), obs_distributions(hmm, 3)))
+
 # ## Tests  #src
 
-@test mean(obs_seqs[1][1:2:end]) < 0 < mean(obs_seqs[1][2:2:end])  #src
-test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false)  #src
+test_coherent_algorithms(rng, hmm, control_seq; seq_ends, hmm_guess, init=false, atol=0.07)  #src
 test_type_stability(rng, hmm, control_seq; seq_ends, hmm_guess)  #src

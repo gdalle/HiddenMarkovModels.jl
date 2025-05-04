@@ -1,5 +1,5 @@
 """
-    AbstractHMM 
+    AbstractHMM
 
 Abstract supertype for an HMM amenable to simulation, inference and learning.
 
@@ -87,7 +87,7 @@ Return the matrix of state transition log-probabilities for `hmm` (possibly when
 Falls back on `transition_matrix`.
 
 !!! note
-    When processing sequences, the control at time `t` influences the transition from time `t` to `t+1` (and not from time `t-1` to `t`).
+    When processing sequences, the control at time `t` influences the transition from time `t-1` to `t` (since version 0.7 of the package).
 """
 function log_transition_matrix(hmm::AbstractHMM, control)
     return elementwise_log(transition_matrix(hmm, control))
@@ -145,7 +145,7 @@ end
     rand([rng,] hmm, control_seq)
 
 Simulate `hmm` for `T` time steps, or when the sequence `control_seq` is applied.
-    
+
 Return a named tuple `(; state_seq, obs_seq)`.
 """
 function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVector)
@@ -158,7 +158,7 @@ function Random.rand(rng::AbstractRNG, hmm::AbstractHMM, control_seq::AbstractVe
     state_seq[1] = state1
 
     @views for t in 1:(T - 1)
-        trans = transition_matrix(hmm, control_seq[t])
+        trans = transition_matrix(hmm, control_seq[t + 1])
         state_seq[t + 1] = rand(
             rng, LightCategorical(trans[state_seq[t], :], dummy_log_probas)
         )

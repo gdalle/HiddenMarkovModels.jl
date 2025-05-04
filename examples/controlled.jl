@@ -125,7 +125,7 @@ Now we put it to the test.
 
 init_guess = [0.5, 0.5]
 trans_guess = [0.6 0.4; 0.3 0.7]
-dist_coeffs_guess = [-1.1 * ones(d), 1.1 * ones(d)]
+dist_coeffs_guess = [-2 * ones(d), 2 * ones(d)]
 hmm_guess = ControlledGaussianHMM(init_guess, trans_guess, dist_coeffs_guess);
 
 #-
