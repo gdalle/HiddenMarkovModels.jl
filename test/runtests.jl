@@ -57,8 +57,10 @@ end
         end
 
         for file in readdir(examples_script_path)
-            @testset "Example - $file" begin
-                include(joinpath(examples_path, file))
+            if endswith(file, ".jl")
+                @testset "Example - $file" begin
+                    include(joinpath(examples_path, file))
+                end
             end
         end
 
