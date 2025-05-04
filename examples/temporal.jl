@@ -122,7 +122,7 @@ function StatsAPI.fit!(
         t1, t2 = HMMs.seq_limits(seq_ends, k)
         hmm.init .+= γ[:, t1]
         for l in 1:L
-            hmm.trans_per[l] .+= sum(ξ[(t1 + l - 1):L:t2])
+            hmm.trans_per[l] .+= sum(ξ[(t1 + l - 2 + (l == 1) * L):L:t2])
         end
     end
     hmm.init ./= sum(hmm.init)
