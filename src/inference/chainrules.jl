@@ -7,8 +7,12 @@ function _params_and_loglikelihoods(
     seq_ends::AbstractVectorOrNTuple{Int}=(length(obs_seq),),
 )
     init = initialization(hmm)
-    trans_by_time = mapreduce(_dcat, eachindex(control_seq)[1:(end - 1)]) do t
-        transition_matrix(hmm, control_seq[t + 1])
+    trans_by_time = mapreduce(_dcat, eachindex(control_seq)) do t
+        if t < length(control_seq)
+            transition_matrix(hmm, control_seq[t + 1])
+        else
+            transition_matrix(hmm, control_seq[1])  # not used
+        end
     end
     logB = mapreduce(hcat, eachindex(obs_seq, control_seq)) do t
         logdensityof.(obs_distributions(hmm, control_seq[t]), (obs_seq[t],))

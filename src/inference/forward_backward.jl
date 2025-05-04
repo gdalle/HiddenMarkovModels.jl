@@ -19,6 +19,7 @@ function initialize_forward_backward(
         for t in 1:(T - 1)
             ξ[t] = similar(transition_matrix(hmm, control_seq[t + 1]), R)
         end
+        ξ[T] = zero(trans)  # not used
     end
     logL = Vector{R}(undef, K)
     B = Matrix{R}(undef, N, T)
