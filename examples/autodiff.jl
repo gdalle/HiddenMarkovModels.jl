@@ -1,4 +1,4 @@
-# # Autodiff
+# # Differentiation
 
 #=
 Here we show how to compute gradients of the observation sequence loglikelihood with respect to various inputs.
@@ -37,7 +37,7 @@ end
 
 #=
 Both its transition matrix and its vector of observation means result from a convex combination between the corresponding field and a base value (aka diffusion).
-The coefficient $\lambda$ of this convex combination is given as a control. 
+The coefficient $\lambda$ of this convex combination is given as a control.
 =#
 
 HMMs.initialization(hmm::DiffusionHMM) = hmm.init

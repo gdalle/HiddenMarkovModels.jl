@@ -23,7 +23,7 @@ open(joinpath(joinpath(@__DIR__, "src"), "index.md"), "w") do io
     end
 end
 
-examples_jl_path = joinpath(dirname(@__DIR__), "examples")
+examples_path = joinpath(dirname(@__DIR__), "examples")
 examples_md_path = joinpath(@__DIR__, "src", "examples")
 
 for file in readdir(examples_md_path)
@@ -32,8 +32,8 @@ for file in readdir(examples_md_path)
     end
 end
 
-for file in readdir(examples_jl_path)
-    Literate.markdown(joinpath(examples_jl_path, file), examples_md_path)
+for file in readdir(examples_path)
+    Literate.markdown(joinpath(examples_path, file), examples_md_path)
 end
 
 function literate_title(path)
@@ -44,19 +44,16 @@ end
 pages = [
     "Home" => "index.md",
     "Tutorials" => [
-        "Basics" => joinpath("examples", "basics.md"),
-        "Types" => joinpath("examples", "types.md"),
-        "Interfaces" => joinpath("examples", "interfaces.md"),
-        "Time dependency" => joinpath("examples", "temporal.md"),
-        "Control dependency" => joinpath("examples", "controlled.md"),
-        "Autodiff" => joinpath("examples", "autodiff.md"),
+        joinpath("examples", "basics.md"),
+        joinpath("examples", "types.md"),
+        joinpath("examples", "interfaces.md"),
+        joinpath("examples", "temporal.md"),
+        joinpath("examples", "controlled.md"),
+        joinpath("examples", "autoregression.md"),
+        joinpath("examples", "autodiff.md"),
     ],
     "API reference" => "api.md",
-    "Advanced" => [
-        "Alternatives" => "alternatives.md",
-        "Debugging" => "debugging.md",
-        "Formulas" => "formulas.md",
-    ],
+    "Advanced" => ["alternatives.md", "debugging.md", "formulas.md"],
 ]
 
 fmt = Documenter.HTML(;
